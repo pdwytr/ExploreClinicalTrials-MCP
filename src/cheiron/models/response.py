@@ -3,19 +3,25 @@
 Shape:
     QueryResponse
     ├── visualization   ChartVisualization | NetworkVisualization  (picked by `type`)
-    │   ├── type, title
-    │   ├── encoding    which data field goes on which visual channel
-    │   └── data        the rows (charts) or nodes + edges (network)
+    │   ├── type, intent, title
+    │   ├── encoding    which data field goes on which visual channel (Vega-Lite names)
+    │   └── data        rows (charts) or a NetworkX node-link graph (network)
     │                   every row / node / edge may carry `citations`
-    └── meta            filters, interpretation, rendering hints, counts
+    ├── meta            filters, interpretation, counts, units
+    └── vega_lite       ready-to-render Vega-Lite v5 spec, generated from `visualization`
+                        (null for network graphs; Vega-Lite has no node-link layout)
+
+Chart data arrives pre-aggregated: one row per bar / point / time bucket, so each
+row can carry the citations behind its value.
 """
 
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, computed_field, model_validator
 
+from cheiron.models.catalog import INTENT_CHART_TYPES, ChartType, Intent
 
 # --- Citations (bonus: deep traceability) ------------------------------------
 
@@ -32,30 +38,66 @@ class Citation(BaseModel):
     )
 
 
-# --- Encoding: field -> visual channel ---------------------------------------
+# --- Encoding: field -> visual channel (Vega-Lite vocabulary) -----------------
+
+
+class _VegaLiteNames(BaseModel):
+    """Accepts and emits Vega-Lite's camelCase names (xOffset, timeUnit)."""
+
+    model_config = ConfigDict(validate_by_name=True, validate_by_alias=True, serialize_by_alias=True)
 
 
 class FieldType(str, Enum):
-    """How the frontend should treat a field's values (same idea as Vega-Lite)."""
+    """Vega-Lite measurement types: how the frontend should treat a field's values."""
 
     QUANTITATIVE = "quantitative"  # numbers: counts, enrollment
     NOMINAL = "nominal"  # unordered categories: sponsor, country
     ORDINAL = "ordinal"  # ordered categories: phase
-    TEMPORAL = "temporal"  # dates / years
+    TEMPORAL = "temporal"  # dates, sent as ISO strings ("2015-01-01")
 
 
-class Channel(BaseModel):
+Aggregate = Literal["count", "sum", "mean", "median", "min", "max", "distinct"]
+TimeUnit = Literal["year", "yearquarter", "yearmonth", "utcyear", "utcyearquarter", "utcyearmonth"]
+Sort = Literal["ascending", "descending", "x", "-x", "y", "-y"] | list[str]
+
+
+class Channel(_VegaLiteNames):
     field: str = Field(description="Key in each data row.")
     type: FieldType
     title: str | None = Field(default=None, description="Axis or legend label.")
+    sort: Sort | None = Field(
+        default=None,
+        description="'-y' = order bars by value, largest first; a list = explicit order, e.g. phases.",
+    )
+    aggregate: Aggregate | None = Field(
+        default=None,
+        description="Usually unset: data arrives pre-aggregated. Set only if the frontend should aggregate.",
+    )
+    time_unit: TimeUnit | None = Field(default=None, alias="timeUnit", description="Prefer utc* units.")
+    bin: bool | Literal["binned"] | None = Field(
+        default=None, description="'binned' = rows are already bins; give the bin end in encoding.x2."
+    )
 
 
-class ChartEncoding(BaseModel):
+class SecondaryChannel(_VegaLiteNames):
+    """End of a range (e.g. bin end); takes its type from the matching primary channel."""
+
+    field: str
+    title: str | None = None
+
+
+class ChartEncoding(_VegaLiteNames):
     x: Channel
     y: Channel
-    series: Channel | None = Field(
-        default=None, description="Splits data into colored groups (grouped bars, multi-line series)."
+    x2: SecondaryChannel | None = Field(default=None, description="Bin end for pre-binned histograms.")
+    color: Channel | None = Field(default=None, description="Splits data into colored groups.")
+    x_offset: Channel | None = Field(
+        default=None, alias="xOffset", description="Places grouped bars side by side within each x."
     )
+
+    def fields(self) -> set[str]:
+        channels = [self.x, self.y, self.x2, self.color, self.x_offset]
+        return {c.field for c in channels if c is not None}
 
 
 class NetworkEncoding(BaseModel):
@@ -92,6 +134,11 @@ class Edge(BaseModel):
 
 
 class NetworkData(BaseModel):
+    """NetworkX node-link format: `networkx.node_link_graph(data, edges="edges")` reads it as is."""
+
+    directed: bool = False
+    multigraph: bool = False
+    graph: dict[str, Any] = Field(default_factory=dict, description="Graph-level attributes.")
     nodes: list[Node]
     edges: list[Edge]
 
@@ -108,27 +155,44 @@ class NetworkData(BaseModel):
 
 
 class ChartVisualization(BaseModel):
-    type: Literal["bar_chart", "grouped_bar_chart", "time_series", "scatter_plot", "histogram"]
+    type: ChartType
+    intent: Intent = Field(description="What the chart shows (FT Visual Vocabulary category).")
     title: str
     encoding: ChartEncoding
     data: list[DataRow]
 
     @model_validator(mode="after")
-    def encoded_fields_exist_in_data(self) -> "ChartVisualization":
-        """Every field the encoding names must be present in every row."""
-        channels = [self.encoding.x, self.encoding.y, self.encoding.series]
-        needed = {c.field for c in channels if c is not None}
+    def check_consistency(self) -> "ChartVisualization":
+        if self.type not in INTENT_CHART_TYPES[self.intent]:
+            allowed = ", ".join(INTENT_CHART_TYPES[self.intent])
+            raise ValueError(f"{self.type} does not fit intent {self.intent.value}; use one of: {allowed}")
+
+        needed = self.encoding.fields()
         for i, row in enumerate(self.data):
             missing = needed - set(row.model_extra or {})
             if missing:
                 raise ValueError(f"data[{i}] is missing encoded field(s): {sorted(missing)}")
-        if self.type == "grouped_bar_chart" and self.encoding.series is None:
-            raise ValueError("grouped_bar_chart requires encoding.series")
+
+        enc = self.encoding
+        if self.type == "grouped_bar_chart" and (enc.color is None or enc.x_offset is None):
+            raise ValueError("grouped_bar_chart requires encoding.color and encoding.xOffset")
+        if self.type == "stacked_bar_chart" and enc.color is None:
+            raise ValueError("stacked_bar_chart requires encoding.color")
+        if self.type == "histogram":
+            if not enc.x.bin:
+                raise ValueError("histogram requires encoding.x.bin")
+            if enc.x.bin == "binned" and enc.x2 is None:
+                raise ValueError("pre-binned histogram requires encoding.x2 (bin end)")
+        if self.type == "time_series" and enc.x.type not in (FieldType.TEMPORAL, FieldType.ORDINAL):
+            raise ValueError("time_series requires a temporal or ordinal x")
+        if self.type == "scatter_plot" and FieldType.QUANTITATIVE not in (enc.x.type, enc.y.type):
+            raise ValueError("scatter_plot requires at least one quantitative axis")
         return self
 
 
 class NetworkVisualization(BaseModel):
     type: Literal["network_graph"]
+    intent: Literal[Intent.RELATIONSHIP] = Intent.RELATIONSHIP
     title: str
     encoding: NetworkEncoding = Field(default_factory=NetworkEncoding)
     data: NetworkData
@@ -138,11 +202,6 @@ Visualization = ChartVisualization | NetworkVisualization
 
 
 # --- Metadata --------------------------------------------------------------------
-
-
-class Sort(BaseModel):
-    field: str
-    order: Literal["asc", "desc"] = "desc"
 
 
 class Meta(BaseModel):
@@ -155,8 +214,6 @@ class Meta(BaseModel):
     warnings: list[str] = Field(default_factory=list, description="E.g. results truncated, missing dates excluded.")
     total_trials_matched: int = Field(ge=0, description="Trials matching the filters at the source.")
     trials_analyzed: int = Field(ge=0, description="Trials actually aggregated (can be lower if capped).")
-    sort: Sort | None = None
-    time_granularity: Literal["year", "quarter", "month"] | None = None
     units: dict[str, str] = Field(default_factory=dict, description="Field -> unit, e.g. {'trial_count': 'trials'}.")
     generated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
@@ -169,6 +226,15 @@ class QueryResponse(BaseModel):
 
     visualization: Visualization = Field(discriminator="type")
     meta: Meta
+
+    @computed_field(description="Vega-Lite v5 spec for charts (render with vega-embed); null for network graphs.")
+    @property
+    def vega_lite(self) -> dict[str, Any] | None:
+        from cheiron.visualize.vega_lite import to_vega_lite  # local import: visualize depends on models
+
+        if isinstance(self.visualization, ChartVisualization):
+            return to_vega_lite(self.visualization)
+        return None
 
 
 class ErrorResponse(BaseModel):

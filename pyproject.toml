@@ -8,7 +8,11 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["pytest>=8"]
+dev = [
+    "pytest>=8",
+    "altair>=5",    # validates generated specs against the official Vega-Lite schema
+    "networkx>=3.4", # checks NetworkData round-trips through node_link_graph
+]
 
 [build-system]
 requires = ["hatchling"]

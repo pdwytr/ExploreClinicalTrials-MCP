@@ -1,8 +1,9 @@
+from cheiron.models.catalog import INTENT_CHART_TYPES, ChartType, Intent, VisualizationType, default_chart_type
 from cheiron.models.request import QueryRequest, RecruitmentStatus, TrialPhase
 from cheiron.models.response import (
+    Channel,
     ChartEncoding,
     ChartVisualization,
-    Channel,
     Citation,
     DataRow,
     Edge,
@@ -14,18 +15,21 @@ from cheiron.models.response import (
     NetworkVisualization,
     Node,
     QueryResponse,
-    Sort,
+    SecondaryChannel,
 )
 
 __all__ = [
-    "ChartEncoding",
-    "ChartVisualization",
+    "INTENT_CHART_TYPES",
     "Channel",
+    "ChartEncoding",
+    "ChartType",
+    "ChartVisualization",
     "Citation",
     "DataRow",
     "Edge",
     "ErrorResponse",
     "FieldType",
+    "Intent",
     "Meta",
     "NetworkData",
     "NetworkEncoding",
@@ -34,6 +38,8 @@ __all__ = [
     "QueryRequest",
     "QueryResponse",
     "RecruitmentStatus",
-    "Sort",
+    "SecondaryChannel",
     "TrialPhase",
+    "VisualizationType",
+    "default_chart_type",
 ]
