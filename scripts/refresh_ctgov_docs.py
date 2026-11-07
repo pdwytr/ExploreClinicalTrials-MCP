@@ -20,7 +20,8 @@ SNAPSHOTS = {
     "openapi.yaml": f"{API}/oas/v2",  # full OpenAPI spec
     "search-areas.json": f"{API}/v2/studies/search-areas",  # what each query.* parameter searches
     "enums.json": f"{API}/v2/studies/enums",  # allowed values for enum fields
-    "metadata.json": f"{API}/v2/studies/metadata",  # every field ("piece") name, for AREA[...]
+    # every field ("piece"), including search-only ones (counters, year fields), for AREA[...]
+    "metadata.json": f"{API}/v2/studies/metadata?includeIndexedOnly=true",
     "version.json": f"{API}/v2/version",
 }
 

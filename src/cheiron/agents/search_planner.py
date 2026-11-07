@@ -88,11 +88,13 @@ def load_instructions() -> str:
 
 
 def read_reference(ctx: RunContext[RunState], path: str) -> str:
-    """Read one reference file of the skill, e.g. 'references/fields.md'. Only open a file when the
-    skill's 'References: read only when needed' table says the question needs it."""
-    available = sorted(f"references/{p.name}" for p in (SKILL_DIR / "references").glob("*.md"))
+    """Read one reference file of the skill, e.g. 'references/enums.md' or
+    'references/data-structure/protocol.design.md'. Only open a file when the skill's
+    'References: read only when needed' table (or the data-structure index) says you need it."""
+    available = sorted(p.relative_to(SKILL_DIR).as_posix() for p in (SKILL_DIR / "references").rglob("*.md"))
     if path not in available:
-        raise ModelRetry(f"Unknown reference {path!r}. Available: {', '.join(available)}")
+        top_level = [a for a in available if a.count("/") == 1] + ["references/data-structure/index.md"]
+        raise ModelRetry(f"Unknown reference {path!r}. Start from: {', '.join(top_level)}")
     ctx.deps.references_read.append(path)
     return (SKILL_DIR / path).read_text()
 

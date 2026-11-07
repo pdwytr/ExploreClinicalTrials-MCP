@@ -1,14 +1,16 @@
 """Generate the ctgov-search skill's reference files from the API snapshots in docs/ctgov/.
 
-Each reference is small and focused so the agent can load only what a question needs
-(Agent Skills progressive disclosure: https://agentskills.io/specification).
-Only SKILL.md is hand-written; rerun this after scripts/refresh_ctgov_docs.py.
+Indexed for progressive disclosure (https://agentskills.io/specification): SKILL.md links
+to small files and to data-structure/index.md, which points to one file per module, so
+the agent loads only what a question needs. Only SKILL.md is hand-written; rerun this
+after scripts/refresh_ctgov_docs.py.
 
-    uv run python scripts/build_ctgov_skill.py
+    uv run --group dev python scripts/build_ctgov_skill.py
 """
 
 import json
 import re
+import shutil
 import sys
 from pathlib import Path
 
@@ -16,19 +18,32 @@ import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
-from cheiron.fetch.models import SEARCH_PARAMS  # noqa: E402  (the parameters code accepts)
+from cheiron.fetch.models import SEARCH_PARAMS  # noqa: E402  (the /studies parameters code accepts)
 
 DOCS = ROOT / "docs" / "ctgov"
 OUT = ROOT / "src" / "cheiron" / "agents" / "skills" / "ctgov-search" / "references"
-# Sections whose fields are useful in AREA[...] filters (results/annotation/document are not).
-FILTER_SECTIONS = {"protocolSection", "derivedSection", "hasResults"}
-SCALAR_TYPES = {"date", "integer", "boolean", "normalized_date", "PartialDate", "DateTimeMinutes"}
+
+# Endpoints a plan step can call, and the parameters the planner may set on each
+# (paging, fields, format and sort are set by code).
+ENDPOINT_PARAMS = {
+    "/studies/{nctId}": ["nctId"],
+    "/stats/field/values": ["fields", "types"],
+    "/stats/field/sizes": ["fields"],
+    "/stats/size": [],
+}
+SECTION_NAMES = {
+    "protocolSection": "protocol",
+    "resultsSection": "results",
+    "derivedSection": "derived",
+    "annotationSection": "annotation",
+    "documentSection": "document",
+}
 
 
-def plain(text: str) -> str:
-    """Markdown links to site pages -> their text; collapse whitespace."""
+def plain(text: str | None) -> str:
+    """Markdown links to site pages -> their text; collapse whitespace; escape table pipes."""
     text = re.sub(r"\[([^\]]+)\]\([^)]*\)", r"\1", text or "")
-    return re.sub(r"\s+", " ", text).strip()
+    return re.sub(r"\s+", " ", text).strip().replace("|", "\\|")
 
 
 def header(title: str, source: str, purpose: str) -> str:
@@ -36,92 +51,147 @@ def header(title: str, source: str, purpose: str) -> str:
     return f"# {title}\n\n{purpose}\nGenerated from `docs/ctgov/{source}` (API {version}) by scripts/build_ctgov_skill.py.\n\n"
 
 
+# --- parameters.md -------------------------------------------------------------------------
+
+
 def build_parameters() -> str:
     spec = yaml.safe_load((DOCS / "openapi.yaml").read_text())
-    params = {p["name"]: p for p in spec["paths"]["/studies"]["get"]["parameters"]}
-    lines = [header("Search parameters (GET /studies)", "openapi.yaml",
-                    "The parameters you may set. Paging, fields and sorting are set by code.")]  # fmt: skip
-    lines.append("| Parameter | Description |\n| --- | --- |")
+
+    def described(path: str) -> dict[str, str]:
+        return {p["name"]: plain(p.get("description")) for p in spec["paths"][path]["get"].get("parameters", [])}
+
+    lines = [header("Parameters by endpoint", "openapi.yaml",
+                    "What you may set on each endpoint. Paging, fields, format and sorting are set by code.")]  # fmt: skip
+    studies = described("/studies")
+    lines.append("## `studies` (GET /studies)\n\n| Parameter | Description |\n| --- | --- |")
     for name in sorted(SEARCH_PARAMS, key=lambda n: (not n.startswith("query"), n)):
-        if name in params:
-            desc = plain(params[name].get("description", "")).replace("|", "\\|")
-            lines.append(f"| `{name}` | {desc} |")
+        if name in studies:
+            lines.append(f"| `{name}` | {studies[name]} |")
+    for path, names in ENDPOINT_PARAMS.items():
+        endpoint = "study" if path == "/studies/{nctId}" else path.removeprefix("/")
+        lines.append(f"\n## `{endpoint}` (GET {path})\n")
+        if not names:
+            lines.append("No parameters.")
+            continue
+        params = described(path)
+        lines.append("| Parameter | Description |\n| --- | --- |")
+        lines.extend(f"| `{n}` | {params.get(n, '')} |" for n in names)
     return "\n".join(lines) + "\n"
+
+
+# --- search-areas.md ----------------------------------------------------------------------------
 
 
 def build_search_areas() -> str:
     areas = json.loads((DOCS / "search-areas.json").read_text())[0]["areas"]
     lines = [header("Search areas", "search-areas.json",
-                    "What each query.* parameter searches, highest-weighted fields first. "
-                    "✓ = synonyms are matched. An area name also works in AREA[...], e.g. AREA[ConditionSearch].")]  # fmt: skip
+                    "Every field each query.* parameter searches, highest weight first. ✓ = synonyms are matched. "
+                    "An area name also works in AREA[...], e.g. AREA[ConditionSearch].")]  # fmt: skip
     for area in areas:
         param = f"`query.{area['param']}`" if area.get("param") else "no parameter; use AREA[...]"
         fields = []
         for part in sorted(area["parts"], key=lambda p: -p["weight"]):
             for piece in part["pieces"]:
                 fields.append(piece + (" ✓" if part.get("isSynonyms") else ""))
-        shown = ", ".join(fields[:12]) + (f", … ({len(fields)} fields)" if len(fields) > 12 else "")
-        lines.append(f"- **{area['name']}** ({param}, UI: {area.get('uiLabel', '-')}): {shown}")
+        lines.append(f"- **{area['name']}** ({param}, UI: {area.get('uiLabel', '-')}, {len(fields)} fields): {', '.join(fields)}")
     return "\n".join(lines) + "\n"
+
+
+# --- enums.md --------------------------------------------------------------------------------------
+
+
+def build_enums() -> str:
+    enums = json.loads((DOCS / "enums.json").read_text())
+    lines = [header("Enum values", "enums.json",
+                    "Exact values for every enum type; use them as written, e.g. AREA[Phase]PHASE3. "
+                    "'Used by' lists the fields that take that enum.")]  # fmt: skip
+    for enum in sorted(enums, key=lambda e: e["type"]):
+        values = ", ".join(f"`{v['value']}`" for v in enum["values"])
+        lines.append(f"- **{enum['type']}** (used by {', '.join(enum.get('pieces', []))}): {values}")
+    return "\n".join(lines) + "\n"
+
+
+# --- data-structure/ --------------------------------------------------------------------------------
 
 
 def _walk(nodes, path=()):
     for node in nodes:
         yield path, node
-        yield from _walk(node.get("children", []), path + (node["name"],))
+        yield from _walk(node.get("children", []), path + (node,))
 
 
-def build_fields(enum_names: set[str]) -> tuple[str, set[str]]:
+def _slug(text: str) -> str:
+    return re.sub(r"(?<!^)(?=[A-Z])", "-", text.removesuffix("Module")).lower()
+
+
+def build_data_structure() -> dict[str, str]:
+    """data-structure/index.md plus one file per module: {relative path: text}."""
     meta = json.loads((DOCS / "metadata.json").read_text())
-    used_enums: set[str] = set()
-    rows: dict[str, list[str]] = {}
+    modules: dict[str, dict] = {}
     for path, node in _walk(meta):
-        section = path[0] if path else node["name"]
-        if section not in FILTER_SECTIONS or node["sourceType"] == "STRUCT":
+        if not path:  # a section itself (or the top-level hasResults flag)
+            if node["sourceType"] != "STRUCT":
+                modules.setdefault("other", {"title": "Top-level flags", "section": "-", "rows": []})["rows"].append(node)
             continue
-        base = node["type"].removesuffix("[]")
-        if base in enum_names:
-            used_enums.add(base)
-            kind = f"enum {base}"
-        elif base in SCALAR_TYPES or node["sourceType"] in {"DATE", "NUMERIC", "BOOLEAN"}:
-            kind = node["sourceType"].lower()
-        else:
-            continue  # free text: search it with query.* instead
-        module = path[1] if len(path) > 1 else section
-        rows.setdefault(module, []).append(f"| `{node['piece']}` | {kind} | {plain(node.get('title', ''))} |")
-    lines = [header("Filterable fields for AREA[...]", "metadata.json",
-                    "Fields with fixed values, dates, numbers or booleans, grouped by module. "
-                    "Use as AREA[Piece]VALUE or AREA[Piece]RANGE[min,max]. Enum values are in references/enums.md. "
-                    "Free-text fields are searched with query.* parameters (see references/search-areas.md).")]  # fmt: skip
-    for module, module_rows in rows.items():
-        lines.append(f"\n## {module}\n\n| Field | Type | Meaning |\n| --- | --- | --- |")
-        lines.extend(module_rows)
-    return "\n".join(lines) + "\n", used_enums
+        section = path[0]
+        module = path[1] if len(path) > 1 else node
+        key = f"{SECTION_NAMES.get(section['name'], section['name'])}.{_slug(module['name'])}"
+        entry = modules.setdefault(key, {"title": module.get("title", module["name"]), "section": section["name"], "rows": []})
+        if node is not module:
+            entry["rows"].append(node)
 
-
-def build_enums(used: set[str], enums: list[dict]) -> str:
-    lines = [header("Enum values", "enums.json",
-                    "Exact values for enum fields; use them as written, e.g. AREA[Phase]PHASE3.")]  # fmt: skip
-    for enum in sorted((e for e in enums if e["type"] in used), key=lambda e: e["type"]):
-        values = ", ".join(f"`{v['value']}`" for v in enum["values"])
-        lines.append(f"- **{enum['type']}**: {values}")
-    return "\n".join(lines) + "\n"
+    files: dict[str, str] = {}
+    index = [header("Study data structure: index", "metadata.json",
+                    "Every field of a study record, grouped by module. Read the ONE module file you need. "
+                    "Field names (\"pieces\") work in AREA[Piece]...; dates and numbers also in RANGE[...].")]  # fmt: skip
+    index.append("| Module | Section | Fields | File |\n| --- | --- | --- | --- |")
+    for key, module in modules.items():
+        rows = [n for n in module["rows"] if n["sourceType"] != "STRUCT" or n.get("nested")]
+        if not rows:
+            continue
+        name = f"data-structure/{key}.md"
+        index.append(f"| {plain(module['title'])} | {module['section']} | {len(rows)} | {name} |")
+        body = [header(f"Fields: {plain(module['title'])}", "metadata.json",
+                       "Legend: ⤷ = nested group, use SEARCH[Name](...) to match fields within one item; "
+                       "✓ = synonyms matched; search-only = usable in AREA[...] but not returned in records.")]  # fmt: skip
+        body.append("| Field | Type | Meaning | Notes |\n| --- | --- | --- | --- |")
+        for n in rows:
+            notes = []
+            if n.get("nested"):
+                notes.append(f"⤷ SEARCH[{n['piece']}]")
+            if n.get("synonyms"):
+                notes.append("✓")
+            if n.get("indexedOnly"):
+                notes.append("search-only")
+            if n.get("altPieceNames"):
+                notes.append("also: " + ", ".join(n["altPieceNames"]))
+            meaning = plain(n.get("title"))
+            if n.get("description"):
+                meaning += f". {plain(n['description'])}"
+            body.append(f"| `{n['piece']}` | {plain(n['type'])} | {meaning} | {'; '.join(notes)} |")
+        files[name] = "\n".join(body) + "\n"
+    files["data-structure/index.md"] = "\n".join(index) + "\n"
+    return files
 
 
 def main() -> None:
-    OUT.mkdir(parents=True, exist_ok=True)
-    enums = json.loads((DOCS / "enums.json").read_text())
-    fields_md, used_enums = build_fields({e["type"] for e in enums})
+    if OUT.exists():
+        shutil.rmtree(OUT)  # remove files that no longer exist upstream
+    (OUT / "data-structure").mkdir(parents=True)
     files = {
         "parameters.md": build_parameters(),
         "search-areas.md": build_search_areas(),
-        "fields.md": fields_md,
-        "enums.md": build_enums(used_enums, enums),
+        "enums.md": build_enums(),
         "essie-syntax.md": (DOCS / "essie-syntax.md").read_text(),
+        **build_data_structure(),
     }
-    for name, text in files.items():
+    for name, text in sorted(files.items()):
         (OUT / name).write_text(text)
-        print(f"{name:18} {len(text):>7,} chars  ~{len(text) // 4:>6,} tokens")
+    biggest = max(files.items(), key=lambda kv: len(kv[1]))
+    print(f"{len(files)} files, {sum(len(t) for t in files.values()) // 4:,} tokens in total")
+    print(f"largest: {biggest[0]} (~{len(biggest[1]) // 4:,} tokens)")
+    for name in ["data-structure/index.md", "parameters.md", "search-areas.md", "enums.md"]:
+        print(f"  {name:28} ~{len(files[name]) // 4:,} tokens")
 
 
 if __name__ == "__main__":

@@ -73,20 +73,23 @@ def test_reference_is_read_on_demand_through_the_tool():
 def test_unknown_reference_is_refused_with_the_list_of_files():
     model, seen = scripted(
         ("read_reference", {"path": "../../../../etc/passwd"}),
-        ("read_reference", {"path": "references/fields.md"}),
+        ("read_reference", {"path": "references/data-structure/index.md"}),
+        ("read_reference", {"path": "references/data-structure/protocol.design.md"}),
         ("SearchDecision", PLAN),
     )
     result = decide(SearchPlannerAgent(model))
     told = seen_text(seen["prompts"][-1])
-    assert "Unknown reference '../../../../etc/passwd'" in told and "references/fields.md" in told
-    assert result.references_read == ["references/fields.md"]  # only the valid file was read
+    assert "Unknown reference '../../../../etc/passwd'" in told and "references/data-structure/index.md" in told
+    assert "EnrollmentCount" in told  # a module file reached through the index
+    # only the valid files were read
+    assert result.references_read == ["references/data-structure/index.md", "references/data-structure/protocol.design.md"]
 
 
 def test_concurrent_runs_keep_separate_state():
     def model(messages, info: AgentInfo):
         question = seen_text(messages[:1])
         if not any(isinstance(p, ToolCallPart) for m in messages for p in getattr(m, "parts", [])):
-            ref = "references/enums.md" if "A?" in question else "references/fields.md"
+            ref = "references/enums.md" if "A?" in question else "references/data-structure/index.md"
             return ModelResponse(parts=[ToolCallPart("read_reference", {"path": ref})])
         return ModelResponse(parts=[ToolCallPart(output_tool(info, "SearchDecision"), PLAN)])
 
@@ -98,7 +101,7 @@ def test_concurrent_runs_keep_separate_state():
         )
 
     a, b = asyncio.run(both())
-    assert a.references_read == ["references/enums.md"] and b.references_read == ["references/fields.md"]
+    assert a.references_read == ["references/enums.md"] and b.references_read == ["references/data-structure/index.md"]
 
 
 def test_invalid_plan_is_sent_back_and_fixed():

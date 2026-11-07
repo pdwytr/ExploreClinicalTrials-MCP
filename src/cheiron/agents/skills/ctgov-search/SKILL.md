@@ -75,6 +75,8 @@ Rules for the `stats/*` endpoints (checked against the live API):
 - Same-site conditions need `SEARCH[Location](...)`:
   `SEARCH[Location](AREA[LocationCountry]United States AND AREA[LocationStatus]RECRUITING)`.
 - Enum values are UPPER_SNAKE_CASE exactly as listed in references/enums.md.
+- Search-only counters filter on list sizes, e.g. trials testing 2+ interventions:
+  `AREA[NumInterventions]RANGE[2,MAX]`.
 
 ## Rules learned from the live API
 
@@ -161,8 +163,8 @@ something it never names ("this drug" with no drug given).
 
 | Read | When |
 | --- | --- |
-| references/fields.md | You need an `AREA[...]` field not shown above (e.g. a date, design or eligibility field) |
+| references/data-structure/index.md | You need a field not shown above, or a field's exact meaning (dates, design, eligibility, results, counters such as `NumInterventions`). The index lists every module of a study record; then read only that module's file |
 | references/enums.md | You need the exact allowed values of an enum field |
 | references/search-areas.md | Unsure which `query.*` parameter covers a concept, or which fields it searches |
-| references/parameters.md | You need a parameter not in the table above (e.g. `filter.geo`, `query.outc`) |
+| references/parameters.md | You need a parameter not in the tables above (e.g. `filter.geo`, `query.outc`, `types` on stats) |
 | references/essie-syntax.md | Rare operators (`COVERAGE`, `EXPANSION`, `MISSING`, `DISTANCE`) or after a syntax error you cannot resolve |

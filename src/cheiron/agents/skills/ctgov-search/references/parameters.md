@@ -1,8 +1,10 @@
-# Search parameters (GET /studies)
+# Parameters by endpoint
 
-The parameters you may set. Paging, fields and sorting are set by code.
+What you may set on each endpoint. Paging, fields, format and sorting are set by code.
 Generated from `docs/ctgov/openapi.yaml` (API 2.0.5) by scripts/build_ctgov_skill.py.
 
+
+## `studies` (GET /studies)
 
 | Parameter | Description |
 | --- | --- |
@@ -19,3 +21,26 @@ Generated from `docs/ctgov/openapi.yaml` (API 2.0.5) by scripts/build_ctgov_skil
 | `filter.geo` | Filter by geo-function. Currently only distance function is supported. Format: `distance(latitude,longitude,distance)` |
 | `filter.ids` | Filter by comma- or pipe-separated list of NCT IDs (a.k.a. ClinicalTrials.gov identifiers). The provided IDs will be searched in NCTId and NCTIdAlias fields. |
 | `filter.overallStatus` | Filter by comma- or pipe-separated list of statuses |
+
+## `study` (GET /studies/{nctId})
+
+| Parameter | Description |
+| --- | --- |
+| `nctId` | NCT Number of a study. If found in NCTIdAlias field, 301 HTTP redirect to the actual study will be returned. |
+
+## `stats/field/values` (GET /stats/field/values)
+
+| Parameter | Description |
+| --- | --- |
+| `fields` | Filter by piece names or field paths of leaf fields. See Data Structure for the available values. If specified, must be non-empty comma- or pipe-separated list of fields to return. |
+| `types` | Filter by field types |
+
+## `stats/field/sizes` (GET /stats/field/sizes)
+
+| Parameter | Description |
+| --- | --- |
+| `fields` | Filter by piece names or field paths of leaf fields. See Data Structure for the available values. If specified, must be non-empty comma- or pipe-separated list of fields to return. If unspecified, all available stats will be returned. |
+
+## `stats/size` (GET /stats/size)
+
+No parameters.

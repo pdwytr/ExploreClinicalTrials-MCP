@@ -43,6 +43,15 @@
             "description": "Identifier(s) that are considered \"Obsolete\" or \"Duplicate\". No study is displayed on public site. Request is redirected/forwarded to another NCT Identifier"
           },
           {
+            "name": "numNctAliases",
+            "piece": "NumNCTAliases",
+            "title": "Number of obsolete NCT's associated with a published NCT",
+            "indexedOnly": true,
+            "sourceType": "FUNC NOccrs(NCTIdAlias)",
+            "type": "short",
+            "description": "Number of obsolete identifiers for a NCTId"
+          },
+          {
             "name": "orgStudyIdInfo",
             "piece": "OrgStudyIdInfo",
             "sourceType": "STRUCT",
@@ -149,6 +158,18 @@
                 "type": "text",
                 "description": "URL link based on SecondaryId and SecondaryIdType, including system-generated links to NIH RePORTER, specifically (associated with the types of federal funding identified as SecondaryIdType)"
               }
+            ]
+          },
+          {
+            "name": "numSecondaryIds",
+            "piece": "NumSecondaryIds",
+            "title": "Number of Secondary IDs",
+            "indexedOnly": true,
+            "sourceType": "FUNC NOccrs(SecondaryId)",
+            "type": "short",
+            "description": "Number of Secondary ID for an NCT",
+            "altPieceNames": [
+              "NUMBER-OF-SECONDARY_IDS"
             ]
           },
           {
@@ -484,6 +505,15 @@
             ]
           },
           {
+            "name": "studyFirstSubmitYear",
+            "piece": "StudyFirstSubmitYear",
+            "title": "Study First Submitted Year",
+            "indexedOnly": true,
+            "sourceType": "FUNC MinYear(StudyFirstSubmitDate)",
+            "type": "short",
+            "rules": "System generated"
+          },
+          {
             "name": "studyFirstSubmitQcDate",
             "piece": "StudyFirstSubmitQCDate",
             "title": "Study First Submission Date that Met QC Criteria",
@@ -512,6 +542,15 @@
                 "altPieceNames": [
                   "STUDY-FIRST-POSTED"
                 ]
+              },
+              {
+                "name": "studyFirstPostYear",
+                "piece": "StudyFirstPostYear",
+                "title": "Year the Study First Posted on the Public Site",
+                "indexedOnly": true,
+                "sourceType": "FUNC MinYear(StudyFirstPostDate)",
+                "type": "short",
+                "rules": "System generated"
               },
               {
                 "name": "type",
@@ -544,6 +583,15 @@
             ]
           },
           {
+            "name": "resultsFirstSubmitYear",
+            "piece": "ResultsFirstSubmitYear",
+            "title": "Results First Submitted Year",
+            "indexedOnly": true,
+            "sourceType": "FUNC MinYear(ResultsFirstSubmitDate)",
+            "type": "short",
+            "rules": "System generated"
+          },
+          {
             "name": "resultsFirstSubmitQcDate",
             "piece": "ResultsFirstSubmitQCDate",
             "title": "Results First Submitted that Met QC Criteria",
@@ -574,6 +622,15 @@
                 ]
               },
               {
+                "name": "resultsFirstPostYear",
+                "piece": "ResultsFirstPostYear",
+                "title": "Results First Posted Year",
+                "indexedOnly": true,
+                "sourceType": "FUNC MinYear(ResultsFirstPostDate)",
+                "type": "short",
+                "rules": "System generated"
+              },
+              {
                 "name": "type",
                 "piece": "ResultsFirstPostDateType",
                 "title": "Results First Posted Date Type",
@@ -597,6 +654,15 @@
               "DISPOSITION-FIRST-SUBMITTED",
               "FIRST-RECEIVED-DISPOSITION-DATE"
             ]
+          },
+          {
+            "name": "dispFirstSubmitYear",
+            "piece": "DispFirstSubmitYear",
+            "title": "Certification/Extension First Submitted Year",
+            "indexedOnly": true,
+            "sourceType": "FUNC MinYear(DispFirstSubmitDate)",
+            "type": "short",
+            "rules": "System generated"
           },
           {
             "name": "dispFirstSubmitQcDate",
@@ -629,6 +695,15 @@
                 ]
               },
               {
+                "name": "dispFirstPostYear",
+                "piece": "DispFirstPostYear",
+                "title": "Certification/Extension First Posted Year",
+                "indexedOnly": true,
+                "sourceType": "FUNC MinYear(DispFirstPostDate)",
+                "type": "short",
+                "rules": "System generated"
+              },
+              {
                 "name": "type",
                 "piece": "DispFirstPostDateType",
                 "title": "Certification/Extension First Posted Date Type",
@@ -654,6 +729,15 @@
             ]
           },
           {
+            "name": "lastUpdateSubmitYear",
+            "piece": "LastUpdateSubmitYear",
+            "title": "Last Update Submitted Year",
+            "indexedOnly": true,
+            "sourceType": "FUNC MinYear(LastUpdateSubmitDate)",
+            "type": "short",
+            "rules": "System generated"
+          },
+          {
             "name": "lastUpdatePostDateStruct",
             "piece": "LastUpdatePostDateStruct",
             "sourceType": "STRUCT",
@@ -671,6 +755,16 @@
                 "altPieceNames": [
                   "LAST-UPDATE-POSTED"
                 ]
+              },
+              {
+                "name": "lastUpdatePostYear",
+                "piece": "LastUpdatePostYear",
+                "title": "Last Update Posted Year",
+                "indexedOnly": true,
+                "sourceType": "FUNC MinYear(LastUpdatePostDate)",
+                "type": "short",
+                "description": "Study record last update posted year on public site",
+                "rules": "System generated"
               },
               {
                 "name": "type",
@@ -870,6 +964,24 @@
                 ]
               }
             ]
+          },
+          {
+            "name": "numCollaborators",
+            "piece": "NumCollaborators",
+            "title": "Number of Collaborators for a study",
+            "indexedOnly": true,
+            "sourceType": "FUNC NOccrs(Collaborator)",
+            "type": "short",
+            "description": "number of collaborators",
+            "rules": "internal"
+          },
+          {
+            "name": "numCollaboratorsPlusLead",
+            "piece": "NumCollaboratorsPlusLead",
+            "title": "Number of Collaborators Plus Lead Sponsor",
+            "indexedOnly": true,
+            "sourceType": "FUNC NOccrs(LeadSponsor, Collaborator)",
+            "type": "short"
           }
         ]
       },
@@ -1036,6 +1148,18 @@
             }
           },
           {
+            "name": "numConditions",
+            "piece": "NumConditions",
+            "title": "Number of Conditions for a Study",
+            "indexedOnly": true,
+            "sourceType": "FUNC NOccrs(Condition)",
+            "type": "short",
+            "rules": "Internally calculated",
+            "altPieceNames": [
+              "NUMBER-OF-CONDITIONS"
+            ]
+          },
+          {
             "name": "keywords",
             "piece": "Keyword",
             "title": "Keyword",
@@ -1049,6 +1173,18 @@
               "label": "Keywords",
               "url": "https://clinicaltrials.gov/policy/protocol-definitions#Keywords"
             }
+          },
+          {
+            "name": "numKeywords",
+            "piece": "NumKeywords",
+            "title": "Number of Keywords for a Study",
+            "indexedOnly": true,
+            "sourceType": "FUNC NOccrs(Keyword)",
+            "type": "short",
+            "rules": "Internally calculated",
+            "altPieceNames": [
+              "NUMBER-OF-KEYWORDS"
+            ]
           }
         ]
       },
@@ -1162,6 +1298,16 @@
               "label": "Study Phase",
               "url": "https://clinicaltrials.gov/policy/protocol-definitions#StudyPhase"
             }
+          },
+          {
+            "name": "numPhases",
+            "piece": "NumPhases",
+            "title": "Number of Phases",
+            "indexedOnly": true,
+            "sourceType": "FUNC NOccrs(Phase)",
+            "type": "short",
+            "description": "Indicate which phase(s) the study is in",
+            "rules": "Internally calculated"
           },
           {
             "name": "designInfo",
@@ -1317,6 +1463,13 @@
                       "label": "Masking",
                       "url": "https://clinicaltrials.gov/policy/protocol-definitions#IntMasking"
                     }
+                  },
+                  {
+                    "name": "numDesignWhoMaskeds",
+                    "piece": "NumDesignWhoMaskeds",
+                    "indexedOnly": true,
+                    "sourceType": "FUNC NOccrs(DesignWhoMasked)",
+                    "type": "short"
                   }
                 ]
               }
@@ -1486,8 +1639,30 @@
                   "label": "Arm/Group Intervention Name(s)",
                   "url": "https://clinicaltrials.gov/policy/protocol-definitions#InterventionName"
                 }
+              },
+              {
+                "name": "numArmGroupInterventionNames",
+                "piece": "NumArmGroupInterventionNames",
+                "indexedOnly": true,
+                "sourceType": "FUNC NOccrs(ArmGroupInterventionName)",
+                "type": "short"
               }
             ]
+          },
+          {
+            "name": "numArmGroups",
+            "piece": "NumArmGroups",
+            "indexedOnly": true,
+            "sourceType": "FUNC NOccrs(ArmGroup)",
+            "type": "short",
+            "rules": "Required for FRED",
+            "altPieceNames": [
+              "NUMBER-OF-ARM-GROUPS"
+            ],
+            "dedLink": {
+              "label": "Number of Arms",
+              "url": "https://clinicaltrials.gov/policy/protocol-definitions#NumberOfArms"
+            }
           },
           {
             "name": "interventions",
@@ -1564,6 +1739,13 @@
                 "description": "Arm/Group and Intervention Cross Reference"
               },
               {
+                "name": "numInterventionArmGroupLabels",
+                "piece": "NumInterventionArmGroupLabels",
+                "indexedOnly": true,
+                "sourceType": "FUNC NOccrs(InterventionArmGroupLabel)",
+                "type": "short"
+              },
+              {
                 "name": "otherNames",
                 "piece": "InterventionOtherName",
                 "title": "Other Intervention Name",
@@ -1578,7 +1760,28 @@
                   "label": "Other Intervention Name(s)",
                   "url": "https://clinicaltrials.gov/policy/protocol-definitions#InterventionOtherName"
                 }
+              },
+              {
+                "name": "numInterventionOtherNames",
+                "piece": "NumInterventionOtherNames",
+                "title": "Other Intervention Name Count",
+                "indexedOnly": true,
+                "sourceType": "FUNC NOccrs(InterventionOtherName)",
+                "type": "short",
+                "rules": "Internally calculated"
               }
+            ]
+          },
+          {
+            "name": "numInterventions",
+            "piece": "NumInterventions",
+            "title": "Number of Interventions",
+            "indexedOnly": true,
+            "sourceType": "FUNC NOccrs(Intervention)",
+            "type": "short",
+            "rules": "Internally calculated",
+            "altPieceNames": [
+              "NUMBER-OF-INTERVENTIONS"
             ]
           }
         ]
@@ -1652,6 +1855,18 @@
             ]
           },
           {
+            "name": "numPrimaryOutcomes",
+            "piece": "NumPrimaryOutcomes",
+            "title": "Number of Primary Outcome Measures",
+            "indexedOnly": true,
+            "sourceType": "FUNC NOccrs(PrimaryOutcome)",
+            "type": "short",
+            "rules": "Internally calculated",
+            "altPieceNames": [
+              "NUMBER-OF-PRIMARY-OMS"
+            ]
+          },
+          {
             "name": "secondaryOutcomes",
             "piece": "SecondaryOutcome",
             "title": "Secondary Outcome Measure",
@@ -1705,6 +1920,18 @@
             ]
           },
           {
+            "name": "numSecondaryOutcomes",
+            "piece": "NumSecondaryOutcomes",
+            "title": "Number of Secondary Measure Outcomes",
+            "indexedOnly": true,
+            "sourceType": "FUNC NOccrs(SecondaryOutcome)",
+            "type": "short",
+            "rules": "Internally calculated",
+            "altPieceNames": [
+              "NUMBER-OF-SECONDARY-OMS"
+            ]
+          },
+          {
             "name": "otherOutcomes",
             "piece": "OtherOutcome",
             "title": "Other Outcome Measure",
@@ -1753,6 +1980,24 @@
                 }
               }
             ]
+          },
+          {
+            "name": "numOtherOutcomes",
+            "piece": "NumOtherOutcomes",
+            "title": "Num of Other Outcome Measures",
+            "indexedOnly": true,
+            "sourceType": "FUNC NOccrs(OtherOutcome)",
+            "type": "short",
+            "rules": "Internally calculated"
+          },
+          {
+            "name": "numOutcomes",
+            "piece": "NumOutcomes",
+            "title": "Number of Outcome Measures",
+            "indexedOnly": true,
+            "sourceType": "FUNC NOccrs(PrimaryOutcome, SecondaryOutcome, OtherOutcome)",
+            "type": "short",
+            "rules": "Internally calculated"
           }
         ]
       },
@@ -1880,6 +2125,14 @@
             ]
           },
           {
+            "name": "numStdAges",
+            "piece": "NumStdAges",
+            "title": "Num Std Measure Ages",
+            "indexedOnly": true,
+            "sourceType": "FUNC NOccrs(StdAge)",
+            "type": "short"
+          },
+          {
             "name": "studyPopulation",
             "piece": "StudyPopulation",
             "title": "Study Population Description",
@@ -1987,6 +2240,14 @@
             ]
           },
           {
+            "name": "numCentralContacts",
+            "piece": "NumCentralContacts",
+            "title": "Number of Central Contacts",
+            "indexedOnly": true,
+            "sourceType": "FUNC NOccrs(CentralContact)",
+            "type": "short"
+          },
+          {
             "name": "overallOfficials",
             "piece": "OverallOfficial",
             "title": "Overall Study Official",
@@ -2034,6 +2295,14 @@
                 }
               }
             ]
+          },
+          {
+            "name": "numOverallOfficials",
+            "piece": "NumOverallOfficials",
+            "title": "Number of Overall Officials",
+            "indexedOnly": true,
+            "sourceType": "FUNC NOccrs(OverallOfficial)",
+            "type": "short"
           },
           {
             "name": "locations",
@@ -2214,12 +2483,50 @@
                 ]
               },
               {
+                "name": "numLocationContacts",
+                "piece": "NumLocationContacts",
+                "title": "Number of Individual Location Contacts",
+                "indexedOnly": true,
+                "sourceType": "FUNC NOccrs(LocationContact)",
+                "type": "short"
+              },
+              {
+                "name": "countryCode",
+                "piece": "LocationCountryCode",
+                "title": "ISO Country Code",
+                "indexedOnly": true,
+                "sourceType": "FUNC CountryCode(LocationCountry)",
+                "type": "keyword"
+              },
+              {
                 "name": "geoPoint",
                 "piece": "LocationGeoPoint",
                 "title": "Location Geo Point",
                 "sourceType": "FUNC GeoPoint(LocationCity, LocationState, LocationCountry)",
                 "type": "GeoPoint"
               }
+            ]
+          },
+          {
+            "name": "numLocations",
+            "piece": "NumLocations",
+            "title": "Number of Individual Sites/Locations",
+            "indexedOnly": true,
+            "sourceType": "FUNC NOccrs(Location)",
+            "type": "short",
+            "altPieceNames": [
+              "NUMBER-OF-LOCATIONS"
+            ]
+          },
+          {
+            "name": "numUniqueLocationCountries",
+            "piece": "NumUniqueLocationCountries",
+            "title": "Num Unique Measure Location Countries",
+            "indexedOnly": true,
+            "sourceType": "FUNC NUniq(LocationCountry)",
+            "type": "short",
+            "altPieceNames": [
+              "NUMBER-OF-COUNTRIES"
             ]
           }
         ]
@@ -2309,8 +2616,35 @@
                     "synonyms": true
                   }
                 ]
+              },
+              {
+                "name": "numRetractionsForRef",
+                "piece": "NumRetractionsForRef",
+                "title": "Number of Reference Retractions",
+                "indexedOnly": true,
+                "sourceType": "FUNC NOccrs(Retraction)",
+                "type": "short"
               }
             ]
+          },
+          {
+            "name": "numReferences",
+            "piece": "NumReferences",
+            "title": "Number of References to an Expanded Access Study",
+            "indexedOnly": true,
+            "sourceType": "FUNC NOccrs(Reference)",
+            "type": "short",
+            "altPieceNames": [
+              "NUMBER-OF-CITATIONS"
+            ]
+          },
+          {
+            "name": "numRetractionsAllRefs",
+            "piece": "NumRetractionsAllRefs",
+            "title": "Number of Retractions All Refs",
+            "indexedOnly": true,
+            "sourceType": "FUNC NOccrs(Retraction)",
+            "type": "short"
           },
           {
             "name": "seeAlsoLinks",
@@ -2356,6 +2690,15 @@
                 }
               }
             ]
+          },
+          {
+            "name": "numSeeAlsoLinks",
+            "piece": "NumSeeAlsoLinks",
+            "title": "Number of See Also Links",
+            "indexedOnly": true,
+            "sourceType": "FUNC NOccrs(SeeAlsoLink)",
+            "type": "short",
+            "rules": "EA does not have this data element"
           },
           {
             "name": "availIpds",
@@ -2422,6 +2765,15 @@
                 }
               }
             ]
+          },
+          {
+            "name": "numAvailIpDs",
+            "piece": "NumAvailIPDs",
+            "title": "Number of Available IPDs",
+            "indexedOnly": true,
+            "sourceType": "FUNC NOccrs(AvailIPD)",
+            "type": "short",
+            "rules": "For INT/OBS. EA does not have this data element"
           }
         ]
       },
@@ -2475,6 +2827,17 @@
               "label": "IPD Sharing Supporting Information Type",
               "url": "https://clinicaltrials.gov/policy/protocol-definitions#IPDSharingSuppInfoType"
             }
+          },
+          {
+            "name": "numIpdSharingInfoTypes",
+            "piece": "NumIPDSharingInfoTypes",
+            "title": "Number of IPDSharing Info Types",
+            "indexedOnly": true,
+            "sourceType": "FUNC NOccrs(IPDSharingInfoType)",
+            "maxChars": 1000,
+            "type": "short",
+            "description": "Number of IPD Types Selected",
+            "rules": "For INT/OBS. EA does not have this data element"
           },
           {
             "name": "timeFrame",
@@ -2635,6 +2998,15 @@
             ]
           },
           {
+            "name": "numFlowGroups",
+            "piece": "NumFlowGroups",
+            "title": "Number of Arm/Groups",
+            "indexedOnly": true,
+            "sourceType": "FUNC NOccrs(FlowGroup)",
+            "type": "short",
+            "description": "Number of Arm/Group"
+          },
+          {
             "name": "periods",
             "piece": "FlowPeriod",
             "title": "Period",
@@ -2755,8 +3127,27 @@
                         }
                       }
                     ]
+                  },
+                  {
+                    "name": "numFlowAchievements",
+                    "piece": "NumFlowAchievements",
+                    "title": "Number of Arm/Groups per Milestone",
+                    "indexedOnly": true,
+                    "sourceType": "FUNC NOccrs(FlowAchievement)",
+                    "type": "short",
+                    "description": "Number of Arms/Groups (for each milestone)",
+                    "rules": "system generated"
                   }
                 ]
+              },
+              {
+                "name": "numFlowMilestones",
+                "piece": "NumFlowMilestones",
+                "title": "Number of Milestones",
+                "indexedOnly": true,
+                "sourceType": "FUNC NOccrs(FlowMilestone)",
+                "type": "short",
+                "description": "Number of milestones within a period"
               },
               {
                 "name": "dropWithdraws",
@@ -2837,10 +3228,39 @@
                         }
                       }
                     ]
+                  },
+                  {
+                    "name": "numFlowReasons",
+                    "piece": "NumFlowReasons",
+                    "title": "Number of Arm/Group for a Reason Not Completed",
+                    "indexedOnly": true,
+                    "sourceType": "FUNC NOccrs(FlowReason)",
+                    "type": "short",
+                    "description": "number of arm/group in reason not completed",
+                    "rules": "internally calculated"
                   }
                 ]
+              },
+              {
+                "name": "numFlowDropWithdraws",
+                "piece": "NumFlowDropWithdraws",
+                "title": "Number of Reason Not Completed",
+                "indexedOnly": true,
+                "sourceType": "FUNC NOccrs(FlowDropWithdraw)",
+                "type": "short",
+                "description": "Number of reasons not completed",
+                "rules": "internally calculated"
               }
             ]
+          },
+          {
+            "name": "numFlowPeriods",
+            "piece": "NumFlowPeriods",
+            "title": "Number of Periods",
+            "indexedOnly": true,
+            "sourceType": "FUNC NOccrs(FlowPeriod)",
+            "type": "short",
+            "description": "Number of periods"
           }
         ]
       },
@@ -2936,6 +3356,15 @@
             ]
           },
           {
+            "name": "numBaselineGroups",
+            "piece": "NumBaselineGroups",
+            "title": "Number of Baseline Arm/Groups",
+            "indexedOnly": true,
+            "sourceType": "FUNC NOccrs(BaselineGroup)",
+            "type": "short",
+            "description": "Number of Arm/Groups for Baseline"
+          },
+          {
             "name": "denoms",
             "piece": "BaselineDenom",
             "sourceType": "STRUCT",
@@ -2987,6 +3416,14 @@
                 ]
               }
             ]
+          },
+          {
+            "name": "numBaselineDenoms",
+            "piece": "NumBaselineDenoms",
+            "indexedOnly": true,
+            "sourceType": "FUNC NOccrs(BaselineDenom)",
+            "type": "short",
+            "description": "Number of BaselineDenomUnits (Row)"
           },
           {
             "name": "measures",
@@ -3150,6 +3587,13 @@
                 ]
               },
               {
+                "name": "numBaselineMeasureDenoms",
+                "piece": "NumBaselineMeasureDenoms",
+                "indexedOnly": true,
+                "sourceType": "FUNC NOccrs(BaselineMeasureDenom)",
+                "type": "short"
+              },
+              {
                 "name": "classes",
                 "piece": "BaselineClass",
                 "sourceType": "STRUCT",
@@ -3304,12 +3748,47 @@
                             "description": "Explain why baseline measure data are not available, if \"NA\" is reported for Baseline Measure Data."
                           }
                         ]
+                      },
+                      {
+                        "name": "numBaselineMeasurements",
+                        "piece": "NumBaselineMeasurements",
+                        "title": "Number of Arm/Groups",
+                        "indexedOnly": true,
+                        "sourceType": "FUNC NOccrs(BaselineMeasurement)",
+                        "type": "short",
+                        "description": "Number of Baseline Arm/Groups (internally calculated)"
                       }
                     ]
+                  },
+                  {
+                    "name": "numBaselineCategories",
+                    "piece": "NumBaselineCategories",
+                    "title": "Number of Categories",
+                    "indexedOnly": true,
+                    "sourceType": "FUNC NOccrs(BaselineCategory)",
+                    "type": "short",
+                    "description": "Number of categories per Baseline Measure"
                   }
                 ]
+              },
+              {
+                "name": "numBaselineClasses",
+                "piece": "NumBaselineClasses",
+                "indexedOnly": true,
+                "sourceType": "FUNC NOccrs(BaselineClass)",
+                "type": "short",
+                "description": "Number of classes (rows) per Baseline Measure (internally calculated)"
               }
             ]
+          },
+          {
+            "name": "numBaselineMeasures",
+            "piece": "NumBaselineMeasures",
+            "title": "Number of Baseline Measures",
+            "indexedOnly": true,
+            "sourceType": "FUNC NOccrs(BaselineMeasure)",
+            "type": "short",
+            "description": "Number of Baseline Measures (internally calculated)"
           }
         ]
       },
@@ -3537,6 +4016,13 @@
                 ]
               },
               {
+                "name": "numOutcomeGroups",
+                "piece": "NumOutcomeGroups",
+                "indexedOnly": true,
+                "sourceType": "FUNC NOccrs(OutcomeGroup)",
+                "type": "short"
+              },
+              {
                 "name": "denoms",
                 "piece": "OutcomeDenom",
                 "sourceType": "STRUCT",
@@ -3580,6 +4066,13 @@
                     ]
                   }
                 ]
+              },
+              {
+                "name": "numOutcomeDenoms",
+                "piece": "NumOutcomeDenoms",
+                "indexedOnly": true,
+                "sourceType": "FUNC NOccrs(OutcomeDenom)",
+                "type": "short"
               },
               {
                 "name": "classes",
@@ -3725,10 +4218,32 @@
                             "synonyms": true
                           }
                         ]
+                      },
+                      {
+                        "name": "numOutcomeMeasurements",
+                        "piece": "NumOutcomeMeasurements",
+                        "indexedOnly": true,
+                        "sourceType": "FUNC NOccrs(OutcomeMeasurement)",
+                        "type": "short"
                       }
                     ]
+                  },
+                  {
+                    "name": "numOutcomeCategories",
+                    "piece": "NumOutcomeCategories",
+                    "indexedOnly": true,
+                    "sourceType": "FUNC NOccrs(OutcomeCategory)",
+                    "type": "short"
                   }
                 ]
+              },
+              {
+                "name": "numOutcomeClasses",
+                "piece": "NumOutcomeClasses",
+                "indexedOnly": true,
+                "sourceType": "FUNC NOccrs(OutcomeClass)",
+                "type": "short",
+                "rules": "Conditionally Required"
               },
               {
                 "name": "analyses",
@@ -4000,10 +4515,37 @@
                       "label": "Comparison Group Selection",
                       "url": "https://clinicaltrials.gov/policy/results-definitions#GroupSelection"
                     }
+                  },
+                  {
+                    "name": "numOutcomeAnalysisGroupIds",
+                    "piece": "NumOutcomeAnalysisGroupIds",
+                    "title": "Number of selected Arm/Groups for Analysis",
+                    "indexedOnly": true,
+                    "sourceType": "FUNC NOccrs(OutcomeAnalysisGroupId)",
+                    "type": "short",
+                    "description": "Number of comparison groups selected for an Analysis (internal count)"
                   }
                 ]
+              },
+              {
+                "name": "numOutcomeAnalyses",
+                "piece": "NumOutcomeAnalyses",
+                "title": "Number of Analysis",
+                "indexedOnly": true,
+                "sourceType": "FUNC NOccrs(OutcomeAnalysis)",
+                "type": "short",
+                "description": "Number of Analyses per Outcome Measure (internally calculated)"
               }
             ]
+          },
+          {
+            "name": "numOutcomeMeasures",
+            "piece": "NumOutcomeMeasures",
+            "title": "Number of Outcome Measures",
+            "indexedOnly": true,
+            "sourceType": "FUNC NOccrs(OutcomeMeasure)",
+            "type": "short",
+            "description": "Number of Outcome Measures (internally calculated)"
           }
         ]
       },
@@ -4190,6 +4732,15 @@
             ]
           },
           {
+            "name": "numEventGroups",
+            "piece": "NumEventGroups",
+            "title": "Number of Arm/Group",
+            "indexedOnly": true,
+            "sourceType": "FUNC NOccrs(EventGroup)",
+            "type": "short",
+            "description": "Number of Arm/Group for Adverse Event (internal count)"
+          },
+          {
             "name": "seriousEvents",
             "piece": "SeriousEvent",
             "title": "Serious Adverse Event",
@@ -4317,8 +4868,28 @@
                     }
                   }
                 ]
+              },
+              {
+                "name": "numSeriousEventStatss",
+                "piece": "NumSeriousEventStatss",
+                "title": "Number of Event Groups",
+                "indexedOnly": true,
+                "sourceType": "FUNC NOccrs(SeriousEventStats)",
+                "type": "short",
+                "description": "Number of Event Group (Arm/Group in an Adverse Event)",
+                "rules": "internally calculated"
               }
             ]
+          },
+          {
+            "name": "numSeriousEvents",
+            "piece": "NumSeriousEvents",
+            "title": "Number of Serious Adverse Events",
+            "indexedOnly": true,
+            "sourceType": "FUNC NOccrs(SeriousEvent)",
+            "type": "short",
+            "description": "Number of Serious Adverse Events",
+            "rules": "Required"
           },
           {
             "name": "otherEvents",
@@ -4427,8 +4998,29 @@
                     }
                   }
                 ]
+              },
+              {
+                "name": "numOtherEventStatss",
+                "piece": "NumOtherEventStatss",
+                "indexedOnly": true,
+                "sourceType": "FUNC NOccrs(OtherEventStats)",
+                "type": "short"
               }
             ]
+          },
+          {
+            "name": "numOtherEvents",
+            "piece": "NumOtherEvents",
+            "indexedOnly": true,
+            "sourceType": "FUNC NOccrs(OtherEvent)",
+            "type": "short"
+          },
+          {
+            "name": "numEvents",
+            "piece": "NumEvents",
+            "indexedOnly": true,
+            "sourceType": "FUNC NOccrs(SeriousEvent, OtherEvent)",
+            "type": "short"
           }
         ]
       },
@@ -4675,6 +5267,15 @@
                     "type": "boolean"
                   }
                 ]
+              },
+              {
+                "name": "numUnpostedEvents",
+                "piece": "NumUnpostedEvents",
+                "title": "Number of events for the Results submission/review cycle",
+                "indexedOnly": true,
+                "sourceType": "FUNC NOccrs(UnpostedEvent)",
+                "type": "short",
+                "description": "Number of events for the Results submission/review cycle"
               }
             ]
           },
@@ -4745,6 +5346,15 @@
                     "description": "Date the violation is available on clinicaltrials.gov"
                   }
                 ]
+              },
+              {
+                "name": "numViolationEvents",
+                "piece": "NumViolationEvents",
+                "title": "Number of Violation Events",
+                "indexedOnly": true,
+                "sourceType": "FUNC NOccrs(ViolationEvent)",
+                "type": "short",
+                "description": "Number of FDAAA 801 violations - related events"
               }
             ]
           }
@@ -4872,6 +5482,15 @@
                 "description": "Document file size"
               }
             ]
+          },
+          {
+            "name": "numLargeDocs",
+            "piece": "NumLargeDocs",
+            "title": "Number of Uploaded Documents",
+            "indexedOnly": true,
+            "sourceType": "FUNC NOccrs(LargeDoc)",
+            "type": "short",
+            "description": "Number of uploaded documents for a study record (internally calculated)"
           }
         ]
       }
@@ -4907,6 +5526,15 @@
             "sourceType": "TEXT",
             "type": "text[]",
             "description": "Country for which all locations have been removed from the study"
+          },
+          {
+            "name": "numRemovedCountries",
+            "piece": "NumRemovedCountries",
+            "title": "Number of Removed Countries",
+            "indexedOnly": true,
+            "sourceType": "FUNC NOccrs(RemovedCountry)",
+            "type": "short",
+            "description": "Number of removed countries"
           },
           {
             "name": "submissionTracking",
@@ -5058,6 +5686,15 @@
             ]
           },
           {
+            "name": "numConditionMeshes",
+            "piece": "NumConditionMeshes",
+            "title": "Number of Condition MeSH Terms",
+            "indexedOnly": true,
+            "sourceType": "FUNC NOccrs(ConditionMesh)",
+            "type": "short",
+            "description": "Number of condition MeSH terms"
+          },
+          {
             "name": "ancestors",
             "piece": "ConditionAncestor",
             "title": "Ancestors of Condition MeSH Terms",
@@ -5083,6 +5720,14 @@
                 "description": "MeSH Heading"
               }
             ]
+          },
+          {
+            "name": "numConditionAncestors",
+            "piece": "NumConditionAncestors",
+            "title": "Number of Condition Ancestor MeSH Terms",
+            "indexedOnly": true,
+            "sourceType": "FUNC NOccrs(ConditionAncestor)",
+            "type": "short"
           },
           {
             "name": "browseLeaves",
@@ -5131,6 +5776,14 @@
             ]
           },
           {
+            "name": "numConditionBrowseLeafs",
+            "piece": "NumConditionBrowseLeafs",
+            "title": "Number of Condition Leaf Topics",
+            "indexedOnly": true,
+            "sourceType": "FUNC NOccrs(ConditionBrowseLeaf)",
+            "type": "short"
+          },
+          {
             "name": "browseBranches",
             "piece": "ConditionBrowseBranch",
             "title": "Condition Branch Topics",
@@ -5158,6 +5811,14 @@
                 "synonyms": true
               }
             ]
+          },
+          {
+            "name": "numConditionBrowseBranches",
+            "piece": "NumConditionBrowseBranches",
+            "title": "Number of Condition Branch Topics",
+            "indexedOnly": true,
+            "sourceType": "FUNC NOccrs(ConditionBrowseBranch)",
+            "type": "short"
           }
         ]
       },
@@ -5197,6 +5858,14 @@
             ]
           },
           {
+            "name": "numInterventionMeshes",
+            "piece": "NumInterventionMeshes",
+            "title": "Number of Intervention MeSH Terms",
+            "indexedOnly": true,
+            "sourceType": "FUNC NOccrs(InterventionMesh)",
+            "type": "short"
+          },
+          {
             "name": "ancestors",
             "piece": "InterventionAncestor",
             "title": "Ancestors of Intervention MeSH Terms",
@@ -5222,6 +5891,14 @@
                 "description": "MeSH Heading"
               }
             ]
+          },
+          {
+            "name": "numInterventionAncestors",
+            "piece": "NumInterventionAncestors",
+            "title": "Number of Intervention Ancestor MeSH Terms",
+            "indexedOnly": true,
+            "sourceType": "FUNC NOccrs(InterventionAncestor)",
+            "type": "short"
           },
           {
             "name": "browseLeaves",
@@ -5270,6 +5947,14 @@
             ]
           },
           {
+            "name": "numInterventionBrowseLeafs",
+            "piece": "NumInterventionBrowseLeafs",
+            "title": "Number of Intervention Leaf Topics",
+            "indexedOnly": true,
+            "sourceType": "FUNC NOccrs(InterventionBrowseLeaf)",
+            "type": "short"
+          },
+          {
             "name": "browseBranches",
             "piece": "InterventionBrowseBranch",
             "title": "Intervention Branch Topics",
@@ -5297,6 +5982,14 @@
                 "synonyms": true
               }
             ]
+          },
+          {
+            "name": "numInterventionBrowseBranches",
+            "piece": "NumInterventionBrowseBranches",
+            "title": "Number of Intervention Branch Topics",
+            "indexedOnly": true,
+            "sourceType": "FUNC NOccrs(InterventionBrowseBranch)",
+            "type": "short"
           }
         ]
       }

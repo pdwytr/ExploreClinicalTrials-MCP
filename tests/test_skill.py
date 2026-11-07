@@ -44,14 +44,36 @@ def test_body_stays_within_recommended_size():
     assert len(body) / 4 < 5000, "keep SKILL.md under ~5,000 tokens; move detail to references/"
 
 
-def test_every_reference_exists_and_is_linked_from_skill_md():
+def test_every_reference_is_reachable_through_the_index():
+    """SKILL.md lists the top-level references; data-structure/index.md lists every module file."""
     _, body = split_skill()
-    linked = set(re.findall(r"references/[\w.-]+\.md", body))
-    on_disk = {f"references/{p.name}" for p in (SKILL_DIR / "references").glob("*.md")}
-    assert linked == on_disk, "every reference file must be listed (with when to read it) in SKILL.md"
+    refs = SKILL_DIR / "references"
+    linked = set(re.findall(r"references/[\w./-]+\.md", body))
+    top_level = {f"references/{p.name}" for p in refs.glob("*.md")} | {"references/data-structure/index.md"}
+    assert linked == top_level, "SKILL.md must list (with when to read it) every top-level reference and the index"
+
+    index = (refs / "data-structure" / "index.md").read_text()
+    modules = {f"data-structure/{p.name}" for p in (refs / "data-structure").glob("*.md") if p.name != "index.md"}
+    assert set(re.findall(r"data-structure/[\w.-]+\.md", index)) == modules, "index must list every module file"
 
 
-@pytest.mark.parametrize("ref", sorted((SKILL_DIR / "references").glob("*.md")), ids=lambda p: p.name)
+def test_index_covers_every_field_of_the_data_structure():
+    meta = json.loads((SKILL_DIR.parents[3].parent / "docs" / "ctgov" / "metadata.json").read_text())
+
+    def leaf_pieces(nodes):
+        for n in nodes:
+            if n["sourceType"] != "STRUCT":
+                yield n["piece"]
+            yield from leaf_pieces(n.get("children", []))
+
+    module_text = "".join(p.read_text() for p in (SKILL_DIR / "references" / "data-structure").glob("*.md"))
+    documented = set(re.findall(r"\| `([A-Za-z0-9]+)` \|", module_text))
+    assert set(leaf_pieces(meta)) <= documented
+
+
+@pytest.mark.parametrize(
+    "ref", sorted((SKILL_DIR / "references").rglob("*.md")), ids=lambda p: p.relative_to(SKILL_DIR).as_posix()
+)
 def test_reference_files_stay_focused(ref):
     assert len(ref.read_text()) / 4 < 6000, "split large references so the agent loads less"
 

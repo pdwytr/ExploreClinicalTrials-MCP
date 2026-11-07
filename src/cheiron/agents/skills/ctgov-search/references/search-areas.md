@@ -1,25 +1,25 @@
 # Search areas
 
-What each query.* parameter searches, highest-weighted fields first. ✓ = synonyms are matched. An area name also works in AREA[...], e.g. AREA[ConditionSearch].
+Every field each query.* parameter searches, highest weight first. ✓ = synonyms are matched. An area name also works in AREA[...], e.g. AREA[ConditionSearch].
 Generated from `docs/ctgov/search-areas.json` (API 2.0.5) by scripts/build_ctgov_skill.py.
 
 
-- **BasicSearch** (`query.term`, UI: Other terms): NCTId, Acronym ✓, BriefTitle ✓, OfficialTitle ✓, Condition ✓, InterventionName ✓, InterventionOtherName ✓, Phase, StdAge, PrimaryOutcomeMeasure ✓, Keyword ✓, BriefSummary ✓, … (57 fields)
-- **ConditionSearch** (`query.cond`, UI: Conditions or disease): Condition ✓, BriefTitle ✓, OfficialTitle ✓, ConditionMeshTerm ✓, ConditionAncestorTerm ✓, Keyword ✓, NCTId
-- **InterventionSearch** (`query.intr`, UI: Intervention / treatment): InterventionName ✓, InterventionType, ArmGroupType, InterventionOtherName ✓, BriefTitle ✓, OfficialTitle ✓, ArmGroupLabel ✓, InterventionMeshTerm ✓, Keyword ✓, InterventionAncestorTerm ✓, InterventionDescription ✓, ArmGroupDescription ✓
-- **InterventionNameSearch** (no parameter; use AREA[...], UI: -): InterventionName ✓, InterventionOtherName ✓
-- **ObsoleteConditionSearch** (no parameter; use AREA[...], UI: -): Condition ✓, ConditionMeshTerm ✓, ConditionAncestorTerm ✓, Keyword ✓
-- **ExternalIdsSearch** (no parameter; use AREA[...], UI: -): OrgStudyId, SecondaryId
-- **ExternalIdTypesSearch** (no parameter; use AREA[...], UI: -): OrgStudyIdType, SecondaryIdType
-- **EligibilitySearch** (no parameter; use AREA[...], UI: -): EligibilityCriteria ✓, StudyPopulation ✓
-- **OutcomeSearch** (`query.outc`, UI: Outcome measure): PrimaryOutcomeMeasure ✓, SecondaryOutcomeMeasure ✓, PrimaryOutcomeDescription ✓, SecondaryOutcomeDescription ✓, OtherOutcomeMeasure ✓, OutcomeMeasureTitle ✓, OtherOutcomeDescription ✓, OutcomeMeasureDescription ✓, OutcomeMeasurePopulationDescription ✓
-- **OutcomeNameSearch** (no parameter; use AREA[...], UI: -): PrimaryOutcomeMeasure ✓, SecondaryOutcomeMeasure ✓, OtherOutcomeMeasure ✓, OutcomeMeasureTitle ✓
-- **TitleSearch** (`query.titles`, UI: Title / acronym): Acronym ✓, BriefTitle ✓, OfficialTitle ✓
-- **LocationSearch** (`query.locn`, UI: Location terms): LocationCity, LocationState, LocationCountry, LocationFacility, LocationZip
-- **ContactSearch** (no parameter; use AREA[...], UI: -): OverallOfficialName, CentralContactName, OverallOfficialAffiliation, LocationContactName
-- **NCTIdSearch** (no parameter; use AREA[...], UI: -): NCTId, NCTIdAlias
-- **IdSearch** (`query.id`, UI: Study IDs): NCTId, NCTIdAlias, Acronym ✓, OrgStudyId, SecondaryId
-- **SponsorSearch** (`query.spons`, UI: Sponsor / collaborator): LeadSponsorName, CollaboratorName, OrgFullName
-- **FunderTypeSearch** (no parameter; use AREA[...], UI: -): LeadSponsorClass, CollaboratorClass
-- **ResponsiblePartySearch** (no parameter; use AREA[...], UI: -): ResponsiblePartyInvestigatorFullName ✓, ResponsiblePartyOldNameTitle ✓, ResponsiblePartyInvestigatorAffiliation ✓, ResponsiblePartyOldOrganization ✓, ResponsiblePartyInvestigatorTitle ✓
-- **PatientSearch** (`query.patient`, UI: -): Acronym ✓, Condition ✓, BriefTitle ✓, OfficialTitle ✓, ConditionMeshTerm ✓, ConditionAncestorTerm ✓, BriefSummary ✓, Keyword ✓, InterventionName ✓, InterventionOtherName ✓, PrimaryOutcomeMeasure ✓, StdAge, … (47 fields)
+- **BasicSearch** (`query.term`, UI: Other terms, 57 fields): NCTId, Acronym ✓, BriefTitle ✓, OfficialTitle ✓, Condition ✓, InterventionName ✓, InterventionOtherName ✓, Phase, StdAge, PrimaryOutcomeMeasure ✓, Keyword ✓, BriefSummary ✓, ArmGroupLabel ✓, SecondaryOutcomeMeasure ✓, InterventionDescription ✓, ArmGroupDescription ✓, PrimaryOutcomeDescription ✓, LeadSponsorName, OrgStudyId, SecondaryId, NCTIdAlias, InterventionType, ArmGroupType, SecondaryOutcomeDescription ✓, LocationFacility, LocationStatus, LocationState, LocationCountry, LocationCity, BioSpecDescription ✓, ResponsiblePartyInvestigatorFullName ✓, ResponsiblePartyInvestigatorTitle ✓, ResponsiblePartyInvestigatorAffiliation ✓, ResponsiblePartyOldNameTitle ✓, ResponsiblePartyOldOrganization ✓, OverallOfficialAffiliation ✓, OverallOfficialRole ✓, OverallOfficialName ✓, CentralContactName ✓, ConditionMeshTerm ✓, InterventionMeshTerm ✓, DesignAllocation, DesignInterventionModel, DesignMasking, DesignWhoMasked, DesignObservationalModel, DesignPrimaryPurpose, DesignTimePerspective, StudyType, ConditionAncestorTerm ✓, InterventionAncestorTerm ✓, CollaboratorName, OtherOutcomeMeasure ✓, OutcomeMeasureTitle ✓, OtherOutcomeDescription ✓, OutcomeMeasureDescription ✓, LocationContactName
+- **ConditionSearch** (`query.cond`, UI: Conditions or disease, 7 fields): Condition ✓, BriefTitle ✓, OfficialTitle ✓, ConditionMeshTerm ✓, ConditionAncestorTerm ✓, Keyword ✓, NCTId
+- **InterventionSearch** (`query.intr`, UI: Intervention / treatment, 12 fields): InterventionName ✓, InterventionType, ArmGroupType, InterventionOtherName ✓, BriefTitle ✓, OfficialTitle ✓, ArmGroupLabel ✓, InterventionMeshTerm ✓, Keyword ✓, InterventionAncestorTerm ✓, InterventionDescription ✓, ArmGroupDescription ✓
+- **InterventionNameSearch** (no parameter; use AREA[...], UI: -, 2 fields): InterventionName ✓, InterventionOtherName ✓
+- **ObsoleteConditionSearch** (no parameter; use AREA[...], UI: -, 4 fields): Condition ✓, ConditionMeshTerm ✓, ConditionAncestorTerm ✓, Keyword ✓
+- **ExternalIdsSearch** (no parameter; use AREA[...], UI: -, 2 fields): OrgStudyId, SecondaryId
+- **ExternalIdTypesSearch** (no parameter; use AREA[...], UI: -, 2 fields): OrgStudyIdType, SecondaryIdType
+- **EligibilitySearch** (no parameter; use AREA[...], UI: -, 2 fields): EligibilityCriteria ✓, StudyPopulation ✓
+- **OutcomeSearch** (`query.outc`, UI: Outcome measure, 9 fields): PrimaryOutcomeMeasure ✓, SecondaryOutcomeMeasure ✓, PrimaryOutcomeDescription ✓, SecondaryOutcomeDescription ✓, OtherOutcomeMeasure ✓, OutcomeMeasureTitle ✓, OtherOutcomeDescription ✓, OutcomeMeasureDescription ✓, OutcomeMeasurePopulationDescription ✓
+- **OutcomeNameSearch** (no parameter; use AREA[...], UI: -, 4 fields): PrimaryOutcomeMeasure ✓, SecondaryOutcomeMeasure ✓, OtherOutcomeMeasure ✓, OutcomeMeasureTitle ✓
+- **TitleSearch** (`query.titles`, UI: Title / acronym, 3 fields): Acronym ✓, BriefTitle ✓, OfficialTitle ✓
+- **LocationSearch** (`query.locn`, UI: Location terms, 5 fields): LocationCity, LocationState, LocationCountry, LocationFacility, LocationZip
+- **ContactSearch** (no parameter; use AREA[...], UI: -, 4 fields): OverallOfficialName, CentralContactName, OverallOfficialAffiliation, LocationContactName
+- **NCTIdSearch** (no parameter; use AREA[...], UI: -, 2 fields): NCTId, NCTIdAlias
+- **IdSearch** (`query.id`, UI: Study IDs, 5 fields): NCTId, NCTIdAlias, Acronym ✓, OrgStudyId, SecondaryId
+- **SponsorSearch** (`query.spons`, UI: Sponsor / collaborator, 3 fields): LeadSponsorName, CollaboratorName, OrgFullName
+- **FunderTypeSearch** (no parameter; use AREA[...], UI: -, 2 fields): LeadSponsorClass, CollaboratorClass
+- **ResponsiblePartySearch** (no parameter; use AREA[...], UI: -, 5 fields): ResponsiblePartyInvestigatorFullName ✓, ResponsiblePartyOldNameTitle ✓, ResponsiblePartyInvestigatorAffiliation ✓, ResponsiblePartyOldOrganization ✓, ResponsiblePartyInvestigatorTitle ✓
+- **PatientSearch** (`query.patient`, UI: -, 47 fields): Acronym ✓, Condition ✓, BriefTitle ✓, OfficialTitle ✓, ConditionMeshTerm ✓, ConditionAncestorTerm ✓, BriefSummary ✓, Keyword ✓, InterventionName ✓, InterventionOtherName ✓, PrimaryOutcomeMeasure ✓, StdAge, ArmGroupLabel ✓, SecondaryOutcomeMeasure ✓, InterventionDescription ✓, ArmGroupDescription ✓, PrimaryOutcomeDescription ✓, LeadSponsorName, OrgStudyId, SecondaryId, NCTIdAlias, SecondaryOutcomeDescription ✓, LocationFacility, LocationState, LocationCountry, LocationCity, BioSpecDescription ✓, ResponsiblePartyInvestigatorFullName ✓, ResponsiblePartyInvestigatorTitle ✓, ResponsiblePartyInvestigatorAffiliation ✓, ResponsiblePartyOldNameTitle ✓, ResponsiblePartyOldOrganization ✓, OverallOfficialAffiliation, OverallOfficialName, CentralContactName, DesignInterventionModel, DesignMasking, DesignWhoMasked, DesignObservationalModel, DesignPrimaryPurpose, DesignTimePerspective, InterventionMeshTerm ✓, InterventionAncestorTerm ✓, CollaboratorName, OtherOutcomeMeasure ✓, OtherOutcomeDescription ✓, LocationContactName
