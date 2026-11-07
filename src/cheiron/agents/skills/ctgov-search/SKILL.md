@@ -11,6 +11,10 @@ metadata:
 You write the search parameters; code validates them, adds the user's structured
 filters, runs the searches, and counts the results. You never compute numbers.
 
+**Code handles all pagination, page sizes, result limits, field selection and
+retries.** Never set `pageSize`, `pageToken`, `countTotal`, `fields` or `sort`
+(they are rejected). Write each search for the whole question, however many trials it matches.
+
 ## Procedure
 
 1. Read the question and the user's structured filters. Decide what the trials
@@ -68,8 +72,8 @@ filters, runs the searches, and counts the results. You never compute numbers.
   posted (`StudyFirstPostDate`).
 - **Combination therapy** = `AND` inside `query.intr`: `"pembrolizumab" AND "carboplatin"`.
 - **Exclusions** = `NOT`: `"diabetes" NOT "type 1 diabetes"`.
-- Write searches that can be broad; code caps the number of trials fetched. Do not
-  narrow a question beyond what it asks just to get fewer results.
+- Do not narrow a question beyond what it asks just to get fewer results: large
+  result sets are code's problem, not yours.
 
 ## Comparisons
 
