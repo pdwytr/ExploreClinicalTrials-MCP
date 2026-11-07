@@ -19,13 +19,24 @@ import asyncio
 import logging
 from dataclasses import dataclass
 
-from cheiron.fetch.models import SNAPSHOT_API_VERSION, DataVersion, Trial
+from cheiron.fetch.endpoints import StudyStep
+from cheiron.fetch.models import SNAPSHOT_API_VERSION, DataVersion, StudySearchParams, Trial
 from cheiron.models.request import QueryRequest
 from cheiron.models.response import Meta, QueryResponse
 from cheiron.workflow.errors import InvalidSearch, NoResults, UnsupportedQuery, UpstreamError
-from cheiron.workflow.plans import ChartPlan, DataProfile, Dimension, FetchResult, Progress, ProgressCallback, SearchPlan
+from cheiron.workflow.plans import (
+    ChartPlan,
+    DataProfile,
+    Dimension,
+    FetchResult,
+    Progress,
+    ProgressCallback,
+    SearchPlan,
+    StatsResult,
+    StepResult,
+)
 from cheiron.workflow.steps import ChartPlanner, Profiler, SearchPlanner, TrialSource, Visualizer
-from cheiron.workflow.translate import PreparedSearch, apply_request_filters, filters_summary
+from cheiron.workflow.translate import PreparedStep, apply_request_filters, filters_summary
 
 log = logging.getLogger(__name__)
 
@@ -36,25 +47,29 @@ FETCH_ATTEMPTS = 2  # first fetch + one redo if the data was refreshed mid-fetch
 
 @dataclass
 class FetchOutcome:
-    """Result of steps 1-3: what was searched and every trial found, on one data version."""
+    """Result of steps 1-3: every step executed, on one data version."""
 
     plan: SearchPlan  # as the planner wrote it
-    prepared: list[PreparedSearch]  # as executed, after the user's filters were added
-    results: list[FetchResult]  # one per prepared search, same order
+    prepared: list[PreparedStep]  # as executed, after the user's filters were added
+    results: list[StepResult]  # one per prepared step, same order
     version: DataVersion
     warnings: list[str]
 
     @property
     def trials_by_group(self) -> dict[str, list[Trial]]:
-        return {label: r.trials for (label, _), r in zip(self.prepared, self.results)}
+        return {label: r.trials for (label, _), r in zip(self.prepared, self.results) if isinstance(r, FetchResult)}
 
     @property
     def total_matched(self) -> int:
-        return sum(r.total_matched for r in self.results)
+        return sum(r.total_matched for r in self.results if isinstance(r, FetchResult))
 
     @property
     def trials_fetched(self) -> int:
-        return sum(len(r.trials) for r in self.results)
+        return sum(len(r.trials) for r in self.results if isinstance(r, FetchResult))
+
+    @property
+    def stats_fetched(self) -> int:
+        return sum(isinstance(r, StatsResult) for r in self.results)
 
 
 def _report(progress: ProgressCallback | None, stage: str, message: str, **numbers) -> None:
@@ -114,8 +129,15 @@ class QueryWorkflow:
                     raise
                 feedback = [f"The plan was rejected: {exc.message}"]
                 continue
-            if any(r.total_matched for r in results):
+            if any(isinstance(r, StatsResult) or r.total_matched for r in results):
                 for (label, _), result in zip(prepared, results):
+                    if isinstance(result, StatsResult):
+                        if result.incomplete_fields:
+                            warnings.append(
+                                f"{label}: the API returns only the top values for {result.incomplete_fields}; "
+                                "registry-wide counts for the rest are not available."
+                            )
+                        continue
                     if result.truncated:
                         warnings.append(f"{label}: analyzed {len(result.trials)} of {result.total_matched} matching trials.")
                     if not result.trials and search.is_comparison:
@@ -123,12 +145,20 @@ class QueryWorkflow:
                 return FetchOutcome(search, prepared, results, version, warnings)
             if attempt == PLANNING_ATTEMPTS:
                 raise NoResults("No trials matched the search.", filters_summary(prepared))
-            feedback = [f"No trials matched these searches: {filters_summary(prepared)['searches']}"]
+            feedback = [f"No trials matched these steps: {filters_summary(prepared)['steps']}"]
         raise AssertionError("unreachable")
 
+    def _execute(self, index: int, target, tracker: "_FetchTracker"):
+        """The client call for one prepared step."""
+        if isinstance(target, StudySearchParams):
+            return self.source.search(target, self.max_trials_per_search, tracker.callback(index))
+        if isinstance(target, StudyStep):
+            return self.source.fetch_study(target)
+        return self.source.fetch_stats(target)
+
     async def _fetch_consistent(
-        self, prepared: list[PreparedSearch], progress: ProgressCallback | None
-    ) -> tuple[list[FetchResult], DataVersion]:
+        self, prepared: list[PreparedStep], progress: ProgressCallback | None
+    ) -> tuple[list[StepResult], DataVersion]:
         """Run every search against one version of the data.
 
         The registry refreshes daily; a fetch that spans a refresh could mix two
@@ -139,13 +169,9 @@ class QueryWorkflow:
         for _ in range(FETCH_ATTEMPTS):
             before = await self.source.data_version()
             warn_if_docs_outdated(before)
-            tracker = _FetchTracker(len(prepared), progress)
-            results = await asyncio.gather(
-                *(
-                    self.source.search(params, self.max_trials_per_search, tracker.callback(i))
-                    for i, (_, params) in enumerate(prepared)
-                )
-            )
+            searches = [i for i, (_, target) in enumerate(prepared) if isinstance(target, StudySearchParams)]
+            tracker = _FetchTracker(searches, progress)
+            results = await asyncio.gather(*(self._execute(i, target, tracker) for i, (_, target) in enumerate(prepared)))
             after = await self.source.data_version()
             if after.data_timestamp == before.data_timestamp:
                 return list(results), after
@@ -154,18 +180,19 @@ class QueryWorkflow:
 
 
 class _FetchTracker:
-    """Sums page progress across parallel searches into one status message."""
+    """Sums page progress across parallel /studies searches into one status message."""
 
-    def __init__(self, searches: int, progress: ProgressCallback | None):
-        self.fetched = [0] * searches
-        self.totals: list[int | None] = [None] * searches
+    def __init__(self, search_indexes: list[int], progress: ProgressCallback | None):
+        self.fetched: dict[int, int] = {i: 0 for i in search_indexes}
+        self.totals: dict[int, int | None] = {i: None for i in search_indexes}
         self.progress = progress
 
     def callback(self, index: int):
         def on_page(fetched: int, total: int | None) -> None:
             self.fetched[index], self.totals[index] = fetched, total
-            done = sum(self.fetched)
-            total_all = sum(t for t in self.totals if t is not None) if None not in self.totals else None
+            done = sum(self.fetched.values())
+            totals = list(self.totals.values())
+            total_all = sum(t for t in totals if t is not None) if None not in totals else None
             message = f"Fetching trials: {done:,} of {total_all:,}" if total_all is not None else f"Fetching trials: {done:,}"
             _report(self.progress, "fetching", message, trials_fetched=done, trials_total=total_all)
 

@@ -3,10 +3,10 @@ planner's steps, and summarising what was fetched. No AI here."""
 
 import logging
 
-from cheiron.fetch.endpoints import StudiesStep
+from cheiron.fetch.endpoints import FieldSizesStep, FieldValuesStep, RecordSizeStep, StudiesStep, StudyStep
 from cheiron.fetch.models import StudySearchParams, build_advanced_filter
 from cheiron.models.request import QueryRequest
-from cheiron.workflow.errors import InvalidSearch, UnsupportedQuery
+from cheiron.workflow.errors import InvalidSearch
 from cheiron.workflow.plans import SearchPlan
 
 log = logging.getLogger(__name__)
@@ -14,7 +14,8 @@ log = logging.getLogger(__name__)
 # Request field -> API text parameter
 _TEXT_FILTERS = {"drug_name": "query.intr", "condition": "query.cond", "sponsor": "query.spons", "country": "query.locn"}
 
-PreparedSearch = tuple[str, StudySearchParams]  # (label, request ready to execute)
+# (label, what to execute): a /studies search with the user's filters added, or another endpoint's step.
+PreparedStep = tuple[str, StudySearchParams | StudyStep | FieldValuesStep | FieldSizesStep | RecordSizeStep]
 
 
 def phrase(text: str) -> str:
@@ -30,7 +31,7 @@ def _and(existing: str | None, addition: str) -> str:
     return f"({existing}) AND {addition}" if existing else addition
 
 
-def apply_request_filters(plan: SearchPlan, request: QueryRequest) -> tuple[list[PreparedSearch], list[str]]:
+def apply_request_filters(plan: SearchPlan, request: QueryRequest) -> tuple[list[PreparedStep], list[str]]:
     """Add every structured field the user sent to every /studies step, so filters are guaranteed.
 
     - Text fields (drug, condition, sponsor, country) are AND-ed onto the matching
@@ -44,8 +45,11 @@ def apply_request_filters(plan: SearchPlan, request: QueryRequest) -> tuple[list
     Registry-wide steps (/stats/*) cannot filter, so a plan using them while the user
     sent filters is rejected with InvalidSearch: the planner gets that as feedback.
 
-    Returns the executable searches and warnings.
+    A single-study lookup is not filtered either; the user gets a warning.
+
+    Returns the executable steps (in plan order) and warnings.
     """
+    warnings: list[str] = []
     if request.filters():
         unfilterable = [s.endpoint for s in plan.steps if s.endpoint.startswith("stats/")]
         if unfilterable:
@@ -53,11 +57,9 @@ def apply_request_filters(plan: SearchPlan, request: QueryRequest) -> tuple[list
                 f"The user supplied filters {request.filters()}, but {unfilterable} cover the whole registry "
                 "and cannot apply them. Use 'studies' steps for filtered questions."
             )
-    not_executable = [s.endpoint for s in plan.steps if not isinstance(s, StudiesStep)]
-    if not_executable:  # executing other endpoints arrives in the next step of the refactor
-        raise UnsupportedQuery(f"Endpoint(s) {not_executable} are planned but not executed yet.")
+        if any(isinstance(s, StudyStep) for s in plan.steps):
+            warnings.append("Filters do not apply to a lookup of one trial by NCT number.")
 
-    warnings: list[str] = []
     studies = [s for s in plan.steps if isinstance(s, StudiesStep)]
     all_params = [dict(s.params) for s in studies]
 
@@ -83,10 +85,22 @@ def apply_request_filters(plan: SearchPlan, request: QueryRequest) -> tuple[list
             log.info("user status filter replaces %r", p.get("filter.overallStatus"))
             p["filter.overallStatus"] = statuses
 
-    prepared = [(s.label, StudySearchParams(search=p)) for s, p in zip(studies, all_params)]
+    filtered = iter(StudySearchParams(search=p) for p in all_params)
+    prepared: list[PreparedStep] = [
+        (s.label, next(filtered) if isinstance(s, StudiesStep) else s) for s in plan.steps
+    ]
     return prepared, warnings
 
 
-def filters_summary(prepared: list[PreparedSearch]) -> dict:
-    """The exact API searches that ran, for meta.filters_applied (rerunnable as-is)."""
-    return {"searches": [{"label": label, "params": params.search} for label, params in prepared]}
+def step_summary(label: str, target) -> dict:
+    """One executed step as {label, endpoint, params}: exactly what was sent (rerunnable as-is)."""
+    if isinstance(target, StudySearchParams):
+        return {"label": label, "endpoint": "studies", "params": target.search}
+    if isinstance(target, StudyStep):
+        return {"label": label, "endpoint": "study", "params": {"nct_id": target.nct_id.upper()}}
+    return {"label": label, "endpoint": target.endpoint, "params": target.query_params()}
+
+
+def filters_summary(prepared: list[PreparedStep]) -> dict:
+    """The exact API calls that ran, for meta.filters_applied."""
+    return {"steps": [step_summary(label, target) for label, target in prepared]}

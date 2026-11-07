@@ -5,10 +5,11 @@ async because it calls the ClinicalTrials.gov API."""
 from collections.abc import Callable
 from typing import Protocol
 
+from cheiron.fetch.endpoints import FieldSizesStep, FieldValuesStep, RecordSizeStep, StudyStep
 from cheiron.fetch.models import DataVersion, StudySearchParams, Trial
 from cheiron.models.request import QueryRequest
 from cheiron.models.response import ChartVisualization, NetworkVisualization
-from cheiron.workflow.plans import ChartPlan, DataProfile, FetchResult, SearchPlan
+from cheiron.workflow.plans import ChartPlan, DataProfile, FetchResult, SearchPlan, StatsResult
 
 
 class SearchPlanner(Protocol):
@@ -35,6 +36,14 @@ class TrialSource(Protocol):
 
     async def data_version(self) -> DataVersion:
         """API release and data refresh time (GET /version)."""
+        ...
+
+    async def fetch_study(self, step: StudyStep) -> FetchResult:
+        """One trial by NCT number. Raises InvalidSearch if it does not exist."""
+        ...
+
+    async def fetch_stats(self, step: FieldValuesStep | FieldSizesStep | RecordSizeStep) -> StatsResult:
+        """A registry-wide /stats call, validated against its response schema."""
         ...
 
 

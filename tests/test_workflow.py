@@ -141,7 +141,9 @@ def test_single_search_runs_end_to_end():
     assert len(source.calls) == 1
     assert chart_planner.seen_profile.trials_fetched == 2  # agent 2 saw the data profile
     assert resp.meta.interpretation == "Trials of pembrolizumab"
-    assert resp.meta.filters_applied == {"searches": [{"label": "Pembrolizumab", "params": {"query.intr": "pembrolizumab"}}]}
+    assert resp.meta.filters_applied == {
+        "steps": [{"label": "Pembrolizumab", "endpoint": "studies", "params": {"query.intr": "pembrolizumab"}}]
+    }
     assert resp.meta.total_trials_matched == 2
     assert resp.vega_lite is not None
 

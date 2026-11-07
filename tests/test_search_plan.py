@@ -5,7 +5,7 @@ from pydantic import TypeAdapter, ValidationError
 
 from cheiron.models.request import QueryRequest
 from cheiron.workflow import SearchPlan, SearchPlannerOutput, Unanswerable
-from cheiron.workflow.errors import InvalidSearch, UnsupportedQuery
+from cheiron.workflow.errors import InvalidSearch
 from cheiron.workflow.translate import apply_request_filters, filters_summary, phrase
 
 
@@ -104,7 +104,7 @@ def test_filters_apply_to_every_search():
 
 def test_filters_summary_shows_the_exact_searches():
     prepared, _ = apply_request_filters(plan(("x", {"query.cond": "asthma"})), request())
-    assert filters_summary(prepared) == {"searches": [{"label": "x", "params": {"query.cond": "asthma"}}]}
+    assert filters_summary(prepared) == {"steps": [{"label": "x", "endpoint": "studies", "params": {"query.cond": "asthma"}}]}
 
 
 def test_phrase_quotes_user_values():
@@ -142,7 +142,22 @@ def test_registry_wide_step_with_user_filters_is_sent_back_to_the_planner():
         apply_request_filters(p, request(condition="asthma"))
 
 
-def test_other_endpoints_are_not_executed_yet():
-    p = SearchPlan.model_validate({"steps": [{"endpoint": "stats/size", "label": "Sizes"}], "rationale": "r"})
-    with pytest.raises(UnsupportedQuery, match="not executed yet"):
-        apply_request_filters(p, request())
+def test_other_endpoints_pass_through_in_plan_order():
+    p = SearchPlan.model_validate(
+        {
+            "steps": [
+                {"endpoint": "stats/size", "label": "Sizes"},
+                {"endpoint": "studies", "label": "Asthma", "params": {"query.cond": "asthma"}},
+            ],
+            "rationale": "r",
+        }
+    )
+    prepared, _ = apply_request_filters(p, request())
+    assert [label for label, _ in prepared] == ["Sizes", "Asthma"]
+    assert filters_summary(prepared)["steps"][0] == {"label": "Sizes", "endpoint": "stats/size", "params": {}}
+
+
+def test_filters_on_a_single_study_lookup_only_warn():
+    p = SearchPlan.model_validate({"steps": [{"endpoint": "study", "label": "One", "nct_id": "NCT05064059"}], "rationale": "r"})
+    _, warnings = apply_request_filters(p, request(condition="asthma"))
+    assert "lookup of one trial" in warnings[0]

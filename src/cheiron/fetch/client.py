@@ -15,10 +15,22 @@ from collections.abc import AsyncIterator, Callable
 from typing import Any
 
 import httpx
+from pydantic import ValidationError
 
-from cheiron.fetch.models import BASE_URL, MAX_PAGE_SIZE, DataVersion, StudiesPage, StudySearchParams, Trial
+from cheiron.fetch.endpoints import FieldSizesStep, FieldValuesStep, RecordSizeStep, StudyStep
+from cheiron.fetch.models import (
+    BASE_URL,
+    DEFAULT_FIELDS,
+    MAX_PAGE_SIZE,
+    DataVersion,
+    RawStudy,
+    StudiesPage,
+    StudySearchParams,
+    Trial,
+)
+from cheiron.fetch.stats import RESPONSE_MODELS, incomplete_fields
 from cheiron.workflow.errors import InvalidSearch, UpstreamError
-from cheiron.workflow.plans import FetchResult
+from cheiron.workflow.plans import FetchResult, StatsResult
 
 log = logging.getLogger(__name__)
 
@@ -76,6 +88,8 @@ class CtgovClient:
                 return response.json()
             if response.status_code == 400:  # the search itself is wrong: the planner can fix it
                 raise InvalidSearch(response.text.strip()[:500], {"params": params or {}})
+            if response.status_code == 404:  # e.g. an NCT number that does not exist
+                raise InvalidSearch(f"Not found: {path}", {"path": path})
             if response.status_code in RETRY_STATUSES and attempt < self._max_retries:
                 await self._wait(attempt, response.headers.get("Retry-After"))
                 continue
@@ -107,6 +121,21 @@ class CtgovClient:
 
     async def data_version(self) -> DataVersion:
         return DataVersion.model_validate(await self.get("/version"))
+
+    async def fetch_study(self, step: StudyStep) -> FetchResult:
+        """One trial by NCT number, with the same fields a search fetches."""
+        raw = await self.get(step.path(), {"fields": "|".join(DEFAULT_FIELDS)})
+        trial = Trial.from_raw(RawStudy.model_validate(raw))
+        return FetchResult(trials=[trial], total_matched=1)
+
+    async def fetch_stats(self, step: FieldValuesStep | FieldSizesStep | RecordSizeStep) -> StatsResult:
+        """A registry-wide /stats call, validated against that endpoint's response schema."""
+        raw = await self.get(step.path(), step.query_params())
+        try:
+            data = RESPONSE_MODELS[step.endpoint].model_validate(raw)
+        except ValidationError as exc:
+            raise UpstreamError(f"Unexpected response shape from {step.path()}: {exc.errors()[0]['msg']}") from exc
+        return StatsResult(endpoint=step.endpoint, data=data, incomplete_fields=incomplete_fields(data))
 
     async def search(
         self, params: StudySearchParams, limit: int | None = None, on_progress: ProgressCallback | None = None

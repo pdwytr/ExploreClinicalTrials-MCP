@@ -47,6 +47,13 @@ def _now() -> datetime:
     return datetime.now(timezone.utc)
 
 
+def _saved_summary(trials: int, stats: int) -> str:
+    parts = [f"{trials:,} trials"] if trials or not stats else []
+    if stats:
+        parts.append(f"{stats} registry stats result" + ("s" if stats > 1 else ""))
+    return " and ".join(parts)
+
+
 @dataclass
 class Task:
     id: str
@@ -108,13 +115,15 @@ class TaskStore:
         task.update(output_dir=folder)
         try:
             outcome = await self.workflow.plan_and_fetch(task.request, progress=lambda p: task.update(progress=p))
-            task.update(progress=Progress(stage="saving", message=f"Saving {outcome.trials_fetched:,} trials"))
+            saved = _saved_summary(outcome.trials_fetched, outcome.stats_fetched)
+            task.update(progress=Progress(stage="saving", message=f"Saving {saved}"))
             await asyncio.to_thread(self.outputs.save_fetch, folder, outcome)
             meta |= {
                 "status": TaskStatus.SUCCEEDED.value,
                 "rationale": outcome.plan.rationale,
                 "total_trials_matched": outcome.total_matched,
                 "trials_fetched": outcome.trials_fetched,
+                "stats_fetched": outcome.stats_fetched,
                 "warnings": outcome.warnings,
                 "data_as_of": outcome.version.data_timestamp.isoformat(),
                 "api_version": outcome.version.api_version,
@@ -123,7 +132,7 @@ class TaskStore:
                 status=TaskStatus.SUCCEEDED,
                 progress=Progress(
                     stage="done",
-                    message=f"Saved {outcome.trials_fetched:,} trials",
+                    message=f"Saved {saved}",
                     trials_fetched=outcome.trials_fetched,
                     trials_total=outcome.total_matched,
                 ),

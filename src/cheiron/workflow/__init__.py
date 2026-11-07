@@ -9,6 +9,8 @@ from cheiron.workflow.plans import (
     SearchDecision,
     SearchPlan,
     SearchPlannerOutput,
+    StatsResult,
+    StepResult,
     Unanswerable,
 )
 from cheiron.workflow.steps import ChartPlanner, Profiler, SearchPlanner, TrialSource, Visualizer
@@ -28,6 +30,8 @@ __all__ = [
     "SearchPlan",
     "SearchPlanner",
     "SearchPlannerOutput",
+    "StatsResult",
+    "StepResult",
     "TrialSource",
     "Unanswerable",
     "UnsupportedQuery",

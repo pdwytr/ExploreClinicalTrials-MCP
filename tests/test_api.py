@@ -9,7 +9,8 @@ from cheiron.api.app import create_app
 from cheiron.api.outputs import QueryOutputs
 from cheiron.api.tasks import TaskStore
 from cheiron.fetch.models import DataVersion, Trial
-from cheiron.workflow import FetchResult, SearchPlan
+from cheiron.fetch.stats import FieldValuesResponse
+from cheiron.workflow import FetchResult, SearchPlan, StatsResult
 from cheiron.workflow.errors import UnsupportedQuery
 from cheiron.workflow.pipeline import QueryWorkflow
 
@@ -73,9 +74,9 @@ def test_submit_poll_and_find_outputs_on_disk(tmp_path):
     assert done["status"] == "succeeded"
     assert done["progress"]["stage"] == "done" and done["progress"]["trials_fetched"] == 5
     folder = tmp_path / task_id  # one folder per query, named by its UUID
-    assert sorted(p.name for p in folder.iterdir()) == ["meta.json", "plan.json", "request.json", "searches.json", "trials"]
+    assert sorted(p.name for p in folder.iterdir()) == ["meta.json", "plan.json", "request.json", "steps.json", "trials"]
     assert json.loads((folder / "request.json").read_text()) == QUESTION
-    searches = json.loads((folder / "searches.json").read_text())
+    searches = json.loads((folder / "steps.json").read_text())
     assert [s["trials_file"] for s in searches] == ["trials/1-nivolumab.json", "trials/2-pembrolizumab.json"]
     assert searches[0]["params"]["filter.advanced"] == "AREA[Phase](PHASE3)"  # user filter recorded as executed
     assert len(json.loads((folder / searches[1]["trials_file"]).read_text())) == 3
@@ -121,3 +122,42 @@ def test_unknown_task_is_404_and_health_is_ok(tmp_path):
     with make_client(tmp_path, Planner()) as client:
         assert client.get("/queries/nope").status_code == 404
         assert client.get("/health").json() == {"status": "ok"}
+
+
+class StatsPlanner:
+    async def plan(self, request, feedback=None):
+        return SearchPlan(
+            steps=[{"endpoint": "stats/field/values", "label": "All trials", "fields": ["Phase"]}],
+            rationale="Phase distribution across the whole registry.",
+        )
+
+
+class StatsSource(Source):
+    async def fetch_stats(self, step):
+        data = FieldValuesResponse.model_validate(
+            [{"field": "protocolSection.designModule.phases", "piece": "Phase", "type": "ENUM", "missingStudiesCount": 0,
+              "uniqueValuesCount": 2, "topValues": [{"value": "PHASE2", "studiesCount": 5}, {"value": "PHASE3", "studiesCount": 3}]}]
+        )  # fmt: skip
+        return StatsResult(endpoint=step.endpoint, data=data)
+
+
+def test_registry_wide_stats_query_saves_a_stats_file_and_no_trials(tmp_path):
+    async def factory(stack):
+        return TaskStore(QueryWorkflow(search_planner=StatsPlanner(), source=StatsSource()), QueryOutputs(tmp_path))
+
+    with TestClient(create_app(factory)) as client:
+        task_id = client.post("/queries", json={"query": "How are all registered trials split by phase?"}).json()["task_id"]
+        done = wait_until_finished(client, task_id)
+
+    assert done["status"] == "succeeded" and done["progress"]["message"] == "Saved 1 registry stats result"
+    folder = tmp_path / task_id
+    assert sorted(p.name for p in folder.iterdir()) == ["meta.json", "plan.json", "request.json", "stats", "steps.json"]
+    step = json.loads((folder / "steps.json").read_text())[0]
+    assert step == {
+        "label": "All trials",
+        "endpoint": "stats/field/values",
+        "params": {"fields": "Phase"},
+        "stats_file": "stats/1-all-trials.json",
+        "incomplete_fields": [],
+    }
+    assert json.loads((folder / step["stats_file"]).read_text())[0]["topValues"][0] == {"value": "PHASE2", "studiesCount": 5}

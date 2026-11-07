@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from cheiron.fetch.endpoints import PlanStep
 from cheiron.fetch.models import Trial
+from cheiron.fetch.stats import StatsResponse
 from cheiron.models.catalog import INTENT_CHART_TYPES, Intent, VisualizationType
 
 # --- Agent 1 output ------------------------------------------------------------------
@@ -82,12 +83,25 @@ ProgressCallback = Callable[[Progress], None]
 
 
 class FetchResult(BaseModel):
+    """Trials from a /studies search or a single-study lookup."""
+
     trials: list[Trial]
     total_matched: int = Field(ge=0, description="Matches at the source, may exceed len(trials).")
 
     @property
     def truncated(self) -> bool:
         return self.total_matched > len(self.trials)
+
+
+class StatsResult(BaseModel):
+    """A validated registry-wide /stats response."""
+
+    endpoint: str
+    data: StatsResponse
+    incomplete_fields: list[str] = Field(default_factory=list, description="Fields the API cut off (top values only).")
+
+
+StepResult = FetchResult | StatsResult
 
 
 class Dimension(str, Enum):
