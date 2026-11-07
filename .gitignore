@@ -11,5 +11,8 @@ build/
 # Local config / secrets
 .env
 
+# Query outputs (large, regenerable)
+data/
+
 # OS
 .DS_Store

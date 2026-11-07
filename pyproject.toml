@@ -4,10 +4,12 @@ version = "0.1.0"
 description = "ClinicalTrials.gov query-to-visualization backend"
 requires-python = ">=3.11"
 dependencies = [
+    "fastapi>=0.115",
     "httpx>=0.27",
     "pydantic>=2.7",
     "pydantic-ai-slim[openai]>=2.66.0",
     "pydantic-settings>=2.4",
+    "uvicorn>=0.30",
 ]
 
 [dependency-groups]
