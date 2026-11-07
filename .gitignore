@@ -17,4 +17,3 @@ data/
 # OS
 .DS_Store
 evals/report.json
-evals/mesh_report.json
