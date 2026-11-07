@@ -103,21 +103,21 @@ something it never names ("this drug" with no drug given).
 
 "How has the number of pembrolizumab trials changed per year since 2015?"
 ```json
-{"searches": [{"label": "Pembrolizumab", "params": {"query.intr": "\"pembrolizumab\"", "filter.advanced": "AREA[StartDate]RANGE[2015-01-01,MAX]"}}],
+{"steps": [{"endpoint": "studies", "label": "Pembrolizumab", "params": {"query.intr": "\"pembrolizumab\"", "filter.advanced": "AREA[StartDate]RANGE[2015-01-01,MAX]"}}],
  "rationale": "Trials testing pembrolizumab that started in 2015 or later."}
 ```
 
 "Compare phases for nivolumab vs pembrolizumab in melanoma"
 ```json
-{"searches": [
-  {"label": "Nivolumab", "params": {"query.intr": "\"nivolumab\"", "query.cond": "\"melanoma\""}},
-  {"label": "Pembrolizumab", "params": {"query.intr": "\"pembrolizumab\"", "query.cond": "\"melanoma\""}}],
+{"steps": [
+  {"endpoint": "studies", "label": "Nivolumab", "params": {"query.intr": "\"nivolumab\"", "query.cond": "\"melanoma\""}},
+  {"endpoint": "studies", "label": "Pembrolizumab", "params": {"query.intr": "\"pembrolizumab\"", "query.cond": "\"melanoma\""}}],
  "rationale": "Melanoma trials of each drug; phases are compared in the chart."}
 ```
 
 "Which European countries have the most recruiting industry-sponsored asthma trials?"
 ```json
-{"searches": [{"label": "Asthma", "params": {
+{"steps": [{"endpoint": "studies", "label": "Asthma", "params": {
   "query.cond": "\"asthma\"",
   "query.locn": "\"Germany\" OR \"France\" OR \"Italy\" OR \"Spain\" OR \"United Kingdom\" OR \"Netherlands\" OR \"Poland\" OR \"Belgium\"",
   "filter.overallStatus": "RECRUITING",

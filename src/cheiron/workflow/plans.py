@@ -1,6 +1,6 @@
 """The hand-offs between workflow steps.
 
-    SearchPlan   Agent 1 (search planner) -> code: which API searches to run
+    SearchPlan   Agent 1 (search planner) -> code: which API calls to make (steps)
     DataProfile  code -> Agent 2: what the fetched data looks like
     ChartPlan    Agent 2 (chart planner) -> code: how to show it
 """
@@ -9,51 +9,40 @@ from collections.abc import Callable
 from enum import Enum
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, model_validator
 
-from cheiron.fetch.models import Trial, check_search_params
+from cheiron.fetch.endpoints import PlanStep
+from cheiron.fetch.models import Trial
 from cheiron.models.catalog import INTENT_CHART_TYPES, Intent, VisualizationType
 
 # --- Agent 1 output ------------------------------------------------------------------
 #
-# Deliberately thin: the planner writes ClinicalTrials.gov search parameters itself
-# (query.*, filter.* in Essie syntax), after reading the API docs in its prompt.
-# Code only checks names and values, adds the user's structured filters, executes
-# the searches, and sends feedback if a search fails or finds nothing.
-# Structure is added later only where real questions show it is needed.
-
-
-class ApiSearch(BaseModel):
-    """One GET /studies search. A comparison ("A vs B") has one search per side."""
-
-    label: str = Field(min_length=1, max_length=80, description="Shown in the chart, e.g. 'Nivolumab'.")
-    params: dict[str, str] = Field(
-        min_length=1,
-        description="API search parameters, e.g. {'query.cond': '\"multiple sclerosis\"', "
-        "'filter.advanced': 'AREA[Phase](PHASE2 OR PHASE3)'}.",
-    )
-
-    @field_validator("params")
-    @classmethod
-    def known_params(cls, params: dict[str, str]) -> dict[str, str]:
-        return check_search_params(params)
+# Deliberately thin: the planner picks ClinicalTrials.gov endpoints and writes their
+# parameters itself (for /studies: query.*, filter.* in Essie syntax), after reading
+# the API docs in its prompt. Code checks each step against its endpoint's rules,
+# adds the user's structured filters, executes the steps, and sends feedback if a
+# step fails or finds nothing.
 
 
 class SearchPlan(BaseModel):
-    searches: list[ApiSearch] = Field(min_length=1, max_length=4, description="One search, or one per compared side.")
-    rationale: str = Field(min_length=1, max_length=500, description="What is being searched and why, in plain words.")
+    steps: list[PlanStep] = Field(
+        min_length=1, max_length=4, description="One step, or one per compared side. Each names its endpoint."
+    )
+    rationale: str = Field(min_length=1, max_length=500, description="What is being fetched and why, in plain words.")
 
     @property
     def is_comparison(self) -> bool:
-        return len(self.searches) > 1
+        return len(self.steps) > 1
 
     @model_validator(mode="after")
     def check_plan(self) -> "SearchPlan":
-        labels = [s.label.casefold() for s in self.searches]
+        labels = [s.label.casefold() for s in self.steps]
         if len(set(labels)) != len(labels):
-            raise ValueError("search labels must be unique")
-        if self.is_comparison and len({tuple(sorted(s.params.items())) for s in self.searches}) != len(self.searches):
-            raise ValueError("compared searches must differ")
+            raise ValueError("step labels must be unique")
+        if self.is_comparison:
+            identities = {s.model_dump_json(exclude={"label"}) for s in self.steps}
+            if len(identities) != len(self.steps):
+                raise ValueError("compared steps must differ")
         return self
 
 

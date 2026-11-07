@@ -36,7 +36,7 @@ def trial(n: int, phase: str = "PHASE2", year: int | None = 2020) -> Trial:
 
 def search_plan(*interventions: str) -> SearchPlan:
     return SearchPlan(
-        searches=[{"label": i.title(), "params": {"query.intr": i}} for i in interventions],
+        steps=[{"endpoint": "studies", "label": i.title(), "params": {"query.intr": i}} for i in interventions],
         rationale=f"Trials of {' vs '.join(interventions)}",
     )
 

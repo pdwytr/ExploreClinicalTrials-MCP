@@ -5,12 +5,13 @@ from pydantic import TypeAdapter, ValidationError
 
 from cheiron.models.request import QueryRequest
 from cheiron.workflow import SearchPlan, SearchPlannerOutput, Unanswerable
+from cheiron.workflow.errors import InvalidSearch, UnsupportedQuery
 from cheiron.workflow.translate import apply_request_filters, filters_summary, phrase
 
 
 def plan(*searches: tuple[str, dict], rationale: str = "r") -> SearchPlan:
     return SearchPlan.model_validate(
-        {"searches": [{"label": label, "params": params} for label, params in searches], "rationale": rationale}
+        {"steps": [{"endpoint": "studies", "label": label, "params": params} for label, params in searches], "rationale": rationale}
     )
 
 
@@ -23,7 +24,7 @@ def request(**fields) -> QueryRequest:
 
 def test_valid_plan():
     p = plan(("MS", {"query.cond": '"multiple sclerosis"', "filter.advanced": "AREA[Phase](PHASE2 OR PHASE3)"}))
-    assert p.searches[0].params["query.cond"] == '"multiple sclerosis"'
+    assert p.steps[0].params["query.cond"] == '"multiple sclerosis"'
     assert not p.is_comparison
 
 
@@ -49,9 +50,9 @@ def test_labels_unique_and_compared_searches_differ():
 def test_planner_output_is_a_plan_or_unanswerable():
     adapter = TypeAdapter(SearchPlannerOutput)
     decided = adapter.validate_python(
-        {"kind": "search", "plan": {"searches": [{"label": "x", "params": {"query.cond": "asthma"}}], "rationale": "r"}}
+        {"kind": "search", "plan": {"steps": [{"endpoint": "studies", "label": "x", "params": {"query.cond": "asthma"}}], "rationale": "r"}}
     )
-    assert decided.plan.searches[0].label == "x"
+    assert decided.plan.steps[0].label == "x"
     refused = adapter.validate_python({"kind": "unanswerable", "reason": "Efficacy is not in registry records."})
     assert isinstance(refused, Unanswerable)
 
@@ -109,3 +110,39 @@ def test_filters_summary_shows_the_exact_searches():
 def test_phrase_quotes_user_values():
     assert phrase("multiple sclerosis") == '"multiple sclerosis"'
     assert phrase('say "hi"') == '"say hi"'
+
+
+# --- Steps on other endpoints ----------------------------------------------------------------
+
+
+def test_plan_can_mix_endpoints():
+    p = SearchPlan.model_validate(
+        {
+            "steps": [
+                {"endpoint": "studies", "label": "Asthma", "params": {"query.cond": '"asthma"'}},
+                {"endpoint": "stats/field/values", "label": "All trials", "fields": ["Phase"]},
+            ],
+            "rationale": "Asthma trials vs the whole registry, by phase.",
+        }
+    )
+    assert [s.endpoint for s in p.steps] == ["studies", "stats/field/values"]
+
+
+def test_identical_steps_on_any_endpoint_are_rejected():
+    same = {"endpoint": "stats/field/values", "fields": ["Phase"]}
+    with pytest.raises(ValidationError, match="must differ"):
+        SearchPlan.model_validate({"steps": [{**same, "label": "A"}, {**same, "label": "B"}], "rationale": "r"})
+
+
+def test_registry_wide_step_with_user_filters_is_sent_back_to_the_planner():
+    p = SearchPlan.model_validate(
+        {"steps": [{"endpoint": "stats/field/values", "label": "All", "fields": ["Phase"]}], "rationale": "r"}
+    )
+    with pytest.raises(InvalidSearch, match="cannot apply them"):
+        apply_request_filters(p, request(condition="asthma"))
+
+
+def test_other_endpoints_are_not_executed_yet():
+    p = SearchPlan.model_validate({"steps": [{"endpoint": "stats/size", "label": "Sizes"}], "rationale": "r"})
+    with pytest.raises(UnsupportedQuery, match="not executed yet"):
+        apply_request_filters(p, request())

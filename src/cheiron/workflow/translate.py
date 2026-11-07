@@ -1,10 +1,12 @@
 """Deterministic glue between steps: adding the user's structured filters to the
-planner's searches, and summarising what was searched. No AI here."""
+planner's steps, and summarising what was fetched. No AI here."""
 
 import logging
 
+from cheiron.fetch.endpoints import StudiesStep
 from cheiron.fetch.models import StudySearchParams, build_advanced_filter
 from cheiron.models.request import QueryRequest
+from cheiron.workflow.errors import InvalidSearch, UnsupportedQuery
 from cheiron.workflow.plans import SearchPlan
 
 log = logging.getLogger(__name__)
@@ -29,20 +31,35 @@ def _and(existing: str | None, addition: str) -> str:
 
 
 def apply_request_filters(plan: SearchPlan, request: QueryRequest) -> tuple[list[PreparedSearch], list[str]]:
-    """Add every structured field the user sent to every search, so filters are guaranteed.
+    """Add every structured field the user sent to every /studies step, so filters are guaranteed.
 
     - Text fields (drug, condition, sponsor, country) are AND-ed onto the matching
       parameter, unless the planner's value already contains them.
     - Phases and years are AND-ed onto filter.advanced.
     - Statuses replace filter.overallStatus (the user's explicit choice wins).
-    Exception: if the searches compare sides on that very parameter (e.g. two drugs),
+    Exception: if the steps compare sides on that very parameter (e.g. two drugs),
     AND-ing the user's value onto both would change the comparison, so it is skipped
     with a user-facing warning.
 
+    Registry-wide steps (/stats/*) cannot filter, so a plan using them while the user
+    sent filters is rejected with InvalidSearch: the planner gets that as feedback.
+
     Returns the executable searches and warnings.
     """
+    if request.filters():
+        unfilterable = [s.endpoint for s in plan.steps if s.endpoint.startswith("stats/")]
+        if unfilterable:
+            raise InvalidSearch(
+                f"The user supplied filters {request.filters()}, but {unfilterable} cover the whole registry "
+                "and cannot apply them. Use 'studies' steps for filtered questions."
+            )
+    not_executable = [s.endpoint for s in plan.steps if not isinstance(s, StudiesStep)]
+    if not_executable:  # executing other endpoints arrives in the next step of the refactor
+        raise UnsupportedQuery(f"Endpoint(s) {not_executable} are planned but not executed yet.")
+
     warnings: list[str] = []
-    all_params = [dict(s.params) for s in plan.searches]
+    studies = [s for s in plan.steps if isinstance(s, StudiesStep)]
+    all_params = [dict(s.params) for s in studies]
 
     for req_field, api_param in _TEXT_FILTERS.items():
         wanted = getattr(request, req_field)
@@ -66,7 +83,7 @@ def apply_request_filters(plan: SearchPlan, request: QueryRequest) -> tuple[list
             log.info("user status filter replaces %r", p.get("filter.overallStatus"))
             p["filter.overallStatus"] = statuses
 
-    prepared = [(s.label, StudySearchParams(search=p)) for s, p in zip(plan.searches, all_params)]
+    prepared = [(s.label, StudySearchParams(search=p)) for s, p in zip(studies, all_params)]
     return prepared, warnings
 
 

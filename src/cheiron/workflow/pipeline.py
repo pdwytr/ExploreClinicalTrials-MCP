@@ -106,13 +106,13 @@ class QueryWorkflow:
         for attempt in range(1, PLANNING_ATTEMPTS + 1):
             _report(progress, "planning", "Planning searches" if feedback is None else "Revising searches after feedback")
             search = await self.search_planner.plan(request, feedback)
-            prepared, warnings = apply_request_filters(search, request)
             try:
+                prepared, warnings = apply_request_filters(search, request)
                 results, version = await self._fetch_consistent(prepared, progress)
             except InvalidSearch as exc:
                 if attempt == PLANNING_ATTEMPTS:
                     raise
-                feedback = [f"The API rejected a search: {exc.message}"]
+                feedback = [f"The plan was rejected: {exc.message}"]
                 continue
             if any(r.total_matched for r in results):
                 for (label, _), result in zip(prepared, results):

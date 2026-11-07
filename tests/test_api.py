@@ -24,8 +24,8 @@ class Planner:
         if self.fail:
             raise self.fail
         return SearchPlan(
-            searches=[{"label": "Nivolumab", "params": {"query.intr": "nivolumab"}},
-                      {"label": "Pembrolizumab", "params": {"query.intr": "pembrolizumab"}}],
+            steps=[{"endpoint": "studies", "label": "Nivolumab", "params": {"query.intr": "nivolumab"}},
+                      {"endpoint": "studies", "label": "Pembrolizumab", "params": {"query.intr": "pembrolizumab"}}],
             rationale="Each drug's trials.",
         )  # fmt: skip
 

@@ -1,7 +1,6 @@
 from cheiron.workflow.errors import InvalidSearch, NoResults, UnsupportedQuery, UpstreamError, WorkflowError
 from cheiron.workflow.pipeline import QueryWorkflow
 from cheiron.workflow.plans import (
-    ApiSearch,
     ChartPlan,
     DataProfile,
     Dimension,
@@ -15,7 +14,6 @@ from cheiron.workflow.plans import (
 from cheiron.workflow.steps import ChartPlanner, Profiler, SearchPlanner, TrialSource, Visualizer
 
 __all__ = [
-    "ApiSearch",
     "ChartPlan",
     "ChartPlanner",
     "DataProfile",

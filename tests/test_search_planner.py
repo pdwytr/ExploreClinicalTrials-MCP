@@ -13,7 +13,7 @@ from cheiron.models.request import QueryRequest
 from cheiron.settings import Settings
 from cheiron.workflow.errors import UnsupportedQuery
 
-PLAN = {"plan": {"searches": [{"label": "Asthma", "params": {"query.cond": '"asthma"'}}], "rationale": "Asthma trials."}}
+PLAN = {"plan": {"steps": [{"endpoint": "studies", "label": "Asthma", "params": {"query.cond": '"asthma"'}}], "rationale": "Asthma trials."}}
 
 
 def output_tool(info: AgentInfo, kind: str) -> str:
@@ -55,7 +55,7 @@ def test_skill_is_loaded_into_the_instructions():
 def test_returns_a_validated_plan():
     model, _ = scripted(("SearchDecision", PLAN))
     plan = run(SearchPlannerAgent(model))
-    assert plan.searches[0].params == {"query.cond": '"asthma"'}
+    assert plan.steps[0].params == {"query.cond": '"asthma"'}
 
 
 def decide(agent, query="test question"):
@@ -102,10 +102,10 @@ def test_concurrent_runs_keep_separate_state():
 
 
 def test_invalid_plan_is_sent_back_and_fixed():
-    bad = {"plan": {"searches": [{"label": "x", "params": {"pageSize": "10"}}], "rationale": "r"}}
+    bad = {"plan": {"steps": [{"endpoint": "studies", "label": "x", "params": {"pageSize": "10"}}], "rationale": "r"}}
     model, seen = scripted(("SearchDecision", bad), ("SearchDecision", PLAN))
     plan = run(SearchPlannerAgent(model))
-    assert plan.searches[0].label == "Asthma"
+    assert plan.steps[0].label == "Asthma"
     assert "unknown or reserved" in seen_text(seen["prompts"][-1])  # our Pydantic error reached the model
 
 
