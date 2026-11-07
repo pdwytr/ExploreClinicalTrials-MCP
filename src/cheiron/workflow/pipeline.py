@@ -18,7 +18,7 @@ from cheiron.models.response import Meta, QueryResponse
 from cheiron.workflow.errors import NoResults, UnsupportedQuery
 from cheiron.workflow.plans import ChartPlan, DataProfile, Dimension, SearchPlan
 from cheiron.workflow.steps import ChartPlanner, Profiler, SearchPlanner, TrialSource, Visualizer
-from cheiron.workflow.translate import enforce_request_filters, filters_summary, search_params_for
+from cheiron.workflow.translate import describe, enforce_request_filters, filters_summary, search_params_for
 
 MISSING_WARNING_SHARE = 0.10  # warn when more than 10% of trials lack the plotted value
 
@@ -62,7 +62,7 @@ class QueryWorkflow:
         # 7-8. Build and assemble
         visualization = self.visualizer.build(trials_by_group, chart)
         meta = Meta(
-            interpretation=search.interpretation,
+            interpretation=describe(search),
             filters_applied=filters_summary(search),
             warnings=warnings,
             total_trials_matched=total_matched,

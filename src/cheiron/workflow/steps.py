@@ -11,7 +11,10 @@ from cheiron.workflow.plans import ChartPlan, DataProfile, FetchResult, SearchPl
 
 
 class SearchPlanner(Protocol):
-    """Agent 1: question -> what to search for."""
+    """Agent 1: question -> what to search for.
+
+    Its LLM answers with SearchPlannerOutput; an Unanswerable answer is raised as
+    UnsupportedQuery, so the workflow only ever receives a valid SearchPlan."""
 
     async def plan(self, request: QueryRequest) -> SearchPlan: ...
 

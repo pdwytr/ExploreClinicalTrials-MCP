@@ -88,10 +88,12 @@ class FakeVisualizer:
         )
 
 
-ONE_DRUG = SearchPlan(groups=[SearchGroup(label="Pembrolizumab", intervention="pembrolizumab")], interpretation="Pembrolizumab trials")
+ONE_DRUG = SearchPlan(groups=[SearchGroup(label="Pembrolizumab", interventions=["pembrolizumab"])])
 TWO_DRUGS = SearchPlan(
-    groups=[SearchGroup(label="Nivolumab", intervention="nivolumab"), SearchGroup(label="Pembrolizumab", intervention="pembrolizumab")],
-    interpretation="Nivolumab vs pembrolizumab trials",
+    groups=[
+        SearchGroup(label="Nivolumab", interventions=["nivolumab"]),
+        SearchGroup(label="Pembrolizumab", interventions=["pembrolizumab"]),
+    ]
 )
 BY_PHASE = ChartPlan(intent="distribution", chart_type="bar_chart", title="Trials by phase", x=Dimension.PHASE)
 
@@ -121,7 +123,7 @@ def test_single_group_runs_end_to_end():
     assert chart_planner.seen_profile.trials_fetched == 2  # agent 2 saw the data profile
     assert resp.meta.total_trials_matched == 2
     assert resp.meta.trials_analyzed == 2
-    assert resp.meta.interpretation == "Pembrolizumab trials"
+    assert resp.meta.interpretation == "Trials testing pembrolizumab."  # generated from the plan
     assert resp.vega_lite is not None
 
 
@@ -155,9 +157,8 @@ def test_structured_fields_override_the_plan():
 
 def test_plan_that_honours_user_filters_is_left_alone(caplog):
     honouring = SearchPlan(
-        groups=[SearchGroup(label="Keytruda", intervention="keytruda")],  # case differs: still a match
+        groups=[SearchGroup(label="Keytruda", interventions=["keytruda"])],  # case differs: still a match
         phases=["PHASE3"],
-        interpretation="Keytruda phase 3 trials",
     )
     fetched = {'"keytruda"': FetchResult(trials=[trial(1)], total_matched=1)}
     wf, source, _ = make_workflow(honouring, fetched)
@@ -253,7 +254,7 @@ def test_chart_plan_must_fit_catalog():
         ChartPlan(intent="relationship", chart_type="network_graph", title="t", x=Dimension.SPONSOR)
 
 
-def test_phrase_quotes_plain_text_only():
+def test_phrase_always_quotes_so_text_is_never_syntax():
     assert phrase("multiple sclerosis") == '"multiple sclerosis"'
-    assert phrase("asthma OR COPD") == "asthma OR COPD"
-    assert phrase('"already quoted"') == '"already quoted"'
+    assert phrase("asthma OR COPD") == '"asthma OR COPD"'  # a literal phrase, not an operator
+    assert phrase('say "hi"') == '"say hi"'
