@@ -16,7 +16,14 @@ from datetime import date
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from pydantic.alias_generators import to_camel
 
-from cheiron.models.request import RecruitmentStatus, TrialPhase
+from cheiron.models.request import (
+    AgeGroup,
+    InterventionType,
+    RecruitmentStatus,
+    SponsorClass,
+    StudyType,
+    TrialPhase,
+)
 
 BASE_URL = "https://clinicaltrials.gov/api/v2"
 MAX_PAGE_SIZE = 1000  # the API silently caps larger values at 1,000
@@ -60,12 +67,24 @@ def build_advanced_filter(
     phases: list[TrialPhase] | None = None,
     start_year: int | None = None,
     end_year: int | None = None,
+    *,
+    study_types: list[StudyType] | None = None,
+    intervention_types: list[InterventionType] | None = None,
+    sponsor_classes: list[SponsorClass] | None = None,
+    age_groups: list[AgeGroup] | None = None,
 ) -> str | None:
-    """Phase and start-date filters in Essie syntax, e.g.
-    'AREA[Phase](PHASE2 OR PHASE3) AND AREA[StartDate]RANGE[2015-01-01,MAX]'."""
+    """Fixed-value filters in Essie syntax, AND-ed together; values within one filter are OR-ed.
+    e.g. 'AREA[Phase](PHASE2 OR PHASE3) AND AREA[StartDate]RANGE[2015-01-01,MAX]'."""
     parts = []
-    if phases:
-        parts.append(f"AREA[Phase]({' OR '.join(p.value for p in phases)})")
+    for area, values in (
+        ("Phase", phases),
+        ("StudyType", study_types),
+        ("InterventionType", intervention_types),
+        ("LeadSponsorClass", sponsor_classes),
+        ("StdAge", age_groups),
+    ):
+        if values:
+            parts.append(f"AREA[{area}]({' OR '.join(v.value for v in values)})")
     if start_year or end_year:
         lo = f"{start_year}-01-01" if start_year else "MIN"
         hi = f"{end_year}-12-31" if end_year else "MAX"

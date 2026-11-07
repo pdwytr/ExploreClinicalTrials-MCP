@@ -30,6 +30,47 @@ class RecruitmentStatus(str, Enum):
     UNKNOWN = "UNKNOWN"
 
 
+# The enums below are the API's own values (GET /api/v2/studies/enums).
+
+
+class StudyType(str, Enum):
+    INTERVENTIONAL = "INTERVENTIONAL"  # tests a treatment: what most people mean by "trial"
+    OBSERVATIONAL = "OBSERVATIONAL"
+    EXPANDED_ACCESS = "EXPANDED_ACCESS"
+
+
+class InterventionType(str, Enum):
+    DRUG = "DRUG"
+    BIOLOGICAL = "BIOLOGICAL"
+    DEVICE = "DEVICE"
+    PROCEDURE = "PROCEDURE"
+    RADIATION = "RADIATION"
+    BEHAVIORAL = "BEHAVIORAL"
+    GENETIC = "GENETIC"
+    DIETARY_SUPPLEMENT = "DIETARY_SUPPLEMENT"
+    COMBINATION_PRODUCT = "COMBINATION_PRODUCT"
+    DIAGNOSTIC_TEST = "DIAGNOSTIC_TEST"
+    OTHER = "OTHER"
+
+
+class SponsorClass(str, Enum):
+    INDUSTRY = "INDUSTRY"
+    NIH = "NIH"
+    FED = "FED"  # other US federal agency
+    OTHER_GOV = "OTHER_GOV"  # non-US government
+    NETWORK = "NETWORK"
+    INDIV = "INDIV"  # individual
+    OTHER = "OTHER"  # mostly universities and hospitals
+    AMBIG = "AMBIG"
+    UNKNOWN = "UNKNOWN"
+
+
+class AgeGroup(str, Enum):
+    CHILD = "CHILD"  # under 18
+    ADULT = "ADULT"  # 18-64
+    OLDER_ADULT = "OLDER_ADULT"  # 65+
+
+
 class QueryRequest(BaseModel):
     """Request body for POST /query.
 
