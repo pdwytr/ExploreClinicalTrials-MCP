@@ -1,34 +1,53 @@
 ---
 name: ctgov-search
-description: Turns a natural-language question about clinical trials into ClinicalTrials.gov API v2 searches (query.* and filter.* parameters, Essie syntax) for GET /api/v2/studies. Use when planning which trials to fetch to answer a question about drugs, conditions, sponsors, phases, locations, dates or trial counts.
+description: Turns a natural-language question about clinical trials into ClinicalTrials.gov API v2 calls - /studies searches (query.* and filter.* parameters, Essie syntax), single-study lookups, or registry-wide /stats. Use when planning which data to fetch to answer a question about drugs, conditions, sponsors, phases, locations, dates or trial counts.
 metadata:
   api-version: "2.0.5"
   sources: docs/ctgov (official API snapshots)
 ---
 
-# Planning ClinicalTrials.gov searches
+# Planning ClinicalTrials.gov API calls
 
-You write the search parameters; code validates them, adds the user's structured
-filters, runs the searches, and counts the results. You never compute numbers.
+You choose the endpoint and write its parameters; code validates them, adds the
+user's structured filters, runs the calls, and counts the results. You never compute numbers.
 
 **Code handles all pagination, page sizes, result limits, field selection and
-retries.** Never set `pageSize`, `pageToken`, `countTotal`, `fields` or `sort`
-(they are rejected). Write each search for the whole question, however many trials it matches.
+retries.** Never set `pageSize`, `pageToken`, `countTotal`, `fields` (on `studies`)
+or `sort` (they are rejected). Write each search for the whole question, however many trials it matches.
 
 ## Procedure
 
-1. Read the question and the user's structured filters. Decide what the trials
-   must be about (condition, intervention, sponsor, place, dates, phase, status).
+1. Read the question and the user's structured filters. Choose the endpoint (next section).
+   Almost every question is a `studies` search.
 2. If the question compares named things (drug A vs drug B, condition X vs Y),
-   write **one search per side**, each with a short label. Otherwise write one search.
-3. Put each concept in the parameter whose search area fits it (table below).
-4. Put fixed-value constraints (phase, study type, sponsor class, dates, enrollment)
+   write **one step per side**, each with a short label. Otherwise write one step.
+3. For `studies`: put each concept in the parameter whose search area fits it (table below),
+   and fixed-value constraints (phase, study type, sponsor class, dates, enrollment)
    in `filter.advanced` as `AREA[Field]...` expressions.
-5. Write a one-sentence rationale saying what you searched and any assumption made.
-6. If trial registry records cannot answer the question, return `unanswerable`
-   with the reason instead of a search.
+4. Write a one-sentence rationale saying what you fetched and any assumption made.
+5. If trial registry records cannot answer the question, return `unanswerable`
+   with the reason instead of a plan.
 
-## Which parameter
+## Which endpoint
+
+| Question is about | `endpoint` | You provide |
+| --- | --- | --- |
+| Any set of trials defined by a drug, condition, sponsor, place, phase, status or date | `studies` | `params` (search parameters) |
+| One named trial ("NCT05064059") | `study` | `nct_id` |
+| A fixed-value or text field across **all registered trials** ("how are all trials split by phase?") | `stats/field/values` | `fields`, e.g. `["Phase"]` |
+| How many items a list field holds across all trials ("how many conditions does a trial list?") | `stats/field/sizes` | `fields`, e.g. `["Condition"]` |
+| Study record sizes across the registry | `stats/size` | nothing |
+
+Rules for the `stats/*` endpoints (checked against the live API):
+- They cover the **whole registry and cannot filter**. If the question or the user's
+  filters narrow the trials in any way, use `studies` instead (a stats step with user
+  filters is rejected).
+- `stats/field/values` gives counts only for **fixed-value fields** (complete, e.g. `Phase`,
+  `OverallStatus`, `LeadSponsorClass`) and **text fields** (only the **top 250** values,
+  e.g. `LeadSponsorName` has ~52,700). For dates and numbers (`StartDate`,
+  `EnrollmentCount`) it returns only min/max/average, so "trials started per year" needs `studies`.
+
+## Which parameter (`studies`)
 
 | Concept | Parameter | Example value |
 | --- | --- | --- |
@@ -88,9 +107,10 @@ you miss (AND-ed onto your parameters), so never contradict them.
 
 ## Feedback
 
-If you receive feedback (API error message or "no trials matched"), fix that
-specific problem: check syntax against the error, loosen an over-specific term,
-or correct a field name. Do not change parts of the plan that were not at fault.
+If you receive feedback (API error message, "not found", "no trials matched", or a
+stats step rejected because of user filters), fix that specific problem: check syntax
+against the error, loosen an over-specific term, correct a field name or NCT number,
+or switch a stats step to `studies`. Do not change parts of the plan that were not at fault.
 
 ## Unanswerable
 
@@ -123,6 +143,18 @@ something it never names ("this drug" with no drug given).
   "filter.overallStatus": "RECRUITING",
   "filter.advanced": "AREA[LeadSponsorClass]INDUSTRY"}}],
  "rationale": "Recruiting industry-sponsored asthma trials with sites in major European countries (Europe expanded to 8 countries)."}
+```
+
+"How are all registered trials split by phase and by overall status?"
+```json
+{"steps": [{"endpoint": "stats/field/values", "label": "All registered trials", "fields": ["Phase", "OverallStatus"]}],
+ "rationale": "Registry-wide counts of the Phase and OverallStatus fields."}
+```
+
+"Where are the sites of NCT05064059?"
+```json
+{"steps": [{"endpoint": "study", "label": "NCT05064059", "nct_id": "NCT05064059"}],
+ "rationale": "The one named trial; its site countries are in the record."}
 ```
 
 ## References: read only when needed
