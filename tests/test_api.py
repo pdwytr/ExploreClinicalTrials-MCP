@@ -2,15 +2,13 @@
 
 import json
 import time
-from datetime import datetime
 
 from fastapi.testclient import TestClient
 
 from cheiron.api.app import create_app
-from cheiron.api.outputs import QueryOutputs, query_key
+from cheiron.api.outputs import QueryOutputs
 from cheiron.api.tasks import TaskStore
 from cheiron.fetch.models import DataVersion, Trial
-from cheiron.models.request import QueryRequest
 from cheiron.workflow import FetchResult, SearchPlan
 from cheiron.workflow.errors import UnsupportedQuery
 from cheiron.workflow.pipeline import QueryWorkflow
@@ -20,11 +18,9 @@ DATA_TS = "2026-11-06T10:00:05"
 
 class Planner:
     def __init__(self, fail: Exception | None = None):
-        self.calls = 0
         self.fail = fail
 
     async def plan(self, request, feedback=None):
-        self.calls += 1
         if self.fail:
             raise self.fail
         return SearchPlan(
@@ -72,59 +68,40 @@ def test_submit_poll_and_find_outputs_on_disk(tmp_path):
         assert submitted.status_code == 202
         task_id = submitted.json()["task_id"]
         assert submitted.headers["location"] == f"/queries/{task_id}"
-
         done = wait_until_finished(client, task_id)
 
-    assert done["status"] == "succeeded" and not done["reused"]
+    assert done["status"] == "succeeded"
     assert done["progress"]["stage"] == "done" and done["progress"]["trials_fetched"] == 5
-    key = query_key(QueryRequest(**QUESTION), datetime.fromisoformat(DATA_TS))
-    folder = tmp_path / key
+    folder = tmp_path / task_id  # one folder per query, named by its UUID
     assert sorted(p.name for p in folder.iterdir()) == ["meta.json", "plan.json", "request.json", "searches.json", "trials"]
+    assert json.loads((folder / "request.json").read_text()) == QUESTION
     searches = json.loads((folder / "searches.json").read_text())
-    assert [s["label"] for s in searches] == ["Nivolumab", "Pembrolizumab"]
+    assert [s["trials_file"] for s in searches] == ["trials/1-nivolumab.json", "trials/2-pembrolizumab.json"]
     assert searches[0]["params"]["filter.advanced"] == "AREA[Phase](PHASE3)"  # user filter recorded as executed
     assert len(json.loads((folder / searches[1]["trials_file"]).read_text())) == 3
     meta = json.loads((folder / "meta.json").read_text())
     assert meta["status"] == "succeeded" and meta["data_as_of"] == DATA_TS and meta["trials_fetched"] == 5
 
 
-def test_same_question_on_same_data_reuses_the_saved_result(tmp_path):
-    planner = Planner()
-    with make_client(tmp_path, planner) as client:
-        first = wait_until_finished(client, client.post("/queries", json=QUESTION).json()["task_id"])
-        same = {**QUESTION, "query": "  compare phases for NIVOLUMAB vs pembrolizumab "}  # case/spacing differ
-        second = wait_until_finished(client, client.post("/queries", json=same).json()["task_id"])
-
-    assert second["status"] == "succeeded" and second["reused"]
-    assert second["output_dir"] == first["output_dir"]
-    assert planner.calls == 1  # the agent ran once
-
-
-def test_identical_requests_at_the_same_time_run_once(tmp_path):
-    planner = Planner()
-    with make_client(tmp_path, planner) as client:
-        ids = [client.post("/queries", json=QUESTION).json()["task_id"] for _ in range(3)]
-        results = [wait_until_finished(client, i) for i in ids]
-
-    assert all(r["status"] == "succeeded" for r in results)
-    assert planner.calls == 1
-    assert sum(r["reused"] for r in results) == 2
-
-
-def test_different_filters_get_a_different_folder(tmp_path):
+def test_every_query_gets_its_own_folder(tmp_path):
     with make_client(tmp_path, Planner()) as client:
-        a = wait_until_finished(client, client.post("/queries", json=QUESTION).json()["task_id"])
-        b = wait_until_finished(client, client.post("/queries", json={**QUESTION, "trial_phase": ["PHASE2"]}).json()["task_id"])
-    assert a["output_dir"] != b["output_dir"]
+        ids = [client.post("/queries", json=QUESTION).json()["task_id"] for _ in range(2)]
+        for task_id in ids:
+            wait_until_finished(client, task_id)
+    assert ids[0] != ids[1]
+    assert sorted(p.name for p in tmp_path.iterdir()) == sorted(ids)
 
 
-def test_workflow_error_is_reported_in_status_and_nothing_is_saved(tmp_path):
+def test_failed_query_keeps_request_and_error_on_disk(tmp_path):
     with make_client(tmp_path, Planner(fail=UnsupportedQuery("Efficacy is not in registry records."))) as client:
-        done = wait_until_finished(client, client.post("/queries", json=QUESTION).json()["task_id"])
+        task_id = client.post("/queries", json=QUESTION).json()["task_id"]
+        done = wait_until_finished(client, task_id)
 
     assert done["status"] == "failed"
     assert done["error"] == {"error": "unsupported_query", "message": "Efficacy is not in registry records.", "details": {}}
-    assert not any(tmp_path.iterdir())
+    folder = tmp_path / task_id
+    assert sorted(p.name for p in folder.iterdir()) == ["meta.json", "request.json"]
+    assert json.loads((folder / "meta.json").read_text())["error"]["error"] == "unsupported_query"
 
 
 def test_unexpected_error_is_hidden_behind_a_generic_message(tmp_path):
@@ -137,6 +114,7 @@ def test_invalid_request_is_rejected_before_any_task(tmp_path):
     with make_client(tmp_path, Planner()) as client:
         response = client.post("/queries", json={"query": "x", "drugname": "typo"})
     assert response.status_code == 422
+    assert not any(tmp_path.iterdir())
 
 
 def test_unknown_task_is_404_and_health_is_ok(tmp_path):

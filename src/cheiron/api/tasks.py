@@ -1,13 +1,12 @@
-"""Background query tasks, kept in memory (outputs live on disk in data/queries/).
+"""Background query tasks, kept in memory; each query's data is saved to data/queries/<task_id>/.
 
 One process, one task store: task status is lost on restart and not shared between
-worker processes; saved outputs survive either way.
+worker processes. Saved outputs survive either way.
 """
 
 import asyncio
 import logging
 import uuid
-from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from enum import Enum
@@ -15,7 +14,7 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from cheiron.api.outputs import QueryOutputs, query_key
+from cheiron.api.outputs import QueryOutputs
 from cheiron.models.request import QueryRequest
 from cheiron.models.response import ErrorResponse
 from cheiron.workflow.errors import WorkflowError
@@ -38,8 +37,7 @@ class TaskView(BaseModel):
     task_id: str
     status: TaskStatus
     progress: Progress
-    output_dir: str | None = None  # data/queries/<key>, once saved
-    reused: bool = False  # True when an earlier identical query on the same data answered it
+    output_dir: str | None = None  # data/queries/<task_id>
     error: ErrorResponse | None = None
     created_at: datetime
     updated_at: datetime
@@ -56,7 +54,6 @@ class Task:
     status: TaskStatus = TaskStatus.QUEUED
     progress: Progress = field(default_factory=lambda: Progress(stage="queued", message="Waiting to start"))
     output_dir: Path | None = None
-    reused: bool = False
     error: ErrorResponse | None = None
     created_at: datetime = field(default_factory=_now)
     updated_at: datetime = field(default_factory=_now)
@@ -74,11 +71,10 @@ class TaskStore:
         self.outputs = outputs
         self.keep_finished = keep_finished
         self._tasks: dict[str, Task] = {}
-        self._locks: defaultdict[str, asyncio.Lock] = defaultdict(asyncio.Lock)  # one per query key
 
     def submit(self, request: QueryRequest) -> Task:
         self._forget_old()
-        task = Task(id=uuid.uuid4().hex, request=request)
+        task = Task(id=str(uuid.uuid4()), request=request)
         self._tasks[task.id] = task
         task.handle = asyncio.create_task(self._execute(task), name=f"query-{task.id}")
         return task
@@ -92,7 +88,6 @@ class TaskStore:
             status=task.status,
             progress=task.progress,
             output_dir=self.outputs.relative(task.output_dir) if task.output_dir else None,
-            reused=task.reused,
             error=task.error,
             created_at=task.created_at,
             updated_at=task.updated_at,
@@ -106,59 +101,48 @@ class TaskStore:
         await asyncio.gather(*running, return_exceptions=True)
 
     async def _execute(self, task: Task) -> None:
-        task.update(status=TaskStatus.RUNNING, progress=Progress(stage="planning", message="Checking data version"))
+        started = _now()
+        meta: dict = {"task_id": task.id, "started_at": started.isoformat()}
+        task.update(status=TaskStatus.RUNNING)
+        folder = await asyncio.to_thread(self.outputs.create, task.id, task.request)
+        task.update(output_dir=folder)
         try:
-            version = await self.workflow.source.data_version()
-            key = query_key(task.request, version.data_timestamp)
-            async with self._locks[key]:  # identical queries wait, then reuse the first one's output
-                if await asyncio.to_thread(self.outputs.is_complete, key):
-                    task.update(
-                        status=TaskStatus.SUCCEEDED,
-                        output_dir=self.outputs.folder(key),
-                        reused=True,
-                        progress=Progress(stage="done", message="Same question on the same data: reused saved result"),
-                    )
-                    return
-                await self._run_and_save(task)
+            outcome = await self.workflow.plan_and_fetch(task.request, progress=lambda p: task.update(progress=p))
+            task.update(progress=Progress(stage="saving", message=f"Saving {outcome.trials_fetched:,} trials"))
+            await asyncio.to_thread(self.outputs.save_fetch, folder, outcome)
+            meta |= {
+                "status": TaskStatus.SUCCEEDED.value,
+                "rationale": outcome.plan.rationale,
+                "total_trials_matched": outcome.total_matched,
+                "trials_fetched": outcome.trials_fetched,
+                "warnings": outcome.warnings,
+                "data_as_of": outcome.version.data_timestamp.isoformat(),
+                "api_version": outcome.version.api_version,
+            }
+            task.update(
+                status=TaskStatus.SUCCEEDED,
+                progress=Progress(
+                    stage="done",
+                    message=f"Saved {outcome.trials_fetched:,} trials",
+                    trials_fetched=outcome.trials_fetched,
+                    trials_total=outcome.total_matched,
+                ),
+            )
+        except asyncio.CancelledError:
+            meta |= {"status": TaskStatus.FAILED.value, "error": {"error": "internal_error", "message": "Cancelled"}}
+            raise
         except Exception as exc:
             if isinstance(exc, WorkflowError):
                 error = exc.to_response()
             else:
                 log.exception("query task %s failed", task.id)
                 error = ErrorResponse(error="internal_error", message="Unexpected error; see server logs.")
+            meta |= {"status": TaskStatus.FAILED.value, "error": error.model_dump()}
             task.update(status=TaskStatus.FAILED, error=error, progress=Progress(stage="failed", message=error.message))
-
-    async def _run_and_save(self, task: Task) -> None:
-        started = _now()
-        outcome = await self.workflow.plan_and_fetch(task.request, progress=lambda p: task.update(progress=p))
-        task.update(progress=Progress(stage="saving", message=f"Saving {outcome.trials_fetched:,} trials"))
-        # Key from the data version the fetch actually used (the data may have refreshed since the check).
-        key = query_key(task.request, outcome.version.data_timestamp)
-        finished = _now()
-        meta = {
-            "status": "succeeded",
-            "task_id": task.id,
-            "rationale": outcome.plan.rationale,
-            "total_trials_matched": outcome.total_matched,
-            "trials_fetched": outcome.trials_fetched,
-            "warnings": outcome.warnings,
-            "data_as_of": outcome.version.data_timestamp.isoformat(),
-            "api_version": outcome.version.api_version,
-            "started_at": started.isoformat(),
-            "finished_at": finished.isoformat(),
-            "duration_seconds": round((finished - started).total_seconds(), 2),
-        }
-        folder = await asyncio.to_thread(self.outputs.save, key, task.request, outcome, meta)
-        task.update(
-            status=TaskStatus.SUCCEEDED,
-            output_dir=folder,
-            progress=Progress(
-                stage="done",
-                message=f"Saved {outcome.trials_fetched:,} trials",
-                trials_fetched=outcome.trials_fetched,
-                trials_total=outcome.total_matched,
-            ),
-        )
+        finally:
+            finished = _now()
+            meta |= {"finished_at": finished.isoformat(), "duration_seconds": round((finished - started).total_seconds(), 2)}
+            await asyncio.to_thread(self.outputs.save_meta, folder, meta)
 
     def _forget_old(self) -> None:
         cutoff = _now() - self.keep_finished
