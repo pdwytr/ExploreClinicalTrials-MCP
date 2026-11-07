@@ -92,30 +92,61 @@ def build_advanced_filter(
     return " AND ".join(parts) or None
 
 
-class StudySearchParams(BaseModel):
-    """Typed version of the GET /studies query string. Text fields use Essie syntax."""
+# Search parameters a planner may set on GET /studies (names as the API spells them).
+# Paging, field selection, sorting and output format are reserved for code.
+SEARCH_PARAMS = frozenset(
+    {
+        "query.cond",
+        "query.term",
+        "query.locn",
+        "query.titles",
+        "query.intr",
+        "query.outc",
+        "query.spons",
+        "query.lead",
+        "query.id",
+        "filter.overallStatus",
+        "filter.geo",
+        "filter.ids",
+        "filter.advanced",
+    }
+)
+_STATUSES = {s.value for s in RecruitmentStatus}
 
-    condition: str | None = Field(default=None, description="query.cond")
-    intervention: str | None = Field(default=None, description="query.intr")
-    term: str | None = Field(default=None, description="query.term: anything else")
-    location: str | None = Field(default=None, description="query.locn, e.g. a country")
-    sponsor: str | None = Field(default=None, description="query.spons: lead sponsor or collaborator")
-    overall_status: list[RecruitmentStatus] | None = Field(default=None, description="filter.overallStatus")
-    advanced: str | None = Field(default=None, description="filter.advanced, see build_advanced_filter")
+
+def check_search_params(search: dict[str, str]) -> dict[str, str]:
+    """Reject unknown parameter names, empty values and invalid statuses; trim values."""
+    unknown = sorted(set(search) - SEARCH_PARAMS)
+    if unknown:
+        raise ValueError(f"unknown or reserved parameter(s): {unknown}; allowed: {sorted(SEARCH_PARAMS)}")
+    cleaned = {k: v.strip() for k, v in search.items()}
+    empty = sorted(k for k, v in cleaned.items() if not v)
+    if empty:
+        raise ValueError(f"empty value for: {empty}")
+    if "filter.overallStatus" in cleaned:
+        bad = [s for s in re.split(r"[,|]", cleaned["filter.overallStatus"]) if s.strip() not in _STATUSES]
+        if bad:
+            raise ValueError(f"invalid status value(s): {bad}; allowed: {sorted(_STATUSES)}")
+    return cleaned
+
+
+class StudySearchParams(BaseModel):
+    """One GET /studies request: search parameters (query.*, filter.*) plus paging set by code."""
+
+    search: dict[str, str] = Field(default_factory=dict, description="API search parameters, Essie syntax.")
     fields: list[str] = Field(default_factory=lambda: list(DEFAULT_FIELDS))
     page_size: int = Field(default=MAX_PAGE_SIZE, ge=1, le=MAX_PAGE_SIZE)
     page_token: str | None = None
     count_total: bool = True
 
+    @field_validator("search")
+    @classmethod
+    def known_params(cls, search: dict[str, str]) -> dict[str, str]:
+        return check_search_params(search)
+
     def to_query_params(self) -> dict[str, str]:
         params = {
-            "query.cond": self.condition,
-            "query.intr": self.intervention,
-            "query.term": self.term,
-            "query.locn": self.location,
-            "query.spons": self.sponsor,
-            "filter.overallStatus": "|".join(s.value for s in self.overall_status) if self.overall_status else None,
-            "filter.advanced": self.advanced,
+            **self.search,
             "fields": "|".join(self.fields),
             "pageSize": str(self.page_size),
             "pageToken": self.page_token,

@@ -9,8 +9,11 @@ import json
 from datetime import date
 from pathlib import Path
 
+import pytest
+from pydantic import ValidationError
+
 from cheiron.fetch import StudiesPage, StudySearchParams, Trial, build_advanced_filter
-from cheiron.models import RecruitmentStatus, TrialPhase
+from cheiron.models import TrialPhase
 
 FIXTURE = Path(__file__).parent / "fixtures" / "ctgov" / "pembrolizumab_phase3_page1.json"
 
@@ -33,14 +36,16 @@ def test_advanced_filter_combines_phases_and_years():
 
 def test_search_params_become_api_query_string():
     params = StudySearchParams(
-        intervention="pembrolizumab",
-        overall_status=[RecruitmentStatus.RECRUITING, RecruitmentStatus.COMPLETED],
-        advanced=build_advanced_filter([TrialPhase.PHASE3]),
+        search={
+            "query.intr": ' "pembrolizumab" ',
+            "filter.overallStatus": "RECRUITING|COMPLETED",
+            "filter.advanced": build_advanced_filter([TrialPhase.PHASE3]),
+        },
         fields=["NCTId", "Phase"],
         page_size=50,
     ).to_query_params()
     assert params == {
-        "query.intr": "pembrolizumab",
+        "query.intr": '"pembrolizumab"',  # trimmed
         "filter.overallStatus": "RECRUITING|COMPLETED",
         "filter.advanced": "AREA[Phase](PHASE3)",
         "fields": "NCTId|Phase",
@@ -50,9 +55,23 @@ def test_search_params_become_api_query_string():
 
 
 def test_count_total_is_dropped_after_first_page():
-    params = StudySearchParams(condition="asthma", page_token="abc").to_query_params()
+    params = StudySearchParams(search={"query.cond": "asthma"}, page_token="abc").to_query_params()
     assert params["pageToken"] == "abc"
     assert "countTotal" not in params
+
+
+@pytest.mark.parametrize(
+    ("search", "error"),
+    [
+        ({"query.drug": "x"}, "unknown or reserved"),  # not an API parameter
+        ({"pageSize": "5"}, "unknown or reserved"),  # paging belongs to code
+        ({"query.cond": "  "}, "empty value"),
+        ({"filter.overallStatus": "RECRUITING|OPEN"}, "invalid status"),
+    ],
+)
+def test_bad_search_params_are_rejected(search, error):
+    with pytest.raises(ValidationError, match=error):
+        StudySearchParams(search=search)
 
 
 # --- Response ----------------------------------------------------------------------

@@ -3,11 +3,13 @@ from cheiron.fetch.models import (
     DEFAULT_FIELDS,
     FIELD_PATHS,
     MAX_PAGE_SIZE,
+    SEARCH_PARAMS,
     RawStudy,
     StudiesPage,
     StudySearchParams,
     Trial,
     build_advanced_filter,
+    check_search_params,
 )
 
 __all__ = [
@@ -15,9 +17,11 @@ __all__ = [
     "DEFAULT_FIELDS",
     "FIELD_PATHS",
     "MAX_PAGE_SIZE",
+    "SEARCH_PARAMS",
     "RawStudy",
     "StudiesPage",
     "StudySearchParams",
     "Trial",
     "build_advanced_filter",
+    "check_search_params",
 ]

@@ -11,16 +11,18 @@ from cheiron.workflow.plans import ChartPlan, DataProfile, FetchResult, SearchPl
 
 
 class SearchPlanner(Protocol):
-    """Agent 1: question -> what to search for.
+    """Agent 1: question -> which API searches to run.
 
     Its LLM answers with SearchPlannerOutput; an Unanswerable answer is raised as
-    UnsupportedQuery, so the workflow only ever receives a valid SearchPlan."""
+    UnsupportedQuery, so the workflow only ever receives a valid SearchPlan.
+    `feedback` explains why the previous plan failed (API error, no results)."""
 
-    async def plan(self, request: QueryRequest) -> SearchPlan: ...
+    async def plan(self, request: QueryRequest, feedback: list[str] | None = None) -> SearchPlan: ...
 
 
 class TrialSource(Protocol):
-    """Code: runs one search against ClinicalTrials.gov, following pages up to `limit`."""
+    """Code: runs one search against ClinicalTrials.gov, following pages up to `limit`.
+    Raises InvalidSearch when the API rejects the search."""
 
     async def search(self, params: StudySearchParams, limit: int) -> FetchResult: ...
 

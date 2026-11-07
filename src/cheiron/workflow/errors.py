@@ -29,6 +29,13 @@ class NoResults(WorkflowError):
     code = "no_results"
 
 
+class InvalidSearch(WorkflowError):
+    """The API rejected a search the planner wrote (e.g. bad Essie syntax).
+    The workflow feeds this back to the planner once before giving up."""
+
+    code = "unsupported_query"
+
+
 class UpstreamError(WorkflowError):
     """ClinicalTrials.gov or the LLM provider failed."""
 
