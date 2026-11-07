@@ -6,6 +6,7 @@
 """
 
 from collections.abc import Callable
+from datetime import datetime
 from enum import Enum
 from typing import Annotated, Literal
 
@@ -120,19 +121,55 @@ class Dimension(str, Enum):
     GROUP = "group"  # the search label: the series in a comparison
 
 
+class NumericSummary(BaseModel):
+    min: float
+    median: float
+    max: float
+
+
 class FieldProfile(BaseModel):
     distinct: int = Field(ge=0)
     missing: int = Field(ge=0, description="Trials with no value for this dimension.")
-    top_values: list[tuple[str, int]] = Field(default_factory=list, description="Most frequent values with counts.")
+    top_values: list[tuple[str, int]] = Field(
+        default_factory=list, description="Most frequent values with the number of trials having each."
+    )
+    multi_valued: bool = Field(
+        default=False, description="A trial can have several values, so per-value counts can sum to more than the trials."
+    )
+    numeric: NumericSummary | None = None
+    missing_by_group: dict[str, int] | None = Field(default=None, description="Per comparison side, when there are several.")
+
+
+class StatsFieldSummary(BaseModel):
+    piece: str
+    type: str
+    missing: int
+    distinct: int | None = None
+    top_values: list[tuple[str, int]] = Field(default_factory=list)
+    incomplete: bool = Field(default=False, description="The API returned only the top values.")
+    min: str | float | None = None
+    max: str | float | None = None
+    avg: float | None = None
+
+
+class StatsSummary(BaseModel):
+    """A registry-wide /stats result, summarised."""
+
+    label: str
+    endpoint: str
+    fields: list[StatsFieldSummary] = Field(default_factory=list)
+    note: str | None = None  # for stats/size, which has no fields
 
 
 class DataProfile(BaseModel):
-    """A compact summary of the fetched trials, small enough for an LLM prompt."""
+    """A compact summary of everything fetched, small enough for an LLM prompt. Never trial records."""
 
     total_matched: int = Field(ge=0)
     trials_fetched: int = Field(ge=0)
     group_sizes: dict[str, int]
     fields: dict[Dimension, FieldProfile]
+    stats: list[StatsSummary] = Field(default_factory=list)
+    data_as_of: datetime | None = None
 
 
 # --- Agent 2 output ---------------------------------------------------------------------
