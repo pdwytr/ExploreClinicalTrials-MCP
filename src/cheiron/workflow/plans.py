@@ -100,6 +100,7 @@ class Dimension(str, Enum):
 
     PHASE = "phase"
     START_YEAR = "start_year"
+    COMPLETION_YEAR = "completion_year"
     STATUS = "overall_status"
     SPONSOR = "lead_sponsor"
     SPONSOR_CLASS = "sponsor_class"
@@ -115,6 +116,10 @@ class NumericSummary(BaseModel):
     min: float
     median: float
     max: float
+
+
+# Year dimensions and the date field (period.field) each one reads.
+YEAR_DIMENSIONS = {Dimension.START_YEAR: "start", Dimension.COMPLETION_YEAR: "completion"}
 
 
 class FieldProfile(BaseModel):
@@ -183,8 +188,8 @@ class ChartPlan(BaseModel):
         needs_series = self.chart_type in ("grouped_bar_chart", "stacked_bar_chart", "network_graph")
         if needs_series and self.series is None:
             raise ValueError(f"{self.chart_type} needs a series dimension")
-        if self.chart_type == "time_series" and self.x is not Dimension.START_YEAR:
-            raise ValueError("time_series needs x = start_year")
+        if self.chart_type == "time_series" and self.x not in YEAR_DIMENSIONS:
+            raise ValueError("time_series needs x = start_year or completion_year")
         if self.chart_type == "histogram" and self.x is not Dimension.ENROLLMENT:
             raise ValueError("histogram needs x = enrollment (the only numeric field)")
         if self.chart_type == "scatter_plot":

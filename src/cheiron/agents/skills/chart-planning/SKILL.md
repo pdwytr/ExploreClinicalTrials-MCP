@@ -21,7 +21,7 @@ trials gives a misleading chart (code warns above 10% missing, refuses at 100%).
 
 ## Fields you can chart
 
-`phase`, `start_year`, `overall_status`, `lead_sponsor`, `sponsor_class`, `condition`,
+`phase`, `start_year`, `completion_year`, `overall_status`, `lead_sponsor`, `sponsor_class`, `condition`,
 `intervention`, `intervention_type`, `country`, `enrollment` (numeric), and `group`
 (the comparison side: the label of each fetched step).
 
@@ -32,7 +32,7 @@ trials gives a misleading chart (code warns above 10% missing, refuses at 100%).
 | `bar_chart` | Counts per category, rankings ("most common", "which countries") | `x` = a category field |
 | `grouped_bar_chart` | Comparing sides or categories side by side ("A vs B by phase") | `x` + `series` (different fields; `series: group` for comparisons) |
 | `stacked_bar_chart` | Parts of a whole ("share of industry trials per phase") | `x` + `series`; **neither may be multi-valued** (parts would not add up) |
-| `time_series` | Change over time ("per year since 2015") | `x: start_year`; optional `series` (e.g. `group`) |
+| `time_series` | Change over time ("per year since 2015", "completed each year") | `x: start_year` or `completion_year`, matching the searched period's field; optional `series` |
 | `histogram` | Spread of a number ("enrollment sizes") | `x: enrollment` |
 | `network_graph` | Relationships ("sponsors <-> drugs", "drugs used together") | `x` and `series` = the two node kinds; the **same field twice** = co-occurrence within a trial |
 
@@ -47,8 +47,11 @@ trials gives a misleading chart (code warns above 10% missing, refuses at 100%).
   grouped bars; never stack them.
 - **Many categories:** code shows at most 25 (largest first). Set `top_n` lower for
   rankings ("top 10 sponsors"); leave it unset for phases and years.
-- **Phases** keep clinical order and **years** run continuously with empty years as 0:
-  code handles both.
+- **Phases** keep clinical order and **years** run continuously with empty years as 0.
+  Year axes cover the searched period and stop at the data date (later dates are estimates
+  for trials not started or finished yet): code handles all of this and notes it in meta.
+- **Started vs completed:** "trials completed each year" needs `completion_year`; a chart
+  counting by a different date than the search period is rejected.
 - `intent` is a label for the reader: `change_over_time`, `ranking`, `distribution`,
   `magnitude`, `part_to_whole`, `correlation`, `spatial` or `relationship`.
 - **Title:** says what is shown, in the question's terms, with no numbers.

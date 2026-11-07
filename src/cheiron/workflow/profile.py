@@ -39,6 +39,7 @@ TOP_VALUES = 10  # per field: enough to choose a chart, small enough for the pro
 FIELD_VALUES: dict[Dimension, Callable[[Trial], list[str]]] = {
     Dimension.PHASE: lambda t: t.phases,
     Dimension.START_YEAR: lambda t: [str(t.start_year)] if t.start_year else [],
+    Dimension.COMPLETION_YEAR: lambda t: [str(t.completion_year)] if t.completion_year else [],
     Dimension.STATUS: lambda t: [t.overall_status] if t.overall_status else [],
     Dimension.SPONSOR: lambda t: [t.lead_sponsor] if t.lead_sponsor else [],
     Dimension.SPONSOR_CLASS: lambda t: [t.sponsor_class] if t.sponsor_class else [],

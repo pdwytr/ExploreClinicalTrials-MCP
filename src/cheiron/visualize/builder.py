@@ -16,10 +16,11 @@ Counting rules:
 
 from collections import defaultdict
 from collections.abc import Callable
+from datetime import date
 
 from cheiron.fetch.models import Trial
 from cheiron.models.response import ChartVisualization, Citation, NetworkVisualization
-from cheiron.workflow.plans import ChartPlan, Dimension
+from cheiron.workflow.plans import YEAR_DIMENSIONS, ChartPlan, Dimension
 from cheiron.workflow.profile import FIELD_VALUES
 
 MAX_CATEGORIES = 25
@@ -33,6 +34,7 @@ ENROLLMENT_EDGES = [0, 50, 100, 250, 500, 1000, 2500, 5000, 10000]
 FIELD_PATHS = {
     Dimension.PHASE: "protocolSection.designModule.phases",
     Dimension.START_YEAR: "protocolSection.statusModule.startDateStruct.date",
+    Dimension.COMPLETION_YEAR: "protocolSection.statusModule.completionDateStruct.date",
     Dimension.STATUS: "protocolSection.statusModule.overallStatus",
     Dimension.SPONSOR: "protocolSection.sponsorCollaboratorsModule.leadSponsor.name",
     Dimension.SPONSOR_CLASS: "protocolSection.sponsorCollaboratorsModule.leadSponsor.class",
@@ -56,6 +58,8 @@ def _reader(dim: Dimension) -> Callable[[str, Trial], set[str]]:
 def _excerpt(dim: Dimension, value: str, trial: Trial) -> str:
     if dim is Dimension.START_YEAR and trial.start_date:
         return trial.start_date.isoformat()  # the exact date the year came from
+    if dim is Dimension.COMPLETION_YEAR and trial.completion_date:
+        return trial.completion_date.isoformat()
     return value
 
 
@@ -70,53 +74,96 @@ def _citations(dims: list[tuple[Dimension, str]], trials: list[Trial]) -> list[C
     return cited
 
 
-def _order(dim: Dimension, counts: dict[str, list[Trial]], top_n: int | None) -> tuple[list[str], int]:
-    """Category order and how many categories were dropped."""
+def _order(
+    dim: Dimension, counts: dict[str, list[Trial]], top_n: int | None, window: tuple[int | None, int | None] = (None, None)
+) -> tuple[list[str], int]:
+    """Category order and how many categories were dropped. Years run continuously over the window."""
     if dim is Dimension.PHASE:
         ordered = [p for p in PHASE_ORDER if p in counts] + sorted(set(counts) - set(PHASE_ORDER))
-    elif dim is Dimension.START_YEAR:
+    elif dim in YEAR_DIMENSIONS:
         years = [int(y) for y in counts]
-        ordered = [str(y) for y in range(min(years), max(years) + 1)] if years else []
+        lo = window[0] if window[0] is not None else min(years, default=None)
+        hi = window[1] if window[1] is not None else max(years, default=None)
+        ordered = [str(y) for y in range(lo, hi + 1)] if lo is not None and hi is not None else []
     else:
         ordered = sorted(counts, key=lambda v: (-len(counts[v]), v))
-    limit = top_n if top_n is not None else (None if dim in (Dimension.PHASE, Dimension.START_YEAR) else MAX_CATEGORIES)
+    limit = top_n if top_n is not None else (None if dim is Dimension.PHASE or dim in YEAR_DIMENSIONS else MAX_CATEGORIES)
     if limit is not None and len(ordered) > limit:
         return ordered[:limit], len(ordered) - limit
     return ordered, 0
 
 
 def _channel(dim: Dimension) -> dict:
-    if dim is Dimension.START_YEAR:
-        return {"field": "start_year", "type": "temporal", "timeUnit": "utcyear", "title": "Start year"}
+    if dim in YEAR_DIMENSIONS:
+        title = "Start year" if dim is Dimension.START_YEAR else "Completion year"
+        return {"field": dim.value, "type": "temporal", "timeUnit": "utcyear", "title": title}
     if dim is Dimension.PHASE:
         return {"field": "phase", "type": "ordinal", "sort": PHASE_ORDER, "title": "Phase"}
     return {"field": dim.value, "type": "nominal", "title": dim.value.replace("_", " ").capitalize()}
 
 
 def _row_value(dim: Dimension, value: str) -> str:
-    return f"{value}-01-01" if dim is Dimension.START_YEAR else value  # ISO date for temporal axes
+    return f"{value}-01-01" if dim in YEAR_DIMENSIONS else value  # ISO date for temporal axes
 
 
 Y = {"field": "trial_count", "type": "quantitative", "title": "Trials"}
 
 
+def _year_windows(
+    plan: ChartPlan, bounds: dict | None, as_of: date | None
+) -> tuple[dict[Dimension, tuple[int | None, int | None]], list[str]]:
+    """For each year dimension on the chart: the years to show (the searched period, never past the
+    data date) and notes for meta."""
+    windows, notes = {}, []
+    for dim in (plan.x, plan.series):
+        field = YEAR_DIMENSIONS.get(dim) if dim else None
+        if not field:
+            continue
+        lo, hi = (bounds or {}).get(field, (None, None))
+        if as_of is not None:
+            hi = as_of.year if hi is None else min(hi, as_of.year)
+            notes.append(f"{as_of.year} is partial: data as of {as_of.isoformat()}.")
+        windows[dim] = (lo, hi)
+    return windows, notes
+
+
+def _within(dim: Dimension, read, window):
+    """A reader that keeps only years inside the window."""
+    lo, hi = window
+    return lambda group, trial: {v for v in read(group, trial) if (lo is None or int(v) >= lo) and (hi is None or int(v) <= hi)}
+
+
 def build_visualization(
-    trials_by_group: dict[str, list[Trial]], plan: ChartPlan
+    trials_by_group: dict[str, list[Trial]],
+    plan: ChartPlan,
+    bounds: dict[str, tuple[int | None, int | None]] | None = None,
+    as_of: date | None = None,
 ) -> tuple[ChartVisualization | NetworkVisualization, list[str]]:
-    """Returns the visualization and warnings for meta."""
+    """Returns the visualization and warnings for meta.
+
+    `bounds` are the year ranges the searches were filtered on (per date field) and `as_of` the
+    data date: year axes cover the searched period and stop at the data date, because later dates
+    are estimates for trials that have not started or finished yet."""
     pairs: list[Pair] = [(g, t) for g, ts in trials_by_group.items() for t in ts]
     if plan.chart_type == "network_graph":
         return _network(pairs, plan)
     if plan.chart_type == "histogram":
         return _histogram(pairs, plan), []
 
-    read_x = _reader(plan.x)
+    windows, year_notes = _year_windows(plan, bounds, as_of)
+    future = set()
+    for dim, (_, hi) in windows.items():
+        read = _reader(dim)
+        if hi is not None:
+            future |= {t.nct_id for g, t in pairs if read(g, t) and all(int(v) > hi for v in read(g, t))}
+
+    read_x = _reader(plan.x) if plan.x not in windows else _within(plan.x, _reader(plan.x), windows[plan.x])
     if plan.series is None:
         buckets: dict[str, list[Trial]] = defaultdict(list)
         for group, trial in pairs:
             for value in read_x(group, trial):
                 buckets[value].append(trial)
-        order, dropped = _order(plan.x, buckets, plan.top_n)
+        order, dropped = _order(plan.x, buckets, plan.top_n, windows.get(plan.x, (None, None)))
         rows = [
             {
                 plan.x.value: _row_value(plan.x, v),
@@ -125,9 +172,10 @@ def build_visualization(
             }
             for v in order
         ]
-        encoding = {"x": _channel(plan.x) | ({"sort": "-y"} if plan.x not in (Dimension.PHASE, Dimension.START_YEAR) else {}), "y": Y}
+        ordered_axis = plan.x is Dimension.PHASE or plan.x in YEAR_DIMENSIONS
+        encoding = {"x": _channel(plan.x) | ({} if ordered_axis else {"sort": "-y"}), "y": Y}
     else:
-        read_s = _reader(plan.series)
+        read_s = _reader(plan.series) if plan.series not in windows else _within(plan.series, _reader(plan.series), windows[plan.series])
         cells: dict[tuple[str, str], list[Trial]] = defaultdict(list)
         x_totals: dict[str, list[Trial]] = defaultdict(list)
         s_totals: dict[str, list[Trial]] = defaultdict(list)
@@ -139,8 +187,8 @@ def build_visualization(
                     cells[(x, s)].append(trial)
             for s in ss:
                 s_totals[s].append(trial)
-        order, dropped = _order(plan.x, x_totals, plan.top_n)
-        series_order, dropped_series = _order(plan.series, s_totals, None)
+        order, dropped = _order(plan.x, x_totals, plan.top_n, windows.get(plan.x, (None, None)))
+        series_order, dropped_series = _order(plan.series, s_totals, None, windows.get(plan.series, (None, None)))
         dropped += dropped_series
         rows = [
             {
@@ -158,6 +206,11 @@ def build_visualization(
             encoding["xOffset"] = series_channel
 
     warnings = [f"Showing the top {len(order)} values of {plan.x.value}; {dropped} smaller categories are left out."] if dropped else []
+    if future:
+        warnings.append(
+            f"{len(future)} trials with only estimated dates after the data date are left out of the time axis."
+        )
+    warnings += year_notes
     viz = ChartVisualization(type=plan.chart_type, intent=plan.intent, title=plan.title, encoding=encoding, data=rows)
     return viz, warnings
 

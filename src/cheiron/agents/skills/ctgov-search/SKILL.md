@@ -58,7 +58,8 @@ Rules for the `stats/*` endpoints (checked against the live API):
 | Country, state, city of a site | `query.locn` | `"Germany" OR "France"` |
 | Anything else (keywords, acronyms) | `query.term` | `"CAR-T"` |
 | Overall status | `filter.overallStatus` | `RECRUITING\|NOT_YET_RECRUITING` |
-| Phase, type, dates, counts, classes | `filter.advanced` | `AREA[Phase](PHASE2 OR PHASE3)` |
+| Phase, type, counts, classes | `filter.advanced` | `AREA[Phase](PHASE2 OR PHASE3)` |
+| Years (start or completion date) | `period` on the step (not a parameter) | `{"field": "start", "from_year": 2015}` |
 
 ## Essie essentials
 
@@ -69,9 +70,10 @@ Rules for the `stats/*` endpoints (checked against the live API):
   parenthesise mixed expressions: `("asthma" OR "COPD") AND NOT "pediatric"`.
 - Fixed values: `AREA[Phase]PHASE3`, `AREA[StudyType]INTERVENTIONAL`,
   `AREA[LeadSponsorClass]INDUSTRY`, `AREA[InterventionType]DEVICE`.
-- Ranges (dates are YYYY-MM-DD; `MIN`/`MAX` for open ends):
-  `AREA[StartDate]RANGE[2015-01-01,MAX]`, `AREA[EnrollmentCount]RANGE[1000,MAX]`.
+- Number ranges (`MIN`/`MAX` for open ends): `AREA[EnrollmentCount]RANGE[1000,MAX]`.
   RANGE never matches trials with no value in that field.
+- **Years never go in the query text** (code rejects `AREA[StartDate]` / `AREA[CompletionDate]`):
+  set the step's `period` instead (next section).
 - Same-site conditions need `SEARCH[Location](...)`:
   `SEARCH[Location](AREA[LocationCountry]United States AND AREA[LocationStatus]RECRUITING)`.
 - Enum values are UPPER_SNAKE_CASE exactly as listed in references/enums.md.
@@ -89,8 +91,11 @@ Rules for the `stats/*` endpoints (checked against the live API):
 - **"Trials" usually means interventional studies**; add `AREA[StudyType]INTERVENTIONAL`
   when the question is about testing treatments. Leave it out for "studies" in general.
 - **"Ongoing"** = `NOT_YET_RECRUITING|RECRUITING|ENROLLING_BY_INVITATION|ACTIVE_NOT_RECRUITING`.
-- **Years mean start date** unless the question says completed (`CompletionDate`) or
-  posted (`StudyFirstPostDate`).
+- **Years go in `period`**, `{"field": "start" | "completion", "from_year": ..., "to_year": ...}`
+  (inclusive, either end open). `start` unless the question is about trials completed or
+  finishing. "Since 2015" = `from_year: 2015`; "in 2018" = from and to 2018. Code turns it into
+  the date filter, and the chart's time axis must use the matching year (start_year or
+  completion_year). Dates after the data date are estimates; code leaves them off time axes.
 - **Combination therapy** = `AND` inside `query.intr`: `"pembrolizumab" AND "carboplatin"`.
 - **Exclusions** = `NOT`: `"diabetes" NOT "type 1 diabetes"`.
 - Do not narrow a question beyond what it asks just to get fewer results: large
@@ -105,7 +110,9 @@ industry vs academic, by year) is **one** search: the chart splits it later.
 ## User's structured filters
 
 They are listed in the request. Include them in your searches. Code also adds any
-you miss (AND-ed onto your parameters), so never contradict them.
+you miss (AND-ed onto your parameters), so never contradict them. The user's `start_year` /
+`end_year` are an inclusive start-date range ("start_year 2018" = 2018 onwards) and code sets
+them as the start period, replacing any start period you wrote.
 
 ## Feedback
 
@@ -125,7 +132,7 @@ something it never names ("this drug" with no drug given).
 
 "How has the number of pembrolizumab trials changed per year since 2015?"
 ```json
-{"steps": [{"endpoint": "studies", "label": "Pembrolizumab", "params": {"query.intr": "\"pembrolizumab\"", "filter.advanced": "AREA[StartDate]RANGE[2015-01-01,MAX]"}}],
+{"steps": [{"endpoint": "studies", "label": "Pembrolizumab", "params": {"query.intr": "\"pembrolizumab\""}, "period": {"field": "start", "from_year": 2015}}],
  "rationale": "Trials testing pembrolizumab that started in 2015 or later."}
 ```
 

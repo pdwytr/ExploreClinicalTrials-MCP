@@ -69,7 +69,7 @@ def test_phase_and_years_are_anded_onto_advanced_filter():
     p = plan(("x", {"query.cond": "asthma", "filter.advanced": "AREA[StudyType]INTERVENTIONAL"}))
     prepared, _ = apply_request_filters(p, request(trial_phase=["PHASE3"], start_year=2015))
     assert prepared[0][1].search["filter.advanced"] == (
-        "(AREA[StudyType]INTERVENTIONAL) AND AREA[Phase](PHASE3) AND AREA[StartDate]RANGE[2015-01-01,MAX]"
+        "((AREA[StudyType]INTERVENTIONAL) AND AREA[Phase](PHASE3)) AND AREA[StartDate]RANGE[2015-01-01,MAX]"
     )
 
 

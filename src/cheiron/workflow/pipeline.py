@@ -29,9 +29,10 @@ from cheiron.workflow.plans import (
     SearchPlan,
     StatsResult,
     StepResult,
+    YEAR_DIMENSIONS,
 )
 from cheiron.workflow.steps import QueryPlanner, TrialSource
-from cheiron.workflow.translate import PreparedStep, apply_request_filters, filters_summary
+from cheiron.workflow.translate import PreparedStep, apply_request_filters, filters_summary, year_bounds
 
 log = logging.getLogger(__name__)
 
@@ -94,7 +95,10 @@ class QueryWorkflow:
         outcome, chart = result.outcome, result.chart
 
         _report(progress, "building", "Building the chart")
-        visualization, viz_warnings = build_visualization(outcome.trials_by_group, chart)
+        bounds = year_bounds(outcome.plan, request)
+        visualization, viz_warnings = build_visualization(
+            outcome.trials_by_group, chart, bounds, outcome.version.data_timestamp.date()
+        )
         meta = Meta(
             interpretation=outcome.plan.rationale,
             filters_applied=filters_summary(outcome.prepared),
@@ -205,11 +209,21 @@ def warn_if_docs_outdated(version: DataVersion) -> None:
 _docs_warning_logged = False
 
 
-def check_chart_plan(chart: ChartPlan, search: SearchPlan, profile: DataProfile) -> list[str]:
-    """Reject plans the data cannot support; return warnings for weak ones."""
+def check_chart_plan(
+    chart: ChartPlan, search: SearchPlan, profile: DataProfile, bounds: dict | None = None
+) -> list[str]:
+    """Reject plans the data cannot support; return warnings for weak ones.
+    `bounds` are the year ranges the searches were filtered on, per date field."""
     used = [d for d in (chart.x, chart.series) if d is not None]
     if Dimension.GROUP in used and not search.is_comparison:
         raise UnsupportedQuery("The chart groups by comparison side, but there is only one search.")
+    for dim in used:
+        field = YEAR_DIMENSIONS.get(dim)
+        if field and bounds and field not in bounds:
+            raise UnsupportedQuery(
+                f"The chart counts by {dim.value} but the searches are limited by {', '.join(bounds)} date; "
+                f"use the year field that matches the period ({', '.join(f'{f}_year' for f in bounds)})."
+            )
 
     warnings = []
     for dim in used:

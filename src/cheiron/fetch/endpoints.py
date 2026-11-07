@@ -11,10 +11,11 @@ Paging, field selection and output format stay with code, never the planner.
     stats/size           GET /stats/size           study record sizes across the whole registry
 """
 
+import re
 from enum import Enum
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, Field, StringConstraints, field_validator
+from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
 from cheiron.fetch.models import check_search_params
 
@@ -40,16 +41,38 @@ class _Step(BaseModel):
     label: str = Field(min_length=1, max_length=80, description="Shown in the chart, e.g. 'Nivolumab'.")
 
 
+class Period(BaseModel):
+    """A year range on one date field. Code turns it into AREA[StartDate|CompletionDate]RANGE[...]."""
+
+    field: Literal["start", "completion"] = Field(description="Which date the years refer to.")
+    from_year: int | None = Field(default=None, ge=1900, le=2100, description="Inclusive.")
+    to_year: int | None = Field(default=None, ge=1900, le=2100, description="Inclusive.")
+
+    @model_validator(mode="after")
+    def ordered(self) -> "Period":
+        if self.from_year and self.to_year and self.from_year > self.to_year:
+            raise ValueError("from_year must be less than or equal to to_year")
+        return self
+
+
+_DATE_RANGE_IN_TEXT = re.compile(r"AREA\[(StartDate|CompletionDate|PrimaryCompletionDate)\]", re.IGNORECASE)
+
+
 class StudiesStep(_Step):
     """Search trials. The only step that can apply search filters (and the user's filters)."""
 
     endpoint: Literal["studies"] = "studies"
     params: dict[str, str] = Field(min_length=1, description="query.* / filter.* parameters in Essie syntax.")
+    period: Period | None = Field(default=None, description="Year range on start or completion date.")
 
     @field_validator("params")
     @classmethod
     def known_params(cls, params: dict[str, str]) -> dict[str, str]:
-        return check_search_params(params)
+        params = check_search_params(params)
+        for value in params.values():
+            if _DATE_RANGE_IN_TEXT.search(value):
+                raise ValueError("put year ranges in 'period' (field start or completion), not in the query text")
+        return params
 
     def path(self) -> str:
         return "/studies"

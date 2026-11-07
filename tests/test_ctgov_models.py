@@ -13,6 +13,7 @@ import pytest
 from pydantic import ValidationError
 
 from cheiron.fetch import StudiesPage, StudySearchParams, Trial, build_advanced_filter
+from cheiron.fetch.models import date_range
 from cheiron.models import TrialPhase
 
 FIXTURE = Path(__file__).parent / "fixtures" / "ctgov" / "pembrolizumab_phase3_page1.json"
@@ -25,13 +26,11 @@ def load_page() -> StudiesPage:
 # --- Request -----------------------------------------------------------------------
 
 
-def test_advanced_filter_combines_phases_and_years():
-    assert (
-        build_advanced_filter([TrialPhase.PHASE2, TrialPhase.PHASE3], 2015, None)
-        == "AREA[Phase](PHASE2 OR PHASE3) AND AREA[StartDate]RANGE[2015-01-01,MAX]"
-    )
-    assert build_advanced_filter(end_year=2020) == "AREA[StartDate]RANGE[MIN,2020-12-31]"
+def test_phase_filter_and_date_ranges():
+    assert build_advanced_filter([TrialPhase.PHASE2, TrialPhase.PHASE3]) == "AREA[Phase](PHASE2 OR PHASE3)"
     assert build_advanced_filter() is None
+    assert date_range("start", 2015, None) == "AREA[StartDate]RANGE[2015-01-01,MAX]"
+    assert date_range("completion", None, 2020) == "AREA[CompletionDate]RANGE[MIN,2020-12-31]"
 
 
 def test_search_params_become_api_query_string():

@@ -32,6 +32,7 @@ from cheiron.workflow.errors import InvalidSearch, NoResults, UnsupportedQuery
 from cheiron.workflow.pipeline import FetchOutcome, check_chart_plan
 from cheiron.workflow.plans import ChartPlan, DataProfile, SearchPlan, StatsResult, Unanswerable
 from cheiron.workflow.profile import build_profile
+from cheiron.workflow.translate import year_bounds
 from cheiron.workflow.steps import AgentResult
 
 SKILLS_DIR = Path(__file__).parent / "skills"
@@ -182,7 +183,8 @@ async def validate_output(ctx: RunContext[RunState], output: ChartPlan | Unanswe
     if state.outcome is None or state.profile is None:
         raise ModelRetry("Fetch the data (fetch_data) and look at it (describe_data) before choosing a chart.")
     try:
-        state.chart_warnings = check_chart_plan(output, state.outcome.plan, state.profile)
+        bounds = year_bounds(state.outcome.plan, state.request)
+        state.chart_warnings = check_chart_plan(output, state.outcome.plan, state.profile, bounds)
     except UnsupportedQuery as exc:
         raise ModelRetry(f"This chart does not fit the fetched data: {exc.message}") from exc
     return output

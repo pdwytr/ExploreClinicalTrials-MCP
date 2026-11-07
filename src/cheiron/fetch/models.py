@@ -41,6 +41,9 @@ DEFAULT_FIELDS = [
     "BriefTitle",
     "OverallStatus",
     "StartDate",
+    "StartDateType",
+    "CompletionDate",
+    "CompletionDateType",
     "Phase",
     "LeadSponsorName",
     "LeadSponsorClass",
@@ -55,21 +58,20 @@ DEFAULT_FIELDS = [
 # --- Request ---------------------------------------------------------------------
 
 
-def build_advanced_filter(
-    phases: list[TrialPhase] | None = None,
-    start_year: int | None = None,
-    end_year: int | None = None,
-) -> str | None:
-    """The user's phase and start-year filters in Essie syntax, e.g.
-    'AREA[Phase](PHASE2 OR PHASE3) AND AREA[StartDate]RANGE[2015-01-01,MAX]'."""
-    parts = []
-    if phases:
-        parts.append(f"AREA[Phase]({' OR '.join(p.value for p in phases)})")
-    if start_year or end_year:
-        lo = f"{start_year}-01-01" if start_year else "MIN"
-        hi = f"{end_year}-12-31" if end_year else "MAX"
-        parts.append(f"AREA[StartDate]RANGE[{lo},{hi}]")
-    return " AND ".join(parts) or None
+def build_advanced_filter(phases: list[TrialPhase] | None = None) -> str | None:
+    """The user's phase filter in Essie syntax, e.g. 'AREA[Phase](PHASE2 OR PHASE3)'."""
+    return f"AREA[Phase]({' OR '.join(p.value for p in phases)})" if phases else None
+
+
+# Date fields a period can be on (the API piece names).
+DATE_AREAS = {"start": "StartDate", "completion": "CompletionDate"}
+
+
+def date_range(field: str, from_year: int | None, to_year: int | None) -> str:
+    """A year range on a date field in Essie syntax, e.g. 'AREA[StartDate]RANGE[2015-01-01,MAX]'."""
+    lo = f"{from_year}-01-01" if from_year else "MIN"
+    hi = f"{to_year}-12-31" if to_year else "MAX"
+    return f"AREA[{DATE_AREAS[field]}]RANGE[{lo},{hi}]"
 
 
 # Search parameters a planner may set on GET /studies (names as the API spells them).
@@ -155,6 +157,7 @@ class IdentificationModule(_Raw):
 class StatusModule(_Raw):
     overall_status: str | None = None
     start_date_struct: DateStruct | None = None
+    completion_date_struct: DateStruct | None = None
 
 
 class LeadSponsor(_Raw):
@@ -233,6 +236,9 @@ class Trial(BaseModel):
     title: str | None = None
     overall_status: str | None = None
     start_date: date | None = None
+    start_date_type: str | None = None  # ACTUAL or ESTIMATED
+    completion_date: date | None = None
+    completion_date_type: str | None = None
     phases: list[str] = Field(default_factory=list)
     lead_sponsor: str | None = None
     sponsor_class: str | None = None
@@ -245,7 +251,11 @@ class Trial(BaseModel):
     def start_year(self) -> int | None:
         return self.start_date.year if self.start_date else None
 
-    @field_validator("start_date", mode="before")
+    @property
+    def completion_year(self) -> int | None:
+        return self.completion_date.year if self.completion_date else None
+
+    @field_validator("start_date", "completion_date", mode="before")
     @classmethod
     def parse_partial_date(cls, value):
         """The API mixes full dates with year-month ("2021-11"); the latter becomes the 1st of the month."""
@@ -266,6 +276,9 @@ class Trial(BaseModel):
             title=p.identification_module.brief_title,
             overall_status=status.overall_status,
             start_date=status.start_date_struct.date if status.start_date_struct else None,
+            start_date_type=status.start_date_struct.type if status.start_date_struct else None,
+            completion_date=status.completion_date_struct.date if status.completion_date_struct else None,
+            completion_date_type=status.completion_date_struct.type if status.completion_date_struct else None,
             phases=design.phases,
             lead_sponsor=sponsor.name,
             sponsor_class=sponsor.sponsor_class,

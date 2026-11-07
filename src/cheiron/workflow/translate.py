@@ -3,8 +3,8 @@ planner's steps, and summarising what was fetched. No AI here."""
 
 import logging
 
-from cheiron.fetch.endpoints import FieldSizesStep, FieldValuesStep, RecordSizeStep, StudiesStep, StudyStep
-from cheiron.fetch.models import StudySearchParams, build_advanced_filter
+from cheiron.fetch.endpoints import FieldSizesStep, FieldValuesStep, Period, RecordSizeStep, StudiesStep, StudyStep
+from cheiron.fetch.models import StudySearchParams, build_advanced_filter, date_range
 from cheiron.models.request import QueryRequest
 from cheiron.workflow.errors import InvalidSearch
 from cheiron.workflow.plans import SearchPlan
@@ -36,7 +36,9 @@ def apply_request_filters(plan: SearchPlan, request: QueryRequest) -> tuple[list
 
     - Text fields (drug, condition, sponsor, country) are AND-ed onto the matching
       parameter, unless the planner's value already contains them.
-    - Phases and years are AND-ed onto filter.advanced.
+    - Phases are AND-ed onto filter.advanced.
+    - Years: each step's period becomes a RANGE on its date field. The user's start_year /
+      end_year are authoritative: they replace any start-date period the planner wrote.
     - Statuses replace filter.overallStatus (the user's explicit choice wins).
     Exception: if the steps compare sides on that very parameter (e.g. two drugs),
     AND-ing the user's value onto both would change the comparison, so it is skipped
@@ -76,11 +78,13 @@ def apply_request_filters(plan: SearchPlan, request: QueryRequest) -> tuple[list
                 log.info("added user filter: %s += %r", api_param, wanted)
                 p[api_param] = _and(p.get(api_param), phrase(wanted))
 
-    advanced = build_advanced_filter(request.trial_phase, request.start_year, request.end_year)
+    advanced = build_advanced_filter(request.trial_phase)
     statuses = "|".join(s.value for s in request.recruitment_status) if request.recruitment_status else None
-    for p in all_params:
+    for step, p in zip(studies, all_params):
         if advanced and advanced not in p.get("filter.advanced", ""):
             p["filter.advanced"] = _and(p.get("filter.advanced"), advanced)
+        for period in effective_periods(step, request):
+            p["filter.advanced"] = _and(p.get("filter.advanced"), date_range(period.field, period.from_year, period.to_year))
         if statuses and p.get("filter.overallStatus") != statuses:
             log.info("user status filter replaces %r", p.get("filter.overallStatus"))
             p["filter.overallStatus"] = statuses
@@ -104,3 +108,30 @@ def step_summary(label: str, target) -> dict:
 def filters_summary(prepared: list[PreparedStep]) -> dict:
     """The exact API calls that ran, for meta.filters_applied."""
     return {"steps": [step_summary(label, target) for label, target in prepared]}
+
+
+def effective_periods(step: StudiesStep, request: QueryRequest) -> list[Period]:
+    """The periods a /studies step is actually filtered on. The user's start_year / end_year
+    replace the planner's start-date period; a completion-date period is kept alongside."""
+    periods = []
+    if request.start_year or request.end_year:
+        if step.period and step.period.field == "start":
+            log.info("user years replace the planner's start period %s", step.period)
+        periods.append(Period(field="start", from_year=request.start_year, to_year=request.end_year))
+    if step.period and not (periods and step.period.field == "start"):
+        periods.append(step.period)
+    return periods
+
+
+def year_bounds(plan: SearchPlan, request: QueryRequest) -> dict[str, tuple[int | None, int | None]]:
+    """Per date field, the widest (from, to) years any /studies step was filtered on."""
+    bounds: dict[str, tuple[int | None, int | None]] = {}
+    for step in plan.steps:
+        if not isinstance(step, StudiesStep):
+            continue
+        for period in effective_periods(step, request):
+            lo, hi = bounds.get(period.field, (period.from_year, period.to_year))
+            lo = None if lo is None or period.from_year is None else min(lo, period.from_year)
+            hi = None if hi is None or period.to_year is None else max(hi, period.to_year)
+            bounds[period.field] = (lo, hi)
+    return bounds
