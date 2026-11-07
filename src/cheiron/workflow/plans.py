@@ -5,6 +5,7 @@
     ChartPlan    Agent 2 (chart planner) -> code: how to show it
 """
 
+from collections.abc import Callable
 from enum import Enum
 from typing import Annotated, Literal
 
@@ -71,6 +72,21 @@ class Unanswerable(BaseModel):
 
 
 SearchPlannerOutput = Annotated[SearchDecision | Unanswerable, Field(discriminator="kind")]
+
+
+# --- Progress (for task status) --------------------------------------------------------
+
+
+class Progress(BaseModel):
+    """Where a query is, for status updates. Stages run in this order; failed can end any of them."""
+
+    stage: Literal["queued", "planning", "fetching", "analyzing", "building", "saving", "done", "failed"]
+    message: str
+    trials_fetched: int | None = None
+    trials_total: int | None = None
+
+
+ProgressCallback = Callable[[Progress], None]
 
 
 # --- Fetch result and profile ---------------------------------------------------------

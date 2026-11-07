@@ -2,6 +2,7 @@
 tests plug in fakes. Agents are async because they call an LLM; the source is
 async because it calls the ClinicalTrials.gov API."""
 
+from collections.abc import Callable
 from typing import Protocol
 
 from cheiron.fetch.models import DataVersion, StudySearchParams, Trial
@@ -22,9 +23,15 @@ class SearchPlanner(Protocol):
 
 class TrialSource(Protocol):
     """Code: runs one search against ClinicalTrials.gov, following every page
-    (or up to `limit` when one is set). Raises InvalidSearch when the API rejects the search."""
+    (or up to `limit` when one is set). Raises InvalidSearch when the API rejects the search.
+    `on_progress(fetched, total)` is called after each page."""
 
-    async def search(self, params: StudySearchParams, limit: int | None = None) -> FetchResult: ...
+    async def search(
+        self,
+        params: StudySearchParams,
+        limit: int | None = None,
+        on_progress: Callable[[int, int | None], None] | None = None,
+    ) -> FetchResult: ...
 
     async def data_version(self) -> DataVersion:
         """API release and data refresh time (GET /version)."""

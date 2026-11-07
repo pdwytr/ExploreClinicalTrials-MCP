@@ -65,11 +65,13 @@ class FakeSource:
     async def data_version(self):
         return self.versions.pop(0) if len(self.versions) > 1 else self.versions[0]
 
-    async def search(self, params, limit):
+    async def search(self, params, limit, on_progress=None):
         self.calls.append(params)
         result = self.by_intervention.get(params.search.get("query.intr"), FetchResult(trials=[], total_matched=0))
         if isinstance(result, Exception):
             raise result
+        if on_progress:
+            on_progress(len(result.trials), result.total_matched)
         return result
 
 
@@ -160,6 +162,26 @@ def test_user_filters_reach_the_api():
     run(wf, trial_phase=["PHASE3"])
 
     assert source.calls[0].search["filter.advanced"] == "AREA[Phase](PHASE3)"
+
+
+def test_progress_is_reported_through_the_stages():
+    fetched = {"nivolumab": FetchResult(trials=[trial(1)], total_matched=1), "pembrolizumab": FOUND}
+    wf, _, _, _ = make_workflow([search_plan("nivolumab", "pembrolizumab")], fetched)
+    seen = []
+
+    asyncio.run(wf.run(QueryRequest(query="test question"), progress=seen.append))
+
+    assert seen[0].stage == "planning"
+    fetching = [p for p in seen if p.stage == "fetching"]
+    assert fetching[-1].trials_fetched == 3 and fetching[-1].trials_total == 3  # summed across both searches
+    assert [p.stage for p in seen][-2:] == ["analyzing", "building"]
+
+
+def test_plan_and_fetch_works_without_chart_steps():
+    wf = QueryWorkflow(FakeSearchPlanner(search_plan("pembrolizumab")), FakeSource({"pembrolizumab": FOUND}))
+    outcome = asyncio.run(wf.plan_and_fetch(QueryRequest(query="test question")))
+    assert outcome.trials_fetched == 2 and outcome.total_matched == 2
+    assert list(outcome.trials_by_group) == ["Pembrolizumab"]
 
 
 # --- Feedback and retry ------------------------------------------------------------------
