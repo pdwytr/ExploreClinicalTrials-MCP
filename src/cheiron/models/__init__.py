@@ -1,4 +1,4 @@
-from cheiron.models.catalog import INTENT_CHART_TYPES, ChartType, Intent, VisualizationType, default_chart_type
+from cheiron.models.catalog import INTENT_CHART_TYPES, ChartType, Intent, VisualizationType
 from cheiron.models.request import QueryRequest, RecruitmentStatus, TrialPhase
 from cheiron.models.response import (
     Channel,
@@ -41,5 +41,4 @@ __all__ = [
     "SecondaryChannel",
     "TrialPhase",
     "VisualizationType",
-    "default_chart_type",
 ]

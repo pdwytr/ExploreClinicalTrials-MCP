@@ -1,7 +1,6 @@
 from cheiron.fetch.models import (
     BASE_URL,
     DEFAULT_FIELDS,
-    FIELD_PATHS,
     MAX_PAGE_SIZE,
     SEARCH_PARAMS,
     RawStudy,
@@ -15,7 +14,6 @@ from cheiron.fetch.models import (
 __all__ = [
     "BASE_URL",
     "DEFAULT_FIELDS",
-    "FIELD_PATHS",
     "MAX_PAGE_SIZE",
     "SEARCH_PARAMS",
     "RawStudy",

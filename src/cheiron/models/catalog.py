@@ -4,8 +4,8 @@ Intents follow the Financial Times Visual Vocabulary, which groups chart types b
 the relationship in the data a reader should see:
 https://github.com/Financial-Times/chart-doctor/tree/main/visual-vocabulary
 
-The planner picks an *intent* from the question; this table then limits which
-chart types may be used. The first chart type listed is the default.
+The chart planner picks an *intent* from the question; this table then limits
+which chart types may be used.
 """
 
 from enum import Enum
@@ -43,7 +43,3 @@ INTENT_CHART_TYPES: dict[Intent, tuple[VisualizationType, ...]] = {
     Intent.SPATIAL: ("bar_chart",),  # a choropleth map could be added later
     Intent.RELATIONSHIP: ("network_graph",),
 }
-
-
-def default_chart_type(intent: Intent) -> VisualizationType:
-    return INTENT_CHART_TYPES[intent][0]
