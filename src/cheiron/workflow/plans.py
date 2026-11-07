@@ -132,6 +132,10 @@ class FieldProfile(BaseModel):
         default=False, description="A trial can have several values, so per-value counts can sum to more than the trials."
     )
     numeric: NumericSummary | None = None
+    tied_for_top: list[str] | None = Field(
+        default=None, description="Values sharing the highest count (first 10); never pick one arbitrarily."
+    )
+    tied_count: int | None = Field(default=None, description="How many values share the highest count.")
     missing_by_group: dict[str, int] | None = Field(default=None, description="Per comparison side, when there are several.")
 
 

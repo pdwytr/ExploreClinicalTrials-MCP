@@ -27,6 +27,8 @@
   details summary { cursor: pointer; color: var(--muted); margin-top: 12px; }
   .row { display: flex; gap: 12px; align-items: center; margin-top: 14px; flex-wrap: wrap; }
   button { font: inherit; padding: 8px 18px; border: 0; border-radius: 6px; background: var(--accent); color: #fff; cursor: pointer; }
+  #reset { background: #c62828; }
+  #reset:hover { background: #a11f1f; }
   button:disabled { opacity: .5; cursor: default; }
   .examples { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
   .examples a { font-size: 13px; color: var(--accent); cursor: pointer; text-decoration: none; border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; }
@@ -42,7 +44,7 @@
   dl { margin: 0; font-size: 14px; }
   dt { color: var(--muted); font-size: 12px; margin-top: 10px; }
   dd { margin: 2px 0 0; }
-  code { font-size: 12px; background: #f0f0ec; padding: 1px 4px; border-radius: 4px; }
+  code { font-size: 12px; background: #f0f0ec; padding: 1px 4px; border-radius: 4px; overflow-wrap: anywhere; }
   .hint { color: var(--muted); font-size: 13px; margin-top: 8px; }
   #citations ul { list-style: none; padding: 0; margin: 8px 0 0; max-height: 420px; overflow: auto; }
   #citations li { border-top: 1px solid var(--line); padding: 6px 0; font-size: 13px; }
@@ -90,6 +92,7 @@
 
     <div class="row">
       <button id="submit" type="submit">Ask</button>
+      <button id="reset" type="button">Reset</button>
       <label class="file">Open a saved response.json<input id="open-file" type="file" accept="application/json,.json"></label>
       <span id="status" class="status"></span>
     </div>
@@ -154,6 +157,14 @@ function buildRequest() {
   return body;
 }
 
+// Filters apply to one question: clear them once it is accepted (the question text stays).
+function resetFilters() {
+  for (const el of $("form").querySelectorAll("details input, details select")) {
+    if (el.multiple) for (const opt of el.options) opt.selected = false;
+    else el.value = "";
+  }
+}
+
 function showError(message) {
   $("error").textContent = message;
   $("error").classList.remove("hidden");
@@ -195,6 +206,7 @@ $("form").addEventListener("submit", async (event) => {
     });
     const body = await res.json();
     if (!res.ok) throw new Error(describeValidationError(body.detail));
+    resetFilters();
     history.replaceState(null, "", `?task=${body.task_id}`);
     poll(body.task_id);
   } catch (err) {
@@ -286,6 +298,53 @@ function showCitations(title, citations) {
   $("citations").scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
+// ClinicalTrials.gov API parameters, named for people. Unknown keys show as-is.
+const PARAM_NAMES = {
+  "query.term": "Search terms",
+  "query.cond": "Condition",
+  "query.intr": "Intervention",
+  "query.spons": "Sponsor",
+  "query.lead": "Lead sponsor",
+  "query.locn": "Location",
+  "query.titles": "Title",
+  "query.outc": "Outcome",
+  "query.id": "Study ID",
+  "filter.overallStatus": "Status",
+  "filter.geo": "Geography",
+  "filter.ids": "NCT IDs",
+  "filter.advanced": "Advanced filter",
+};
+
+// filters_applied is {steps: [{label, endpoint, params}]} (one search per step); anything else falls back to key: value.
+function renderFilters(filters) {
+  const entries = Object.entries(filters);
+  if (!entries.length) return null;
+  const ul = document.createElement("ul");
+  ul.style.cssText = "margin:0;padding-left:18px";
+  const show = (v) => (Array.isArray(v) ? v.map(show).join(", ") : v && typeof v === "object" ? JSON.stringify(v) : String(v));
+  for (const [key, value] of entries) {
+    if (key !== "steps" || !Array.isArray(value)) {
+      ul.append(Object.assign(document.createElement("li"), { textContent: `${key}: ${show(value)}` }));
+      continue;
+    }
+    for (const step of value) {
+      const li = document.createElement("li");
+      li.append(Object.assign(document.createElement("strong"), { textContent: step.label || "Search" }));
+      if (step.endpoint && step.endpoint !== "studies") li.append(` (/${step.endpoint})`);
+      const params = document.createElement("ul");
+      params.style.cssText = "margin:2px 0 6px;padding-left:16px";
+      for (const [p, v] of Object.entries(step.params || {})) {
+        const item = document.createElement("li");
+        item.append(`${PARAM_NAMES[p] || p}: `, Object.assign(document.createElement("code"), { textContent: show(v), title: p }));
+        params.append(item);
+      }
+      li.append(params);
+      ul.append(li);
+    }
+  }
+  return ul;
+}
+
 function renderMeta(meta, viz) {
   const el = $("meta");
   el.replaceChildren();
@@ -302,13 +361,8 @@ function renderMeta(meta, viz) {
   add("What was computed", meta.interpretation);
   add("Trials", `${meta.trials_analyzed.toLocaleString()} analyzed of ${meta.total_trials_matched.toLocaleString()} matched`);
   add("Chart", `${viz.type.replaceAll("_", " ")} · ${viz.intent.replaceAll("_", " ")}`);
-  const filters = Object.entries(meta.filters_applied || {});
-  if (filters.length) {
-    const ul = document.createElement("ul");
-    ul.style.cssText = "margin:0;padding-left:18px";
-    for (const [k, v] of filters) ul.append(Object.assign(document.createElement("li"), { textContent: `${k}: ${Array.isArray(v) ? v.join(", ") : typeof v === "object" ? JSON.stringify(v) : v}` }));
-    add("Filters applied", ul);
-  }
+  const filters = renderFilters(meta.filters_applied || {});
+  if (filters) add("Filters applied", filters);
   if ((meta.assumptions || []).length) {
     const ul = document.createElement("ul");
     ul.style.cssText = "margin:0;padding-left:18px";
@@ -399,6 +453,19 @@ function renderNetwork(viz) {
   });
   $("network").replaceChildren(svg);
 }
+
+// Start over: clear the question, filters and any result, and stop following the current task.
+$("reset").addEventListener("click", () => {
+  clearInterval(polling);
+  $("query").value = "";
+  resetFilters();
+  setBusy(false);
+  $("error").classList.add("hidden");
+  $("result").classList.add("hidden");
+  $("citations").classList.add("hidden");
+  history.replaceState(null, "", location.pathname);
+  $("query").focus();
+});
 
 $("copy-json").addEventListener("click", () => navigator.clipboard.writeText($("raw-json").textContent));
 

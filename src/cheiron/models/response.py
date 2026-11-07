@@ -19,7 +19,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, computed_field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, computed_field, model_serializer, model_validator
 
 # --- Chart vocabulary ----------------------------------------------------------
 # Which chart suits which question is judgement, taught by the chart-planning skill;
@@ -71,6 +71,11 @@ class _VegaLiteNames(BaseModel):
     """Accepts and emits Vega-Lite's camelCase names (xOffset, timeUnit)."""
 
     model_config = ConfigDict(validate_by_name=True, validate_by_alias=True, serialize_by_alias=True)
+
+    @model_serializer(mode="wrap")
+    def _drop_empty(self, handler):
+        """Leave unset channel options out of the output instead of sending nulls to the frontend."""
+        return {k: v for k, v in handler(self).items() if v is not None}
 
 
 class FieldType(str, Enum):

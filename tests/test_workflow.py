@@ -210,7 +210,8 @@ def test_grouping_by_side_without_a_comparison_is_rejected():
 
 def test_mostly_missing_dimension_is_warned_in_meta():
     by_year = ChartPlan(intent="change_over_time", chart_type="time_series", title="t", x=Dimension.START_YEAR)
-    fetched = {"pembrolizumab": FetchResult(trials=[trial(1), trial(2, year=None)], total_matched=2)}
+    trials = [trial(1), trial(2, year=2021), trial(3, year=None)]
+    fetched = {"pembrolizumab": FetchResult(trials=trials, total_matched=3)}
     wf, _ = make_workflow(search_plan("pembrolizumab"), fetched, by_year)
 
     response, _ = run(wf)

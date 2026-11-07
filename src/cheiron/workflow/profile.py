@@ -62,10 +62,14 @@ def _profile_values(trials_by_group: dict[str, list[Trial]], read: Callable[[Tri
                 missing += 1
             counts.update(values)
         missing_by_group[group] = missing
+    top = counts.most_common()
+    tied = [v for v, c in top if c == top[0][1]] if len(top) > 1 and top[0][1] == top[1][1] else None
     return FieldProfile(
         distinct=len(counts),
         missing=sum(missing_by_group.values()),
-        top_values=counts.most_common(TOP_VALUES),
+        top_values=top[:TOP_VALUES],
+        tied_for_top=tied[:TOP_VALUES] if tied else None,
+        tied_count=len(tied) if tied else None,
         multi_valued=multi,
         missing_by_group=missing_by_group if len(trials_by_group) > 1 else None,
     )

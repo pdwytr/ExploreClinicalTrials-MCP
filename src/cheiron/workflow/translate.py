@@ -2,6 +2,7 @@
 planner's steps, and summarising what was fetched. No AI here."""
 
 import logging
+import re
 
 from cheiron.fetch.endpoints import FieldSizesStep, FieldValuesStep, Period, RecordSizeStep, StudiesStep, StudyStep
 from cheiron.fetch.models import StudySearchParams, build_advanced_filter, date_range
@@ -25,6 +26,11 @@ def phrase(text: str) -> str:
     trials in a live check). Inner double quotes are dropped: they would end the phrase.
     """
     return '"' + text.replace('"', "").strip() + '"'
+
+
+def _norm(expression: str) -> str:
+    """Ignore parentheses and spaces when checking whether a filter is already present."""
+    return re.sub(r"[()\s]", "", expression)
 
 
 def _and(existing: str | None, addition: str) -> str:
@@ -81,7 +87,7 @@ def apply_request_filters(plan: SearchPlan, request: QueryRequest) -> tuple[list
     advanced = build_advanced_filter(request.trial_phase)
     statuses = "|".join(s.value for s in request.recruitment_status) if request.recruitment_status else None
     for step, p in zip(studies, all_params):
-        if advanced and advanced not in p.get("filter.advanced", ""):
+        if advanced and _norm(advanced) not in _norm(p.get("filter.advanced", "")):
             p["filter.advanced"] = _and(p.get("filter.advanced"), advanced)
         for period in effective_periods(step, request):
             p["filter.advanced"] = _and(p.get("filter.advanced"), date_range(period.field, period.from_year, period.to_year))

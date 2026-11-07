@@ -37,6 +37,7 @@ from cheiron.workflow.translate import PreparedStep, apply_request_filters, filt
 log = logging.getLogger(__name__)
 
 MISSING_WARNING_SHARE = 0.10  # warn when more than 10% of trials lack the plotted value
+SMALL_SAMPLE = 10  # warn when fewer trials than this back the chart
 FETCH_ATTEMPTS = 2  # first fetch + one redo if the data was refreshed mid-fetch
 
 
@@ -100,7 +101,7 @@ class QueryWorkflow:
             outcome.trials_by_group, chart, bounds, outcome.version.data_timestamp.date()
         )
         meta = Meta(
-            interpretation=outcome.plan.rationale,
+            interpretation=_interpretation(result),
             filters_applied=filters_summary(outcome.prepared),
             assumptions=_assumptions(chart, result.profile),
             warnings=outcome.warnings + result.chart_warnings + viz_warnings,
@@ -227,6 +228,15 @@ def check_chart_plan(
             )
 
     warnings = []
+    if chart.chart_type == "time_series":
+        years = profile.fields.get(chart.x)
+        if years is None or years.distinct < 2:
+            raise UnsupportedQuery(
+                f"Only {years.distinct if years else 0} year has data, so a time series shows no change; "
+                "use a bar chart instead."
+            )
+    if profile.trials_fetched < SMALL_SAMPLE:
+        warnings.append(f"Only {profile.trials_fetched} trials match; rankings and trends rest on very few trials.")
     for dim in used:
         if dim is Dimension.GROUP:
             continue
@@ -272,3 +282,11 @@ def _chain(result: AgentResult) -> list[ChainStep]:
             )
         )
     return chain
+
+
+def _interpretation(result: AgentResult) -> str:
+    """What was done to answer the question: every successful fetch's rationale, in order."""
+    steps = [r.plan.rationale for r in result.fetches if r.outcome is not None]
+    if len(steps) <= 1:
+        return result.outcome.plan.rationale
+    return " ".join(f"Step {i}: {text}" for i, text in enumerate(steps, start=1))

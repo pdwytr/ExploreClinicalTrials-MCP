@@ -50,6 +50,11 @@ trials gives a misleading chart (code warns above 10% missing, refuses at 100%).
 - **Phases** keep clinical order and **years** run continuously with empty years as 0.
   Year axes cover the searched period and stop at the data date (later dates are estimates
   for trials not started or finished yet): code handles all of this and notes it in meta.
+- **Ties:** when the profile shows `tied_for_top`, the chart and title must show every tied
+  value (e.g. a comparison of the tied sponsors), never a single one presented as the leader.
+- **Too little data:** a time series needs at least 2 years with data (code rejects one-point
+  lines: use a bar chart). With fewer than 10 trials code adds a warning; say "few trials" in
+  the title when the question asks for a ranking or a trend.
 - **Started vs completed:** "trials completed each year" needs `completion_year`; a chart
   counting by a different date than the search period is rejected.
 - `intent` is a label for the reader: `change_over_time`, `ranking`, `distribution`,

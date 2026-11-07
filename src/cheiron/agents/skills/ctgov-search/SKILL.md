@@ -112,6 +112,12 @@ trials", "the three drugs most often combined with X"):
 3. the chart is built from the latest successful fetch, so that fetch must hold everything shown.
 Every fetch is recorded and shown to the reader.
 
+**Ties:** if the profile lists `tied_for_top` for the value you need, never pick one of them.
+Fetch every tied value as its own step (up to 4) and say there is a tie; if more than 4 tie
+(`tied_count`), say so in the rationale and chart the comparison of the first 4.
+**Few trials:** if the first fetch matches only a handful of trials, say in the rationale that
+the ranking rests on very few trials rather than presenting it as a clear leader.
+
 **Lead sponsors:** profiles rank `lead_sponsor`. To fetch "that sponsor's trials", search
 `query.lead` (lead sponsor only); `query.spons` also matches trials it only collaborates on.
 
