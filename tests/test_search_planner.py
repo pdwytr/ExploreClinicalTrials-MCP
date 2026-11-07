@@ -48,7 +48,7 @@ def test_skill_is_loaded_into_the_instructions():
     model, seen = scripted(("SearchDecision", PLAN))
     run(SearchPlannerAgent(model))
     assert "You are the search planner" in seen["instructions"]
-    assert "# Planning ClinicalTrials.gov searches" in seen["instructions"]  # SKILL.md body
+    assert "# Planning ClinicalTrials.gov API calls" in seen["instructions"]  # SKILL.md body
     assert "name: ctgov-search" not in seen["instructions"]  # frontmatter stripped
 
 
