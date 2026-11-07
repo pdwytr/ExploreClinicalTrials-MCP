@@ -116,16 +116,17 @@ def test_failed_fetch_returns_the_reason_and_allows_one_more():
     model, seen = scripted(("fetch_data", {"plan": bad}), *HAPPY)
     result = decide(model)
     told = seen_text(seen["messages"])
-    assert "Fetch failed: No trials matched" in told and "1 call(s) left" in told
+    assert "Fetch 1 failed: No trials matched" in told and "4 call(s) left" in told
+    assert [r.error is not None for r in result.fetches] == [True, False]  # both fetches recorded
     assert result.outcome.plan.steps[0].label == "Pembrolizumab"
 
 
 def test_fetch_budget_is_enforced():
     fetch = ("fetch_data", {"plan": PLAN})
-    model, seen = scripted(fetch, fetch, fetch, ("describe_data", {}), ("ChartPlan", BY_PHASE))
-    decide(model)
-    assert FETCH_BUDGET == 2
-    assert "fetch budget (2) is used up" in seen_text(seen["messages"])
+    model, seen = scripted(*[fetch] * (FETCH_BUDGET + 1), ("describe_data", {}), ("ChartPlan", BY_PHASE))
+    result = decide(model)
+    assert FETCH_BUDGET == 5 and len(result.fetches) == 5
+    assert "fetch budget (5) is used up" in seen_text(seen["messages"])
 
 
 # --- The answer is checked against the data ---------------------------------------------------------

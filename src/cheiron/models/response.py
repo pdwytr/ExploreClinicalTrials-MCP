@@ -226,6 +226,19 @@ Visualization = ChartVisualization | NetworkVisualization
 # --- Metadata --------------------------------------------------------------------
 
 
+class ChainStep(BaseModel):
+    """One fetch_data call the agent made, in order. Lets a reader check intermediate findings."""
+
+    fetch: int = Field(ge=1, description="1 for the first fetch, 2 for the second, ...")
+    rationale: str = Field(description="Why the agent made this fetch, in its words.")
+    searches: list[dict[str, Any]] = Field(description="Exact API calls as executed: label, endpoint, params.")
+    status: Literal["ok", "failed"]
+    total_trials_matched: int | None = None
+    error: str | None = None
+    charted: bool = Field(default=False, description="True for the fetch whose data the chart is built from.")
+    output_dir: str | None = Field(default=None, description="Folder with this fetch's plan, profile and data.")
+
+
 class Meta(BaseModel):
     source: Literal["clinicaltrials.gov"] = "clinicaltrials.gov"
     interpretation: str = Field(description="Plain-English restatement of what was computed.")
@@ -239,6 +252,7 @@ class Meta(BaseModel):
     units: dict[str, str] = Field(default_factory=dict, description="Field -> unit, e.g. {'trial_count': 'trials'}.")
     data_as_of: datetime | None = Field(default=None, description="When ClinicalTrials.gov last refreshed the data used.")
     api_version: str | None = Field(default=None, description="ClinicalTrials.gov API version that served the data.")
+    chain: list[ChainStep] = Field(default_factory=list, description="Every fetch the agent made, in order.")
     generated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 

@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from cheiron.fetch.endpoints import StudyStep
 from cheiron.fetch.models import SNAPSHOT_API_VERSION, DataVersion, StudySearchParams, Trial
 from cheiron.models.request import QueryRequest
-from cheiron.models.response import Meta, QueryResponse
+from cheiron.models.response import ChainStep, Meta, QueryResponse
 from cheiron.workflow.errors import InvalidSearch, NoResults, UnsupportedQuery, UpstreamError
 from cheiron.workflow.plans import (
     ChartPlan,
@@ -31,7 +31,7 @@ from cheiron.workflow.plans import (
     StepResult,
     YEAR_DIMENSIONS,
 )
-from cheiron.workflow.steps import QueryPlanner, TrialSource
+from cheiron.workflow.steps import AgentResult, QueryPlanner, TrialSource
 from cheiron.workflow.translate import PreparedStep, apply_request_filters, filters_summary, year_bounds
 
 log = logging.getLogger(__name__)
@@ -82,7 +82,7 @@ class QueryWorkflow:
 
     async def run(
         self, request: QueryRequest, progress: ProgressCallback | None = None
-    ) -> tuple[QueryResponse, FetchOutcome]:
+    ) -> tuple[QueryResponse, AgentResult]:
         """Answer one question: the agent plans, fetches and chooses; code builds the response."""
         from cheiron.visualize.builder import build_visualization  # visualize depends on workflow
 
@@ -109,8 +109,9 @@ class QueryWorkflow:
             units={"trial_count": "trials"},
             data_as_of=outcome.version.data_timestamp,
             api_version=outcome.version.api_version,
+            chain=_chain(result),
         )
-        return QueryResponse(visualization=visualization, meta=meta), outcome
+        return QueryResponse(visualization=visualization, meta=meta), result
 
     async def fetch_plan(
         self, search: SearchPlan, request: QueryRequest, progress: ProgressCallback | None = None
@@ -251,3 +252,23 @@ def _assumptions(chart: ChartPlan, profile: DataProfile) -> list[str]:
     if len(profile.group_sizes) > 1:
         notes.append("Compared sides are separate searches; a trial matching several sides is counted in each.")
     return notes
+
+
+def _chain(result: AgentResult) -> list[ChainStep]:
+    """Every fetch the agent made, in order, so a reader can check intermediate findings."""
+    chain = []
+    for record in result.fetches:
+        ok = record.outcome is not None
+        chain.append(
+            ChainStep(
+                fetch=record.number,
+                rationale=record.plan.rationale,
+                searches=filters_summary(record.outcome.prepared)["steps"] if ok else record.plan.model_dump(mode="json")["steps"],
+                status="ok" if ok else "failed",
+                total_trials_matched=record.outcome.total_matched if ok else None,
+                error=record.error,
+                charted=record.outcome is result.outcome,
+                output_dir=f"fetch-{record.number}",
+            )
+        )
+    return chain

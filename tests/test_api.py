@@ -105,10 +105,12 @@ def test_outputs_on_disk_include_the_response(tmp_path):
 
     folder = tmp_path / task_id  # one folder per query, named by its UUID
     names = sorted(p.name for p in folder.iterdir())
-    assert names == ["meta.json", "plan.json", "request.json", "response.json", "steps.json", "trials"]
+    assert names == ["fetch-1", "meta.json", "request.json", "response.json"]
+    fetch = folder / "fetch-1"
+    assert sorted(p.name for p in fetch.iterdir()) == ["plan.json", "profile.json", "steps.json", "trials"]
     assert json.loads((folder / "request.json").read_text()) == QUESTION
     assert json.loads((folder / "response.json").read_text()) == done["result"]  # same as returned
-    steps = json.loads((folder / "steps.json").read_text())
+    steps = json.loads((fetch / "steps.json").read_text())
     assert [s["trials_file"] for s in steps] == ["trials/1-nivolumab.json", "trials/2-pembrolizumab.json"]
     assert steps[0]["params"]["filter.advanced"] == "AREA[Phase](PHASE3)"  # user filter recorded as executed
     meta = json.loads((folder / "meta.json").read_text())
@@ -155,6 +157,14 @@ def test_unknown_task_is_404_and_health_is_ok(tmp_path):
         assert client.get("/health").json() == {"status": "ok"}
 
 
+def test_root_serves_the_web_ui(tmp_path):
+    with make_client(tmp_path, Agent()) as client:
+        res = client.get("/")
+        assert res.status_code == 200
+        assert res.headers["content-type"].startswith("text/html")
+        assert "vegaEmbed" in res.text and "/queries" in res.text
+
+
 def test_stats_step_is_saved_next_to_trials(tmp_path):
     plan = SearchPlan(
         steps=[{"endpoint": "studies", "label": "Nivolumab", "params": {"query.intr": "nivolumab"}},
@@ -168,7 +178,7 @@ def test_stats_step_is_saved_next_to_trials(tmp_path):
 
     assert done["status"] == "succeeded"
     assert done["progress"]["message"] == "Saved 2 trials and 1 registry stats result"
-    steps = json.loads((tmp_path / task_id / "steps.json").read_text())
+    steps = json.loads((tmp_path / task_id / "fetch-1" / "steps.json").read_text())
     assert steps[1] == {
         "label": "All trials",
         "endpoint": "stats/field/values",
@@ -176,5 +186,5 @@ def test_stats_step_is_saved_next_to_trials(tmp_path):
         "stats_file": "stats/2-all-trials.json",
         "incomplete_fields": [],
     }
-    saved = json.loads((tmp_path / task_id / steps[1]["stats_file"]).read_text())
+    saved = json.loads((tmp_path / task_id / "fetch-1" / steps[1]["stats_file"]).read_text())
     assert saved[0]["topValues"][0] == {"value": "PHASE2", "studiesCount": 5}

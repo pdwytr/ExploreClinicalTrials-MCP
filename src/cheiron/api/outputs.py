@@ -2,12 +2,15 @@
 
     data/queries/<task_id>/
         request.json        the request (written when the query starts)
-        plan.json           the planner's steps + rationale
-        steps.json          each step as executed (endpoint, params with user filters), totals, data file
-        trials/<n>-<label>.json   trials from a /studies search or single-study lookup
-        stats/<n>-<label>.json    a validated registry-wide /stats response
         response.json       the QueryResponse returned to the client (visualization + meta + vega_lite)
         meta.json           status, data version, warnings, timings, error (written at the end)
+        fetch-<n>/          one folder per fetch_data call the agent made, in order
+            plan.json           the agent's steps + rationale for this fetch
+            error.json          why the fetch failed (failed fetches only)
+            steps.json          each step as executed (endpoint, params with user filters), totals, data file
+            profile.json        what the agent saw about this data (code-computed counts)
+            trials/<n>-<label>.json   trials from a /studies search or single-study lookup
+            stats/<n>-<label>.json    a validated registry-wide /stats response
 """
 
 import json
@@ -19,7 +22,7 @@ from cheiron.models.request import QueryRequest
 from cheiron.models.response import QueryResponse
 from cheiron.settings import PROJECT_ROOT
 from cheiron.workflow.pipeline import FetchOutcome
-from cheiron.workflow.plans import StatsResult
+from cheiron.workflow.plans import DataProfile, SearchPlan, StatsResult
 from cheiron.workflow.translate import step_summary
 
 DEFAULT_ROOT = PROJECT_ROOT / "data" / "queries"
@@ -39,9 +42,22 @@ class QueryOutputs:
         _write_json(folder / "request.json", request.model_dump(mode="json", exclude_none=True))
         return folder
 
-    def save_fetch(self, folder: Path, outcome: FetchOutcome) -> None:
-        """plan.json, steps.json, and each step's data: trials/<n>-<label>.json or stats/<n>-<label>.json."""
-        _write_json(folder / "plan.json", outcome.plan.model_dump(mode="json"))
+    def save_fetch(
+        self,
+        folder: Path,
+        plan: SearchPlan,
+        outcome: FetchOutcome | None,
+        profile: DataProfile | None = None,
+        error: str | None = None,
+    ) -> None:
+        """One fetch's folder: plan.json, then error.json or steps.json + profile.json + each step's data."""
+        folder.mkdir(parents=True, exist_ok=True)
+        _write_json(folder / "plan.json", plan.model_dump(mode="json"))
+        if outcome is None:
+            _write_json(folder / "error.json", {"error": error})
+            return
+        if profile is not None:
+            _write_json(folder / "profile.json", profile.model_dump(mode="json", exclude_none=True))
         steps = []
         for n, ((label, target), result) in enumerate(zip(outcome.prepared, outcome.results), start=1):
             name = f"{n}-{re.sub(r'[^a-z0-9]+', '-', label.casefold()).strip('-')}.json"

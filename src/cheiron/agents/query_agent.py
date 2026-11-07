@@ -33,19 +33,23 @@ from cheiron.workflow.pipeline import FetchOutcome, check_chart_plan
 from cheiron.workflow.plans import ChartPlan, DataProfile, SearchPlan, StatsResult, Unanswerable
 from cheiron.workflow.profile import build_profile
 from cheiron.workflow.translate import year_bounds
-from cheiron.workflow.steps import AgentResult
+from cheiron.workflow.steps import AgentResult, FetchRecord
 
 SKILLS_DIR = Path(__file__).parent / "skills"
 SEARCH_SKILL = "ctgov-search"
-FETCH_BUDGET = 2
+FETCH_BUDGET = 5
 
-ROLE = """You answer a question about clinical trials with exactly one chart. Work in this order:
+ROLE = f"""You answer a question about clinical trials with exactly one chart. Work in this order:
 1. Plan the API calls following the ctgov-search skill below, then call fetch_data with the plan.
-2. Call describe_data to see a profile of everything fetched (you never see the records).
-3. Call load_skill("chart-planning") and choose the chart from the profile.
-4. Answer through a final-result tool: a ChartPlan, or Unanswerable if registry data cannot answer.
-You may call fetch_data at most twice in total: use the second call only if a fetch failed or the
-profile shows the data does not fit the question."""
+2. Call describe_data to see a profile of the latest fetch (you never see the records).
+3. If the question depends on something you must find first (e.g. "the sponsor with the most
+   melanoma trials", "the drugs most often combined with X"), read it from that profile, then call
+   fetch_data again with what you found. Also fetch again if a fetch failed or the data does not fit.
+4. Call load_skill("chart-planning") and choose the chart from the latest profile: the chart is
+   built from the latest successful fetch, so that fetch must hold everything the chart shows.
+5. Answer through a final-result tool: a ChartPlan, or Unanswerable if registry data cannot answer.
+You may call fetch_data at most {FETCH_BUDGET} times. Every fetch is recorded and shown to the reader
+with your rationale, so state in each plan's rationale what the fetch is for and what you found before."""
 
 Fetch = Callable[[SearchPlan], Awaitable[FetchOutcome]]
 
@@ -56,10 +60,10 @@ class RunState:
 
     request: QueryRequest
     fetch: Fetch
-    fetches: int = 0
     outcome: FetchOutcome | None = None
     profile: DataProfile | None = None
     chart_warnings: list[str] = field(default_factory=list)
+    fetches: list[FetchRecord] = field(default_factory=list)
     skills_loaded: list[str] = field(default_factory=lambda: [SEARCH_SKILL])
     references_read: list[str] = field(default_factory=list)
 
@@ -113,6 +117,7 @@ class QueryAgent:
             skills_loaded=state.skills_loaded,
             references_read=state.references_read,
             usage=result.usage,
+            fetches=state.fetches,
         )
 
 
@@ -123,22 +128,27 @@ async def fetch_data(ctx: RunContext[RunState], plan: SearchPlan) -> str:
     """Execute a plan of API calls (see the ctgov-search skill). Code adds the user's filters, fetches
     every page and keeps the data; you get back only how many trials each step matched."""
     state = ctx.deps
-    if state.fetches >= FETCH_BUDGET:
+    if len(state.fetches) >= FETCH_BUDGET:
         raise ModelRetry(f"The fetch budget ({FETCH_BUDGET}) is used up. Call describe_data and decide.")
-    state.fetches += 1
+    record = FetchRecord(number=len(state.fetches) + 1, plan=plan)
+    state.fetches.append(record)
+    left = FETCH_BUDGET - len(state.fetches)
     try:
         outcome = await state.fetch(plan)
     except (InvalidSearch, NoResults) as exc:
-        left = FETCH_BUDGET - state.fetches
-        return f"Fetch failed: {exc.message} Fix the plan and call fetch_data again ({left} call(s) left)."
-    state.outcome = outcome
+        record.error = exc.message
+        return f"Fetch {record.number} failed: {exc.message} Fix the plan and call fetch_data again ({left} call(s) left)."
     stats = [(label, r) for (label, _), r in zip(outcome.prepared, outcome.results) if isinstance(r, StatsResult)]
-    state.profile = build_profile(outcome.trials_by_group, outcome.total_matched, stats, outcome.version.data_timestamp)
+    profile = build_profile(outcome.trials_by_group, outcome.total_matched, stats, outcome.version.data_timestamp)
+    record.outcome, record.profile = outcome, profile
+    state.outcome, state.profile = outcome, profile  # the latest successful fetch is what gets charted
     steps = [
         {"label": label, "endpoint": getattr(r, "endpoint", "studies"), "total_matched": getattr(r, "total_matched", None)}
         for (label, _), r in zip(outcome.prepared, outcome.results)
     ]
-    return json.dumps({"fetched": steps, "warnings": outcome.warnings, "next": "call describe_data"})
+    return json.dumps(
+        {"fetch": record.number, "fetched": steps, "warnings": outcome.warnings, "fetches_left": left, "next": "call describe_data"}
+    )
 
 
 async def describe_data(ctx: RunContext[RunState]) -> str:

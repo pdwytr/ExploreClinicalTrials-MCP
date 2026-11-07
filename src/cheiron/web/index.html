@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cheiron</title>
+<script src="https://cdn.jsdelivr.net/npm/vega@5.30.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@5.21.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@6.26.0"></script>
+<style>
+  :root {
+    --bg: #f7f7f5; --panel: #fff; --text: #1d1d1b; --muted: #6b6b66; --line: #e2e2dc;
+    --accent: #2f6fde; --warn-bg: #fff6e0; --warn: #8a5a00; --err-bg: #fdecec; --err: #a12020;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 1100px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 20px; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+  textarea, input, select { width: 100%; font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+  textarea { min-height: 64px; resize: vertical; }
+  label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 12px; }
+  select[multiple] { height: 96px; }
+  details summary { cursor: pointer; color: var(--muted); margin-top: 12px; }
+  .row { display: flex; gap: 12px; align-items: center; margin-top: 14px; flex-wrap: wrap; }
+  button { font: inherit; padding: 8px 18px; border: 0; border-radius: 6px; background: var(--accent); color: #fff; cursor: pointer; }
+  button:disabled { opacity: .5; cursor: default; }
+  .examples { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .examples a { font-size: 13px; color: var(--accent); cursor: pointer; text-decoration: none; border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; }
+  .status { color: var(--muted); }
+  .bar { height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; margin-top: 8px; }
+  .bar > div { height: 100%; width: 0; background: var(--accent); transition: width .3s; }
+  .error { background: var(--err-bg); color: var(--err); border-radius: 6px; padding: 10px 12px; }
+  .warn { background: var(--warn-bg); color: var(--warn); border-radius: 6px; padding: 8px 12px; margin: 4px 0; font-size: 14px; }
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 16px; }
+  @media (max-width: 860px) { .layout { grid-template-columns: 1fr; } }
+  #chart { width: 100%; min-height: 360px; }
+  #network svg { width: 100%; height: auto; display: block; }
+  dl { margin: 0; font-size: 14px; }
+  dt { color: var(--muted); font-size: 12px; margin-top: 10px; }
+  dd { margin: 2px 0 0; }
+  code { font-size: 12px; background: #f0f0ec; padding: 1px 4px; border-radius: 4px; }
+  .hint { color: var(--muted); font-size: 13px; margin-top: 8px; }
+  #citations ul { list-style: none; padding: 0; margin: 8px 0 0; max-height: 420px; overflow: auto; }
+  #citations li { border-top: 1px solid var(--line); padding: 6px 0; font-size: 13px; }
+  #citations a { color: var(--accent); font-weight: 600; }
+  .hidden { display: none !important; }
+  label.file { display: inline-block; margin: 0; font-size: 14px; color: var(--accent); cursor: pointer; }
+  label.file input { display: none; }
+  #raw summary { margin: 0; }
+  #raw pre { max-height: 480px; overflow: auto; font-size: 12px; background: #f0f0ec; padding: 10px; border-radius: 6px; margin: 10px 0 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Cheiron</h1>
+  <p class="sub">Ask a question about ClinicalTrials.gov and get a chart with a source for every value.</p>
+
+  <form id="form" class="panel">
+    <label for="query">Question</label>
+    <textarea id="query" name="query" required minlength="3" maxlength="500"
+      placeholder="How has the number of trials for this drug changed over time?"></textarea>
+    <div class="examples" id="examples"></div>
+
+    <details>
+      <summary>Filters (optional)</summary>
+      <div class="grid">
+        <div><label for="drug_name">Drug</label><input id="drug_name" name="drug_name" placeholder="Pembrolizumab"></div>
+        <div><label for="condition">Condition</label><input id="condition" name="condition" placeholder="Breast cancer"></div>
+        <div><label for="sponsor">Sponsor</label><input id="sponsor" name="sponsor"></div>
+        <div><label for="country">Country</label><input id="country" name="country" placeholder="United States"></div>
+        <div><label for="start_year">Start year from</label><input id="start_year" name="start_year" type="number" min="1900" max="2100"></div>
+        <div><label for="end_year">Start year to</label><input id="end_year" name="end_year" type="number" min="1900" max="2100"></div>
+        <div><label for="trial_phase">Phase</label>
+          <select id="trial_phase" name="trial_phase" multiple>
+            <option>EARLY_PHASE1</option><option>PHASE1</option><option>PHASE2</option>
+            <option>PHASE3</option><option>PHASE4</option><option>NA</option>
+          </select></div>
+        <div><label for="recruitment_status">Status</label>
+          <select id="recruitment_status" name="recruitment_status" multiple>
+            <option>NOT_YET_RECRUITING</option><option>RECRUITING</option><option>ENROLLING_BY_INVITATION</option>
+            <option>ACTIVE_NOT_RECRUITING</option><option>COMPLETED</option><option>SUSPENDED</option>
+            <option>TERMINATED</option><option>WITHDRAWN</option><option>UNKNOWN</option>
+          </select></div>
+      </div>
+    </details>
+
+    <div class="row">
+      <button id="submit" type="submit">Ask</button>
+      <label class="file">Open a saved response.json<input id="open-file" type="file" accept="application/json,.json"></label>
+      <span id="status" class="status"></span>
+    </div>
+    <div id="progress" class="bar hidden"><div></div></div>
+  </form>
+
+  <div id="error" class="error hidden"></div>
+
+  <section id="result" class="layout hidden">
+    <div>
+      <div class="panel">
+        <div id="chart"></div>
+        <div id="network" class="hidden"></div>
+        <p class="hint">Click a bar, point or node to see the trials behind it.</p>
+      </div>
+      <div id="citations" class="panel hidden">
+        <strong id="cite-title"></strong>
+        <ul id="cite-list"></ul>
+      </div>
+      <details class="panel" id="raw">
+        <summary>Response JSON</summary>
+        <div class="row"><button type="button" id="copy-json">Copy</button></div>
+        <pre id="raw-json"></pre>
+      </details>
+    </div>
+    <aside class="panel" id="meta"></aside>
+  </section>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const POLL_MS = 1500;
+const STAGES = ["queued", "planning", "fetching", "analyzing", "building", "saving", "done"];
+// The question classes from the assignment brief: trends, distributions, comparisons, geography, networks.
+const EXAMPLES = [
+  "How has the number of trials for pembrolizumab changed per year since 2015?",
+  "How are breast cancer trials distributed across phases?",
+  "Compare phases for trials involving nivolumab vs pembrolizumab",
+  "Which countries have the most recruiting trials for type 2 diabetes?",
+  "Show a network of sponsors and drugs for melanoma trials",
+  "What is the distribution of enrollment in phase 3 asthma trials?",
+];
+let polling = null;
+
+for (const text of EXAMPLES) {
+  const a = document.createElement("a");
+  a.textContent = text;
+  a.onclick = () => { $("query").value = text; $("query").focus(); };
+  $("examples").append(a);
+}
+
+function buildRequest() {
+  const form = new FormData($("form"));
+  const body = {};
+  for (const [key, value] of form.entries()) {
+    const v = String(value).trim();
+    if (!v) continue;
+    if (key === "trial_phase" || key === "recruitment_status") (body[key] ??= []).push(v);
+    else if (key === "start_year" || key === "end_year") body[key] = Number(v);
+    else body[key] = v;
+  }
+  return body;
+}
+
+function showError(message) {
+  $("error").textContent = message;
+  $("error").classList.remove("hidden");
+}
+
+function setBusy(busy, message = "") {
+  $("submit").disabled = busy;
+  $("status").textContent = message;
+  $("progress").classList.toggle("hidden", !busy);
+}
+
+function showProgress(p) {
+  let pct = (STAGES.indexOf(p.stage) / (STAGES.length - 1)) * 100;
+  if (p.stage === "fetching" && p.trials_total) {
+    const fetching = STAGES.indexOf("fetching") / (STAGES.length - 1);
+    const next = STAGES.indexOf("analyzing") / (STAGES.length - 1);
+    pct = (fetching + (next - fetching) * Math.min(1, p.trials_fetched / p.trials_total)) * 100;
+  }
+  $("progress").firstElementChild.style.width = `${Math.max(3, pct)}%`;
+  $("status").textContent = p.message;
+}
+
+function describeValidationError(detail) {
+  if (!Array.isArray(detail)) return String(detail);
+  return detail.map((d) => `${(d.loc || []).filter((x) => x !== "body").join(".") || "request"}: ${d.msg}`).join("; ");
+}
+
+$("form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  clearInterval(polling);
+  $("error").classList.add("hidden");
+  $("result").classList.add("hidden");
+  setBusy(true, "Submitting…");
+  try {
+    const res = await fetch("/queries", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(buildRequest()),
+    });
+    const body = await res.json();
+    if (!res.ok) throw new Error(describeValidationError(body.detail));
+    history.replaceState(null, "", `?task=${body.task_id}`);
+    poll(body.task_id);
+  } catch (err) {
+    setBusy(false);
+    showError(err.message || "Could not submit the question.");
+  }
+});
+
+function poll(taskId) {
+  setBusy(true, "Waiting…");
+  const tick = async () => {
+    try {
+      const res = await fetch(`/queries/${taskId}`);
+      const task = await res.json();
+      if (!res.ok) throw new Error(task.detail || `HTTP ${res.status}`);
+      showProgress(task.progress);
+      if (task.status === "succeeded") {
+        clearInterval(polling);
+        setBusy(false, task.progress.message);
+        render(task.result);
+      } else if (task.status === "failed") {
+        clearInterval(polling);
+        setBusy(false);
+        showError(task.error ? task.error.message : "The query failed.");
+      }
+    } catch (err) {
+      clearInterval(polling);
+      setBusy(false);
+      showError(err.message);
+    }
+  };
+  tick();
+  polling = setInterval(tick, POLL_MS);
+}
+
+// --- Rendering ------------------------------------------------------------------
+
+async function render(result) {
+  $("result").classList.remove("hidden");
+  $("raw-json").textContent = JSON.stringify(result, null, 2);
+  $("citations").classList.add("hidden");
+  renderMeta(result.meta, result.visualization);
+  const isNetwork = result.visualization.type === "network_graph";
+  $("chart").classList.toggle("hidden", isNetwork);
+  $("network").classList.toggle("hidden", !isNetwork);
+  if (isNetwork) {
+    renderNetwork(result.visualization);
+  } else {
+    const view = await vegaEmbed("#chart", result.vega_lite, { actions: { export: true, source: false, compiled: false, editor: true } });
+    view.view.addEventListener("click", (_event, item) => {
+      const datum = item && item.datum;
+      if (datum && datum.citations) showCitations(labelFor(datum, result.visualization.encoding), datum.citations);
+    });
+  }
+}
+
+function labelFor(datum, encoding) {
+  return ["x", "color", "y"]
+    .map((ch) => encoding[ch])
+    .filter(Boolean)
+    .map((c) => {
+      let v = datum[c.field];
+      if (c.type === "temporal" && v != null) v = String(v).slice(0, 10);
+      return `${c.title || c.field}: ${v}`;
+    })
+    .join(" · ");
+}
+
+function showCitations(title, citations) {
+  $("citations").classList.remove("hidden");
+  $("cite-title").textContent = `${title} (${citations.length} trial${citations.length === 1 ? "" : "s"})`;
+  const list = $("cite-list");
+  list.replaceChildren();
+  if (!citations.length) {
+    list.append(Object.assign(document.createElement("li"), { textContent: "No trial-level sources for this value (registry-wide statistic)." }));
+  }
+  for (const c of citations) {
+    const li = document.createElement("li");
+    const a = Object.assign(document.createElement("a"), {
+      href: `https://clinicaltrials.gov/study/${c.nct_id}`, target: "_blank", rel: "noopener", textContent: c.nct_id,
+    });
+    li.append(a, ` — ${c.excerpt}`);
+    if (c.field) {
+      const code = Object.assign(document.createElement("code"), { textContent: c.field });
+      li.append(document.createElement("br"), code);
+    }
+    list.append(li);
+  }
+  $("citations").scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+function renderMeta(meta, viz) {
+  const el = $("meta");
+  el.replaceChildren();
+  const add = (term, content) => {
+    if (content == null || content === "" || (Array.isArray(content) && !content.length)) return;
+    const dt = Object.assign(document.createElement("dt"), { textContent: term });
+    const dd = document.createElement("dd");
+    if (content instanceof Node) dd.append(content); else dd.textContent = content;
+    dl.append(dt, dd);
+  };
+  for (const w of meta.warnings || []) el.append(Object.assign(document.createElement("div"), { className: "warn", textContent: w }));
+  const dl = document.createElement("dl");
+  el.append(dl);
+  add("What was computed", meta.interpretation);
+  add("Trials", `${meta.trials_analyzed.toLocaleString()} analyzed of ${meta.total_trials_matched.toLocaleString()} matched`);
+  add("Chart", `${viz.type.replaceAll("_", " ")} · ${viz.intent.replaceAll("_", " ")}`);
+  const filters = Object.entries(meta.filters_applied || {});
+  if (filters.length) {
+    const ul = document.createElement("ul");
+    ul.style.cssText = "margin:0;padding-left:18px";
+    for (const [k, v] of filters) ul.append(Object.assign(document.createElement("li"), { textContent: `${k}: ${Array.isArray(v) ? v.join(", ") : typeof v === "object" ? JSON.stringify(v) : v}` }));
+    add("Filters applied", ul);
+  }
+  if ((meta.assumptions || []).length) {
+    const ul = document.createElement("ul");
+    ul.style.cssText = "margin:0;padding-left:18px";
+    for (const a of meta.assumptions) ul.append(Object.assign(document.createElement("li"), { textContent: a }));
+    add("Assumptions", ul);
+  }
+  const units = Object.entries(meta.units || {}).map(([k, v]) => `${k}: ${v}`).join(", ");
+  add("Units", units);
+  add("Data as of", meta.data_as_of ? new Date(meta.data_as_of).toLocaleString() : null);
+  add("Source", `ClinicalTrials.gov${meta.api_version ? ` API ${meta.api_version}` : ""}`);
+}
+
+// Network graphs have no Vega-Lite spec: a small force layout drawn as SVG.
+function renderNetwork(viz) {
+  const { nodes, edges } = viz.data;
+  const W = 800, H = 520, NS = "http://www.w3.org/2000/svg";
+  const pos = new Map(nodes.map((n, i) => {
+    const a = (2 * Math.PI * i) / nodes.length;
+    return [n.id, { x: W / 2 + 200 * Math.cos(a), y: H / 2 + 200 * Math.sin(a), vx: 0, vy: 0 }];
+  }));
+  for (let step = 0; step < 300; step++) {
+    const cool = 1 - step / 300;
+    for (const a of nodes) for (const b of nodes) {
+      if (a === b) continue;
+      const p = pos.get(a.id), q = pos.get(b.id);
+      const dx = p.x - q.x, dy = p.y - q.y, d2 = Math.max(dx * dx + dy * dy, 25);
+      p.vx += (dx / d2) * 800; p.vy += (dy / d2) * 800;
+    }
+    for (const e of edges) {
+      const p = pos.get(e.source), q = pos.get(e.target);
+      const dx = q.x - p.x, dy = q.y - p.y;
+      p.vx += dx * 0.01; p.vy += dy * 0.01; q.vx -= dx * 0.01; q.vy -= dy * 0.01;
+    }
+    for (const p of pos.values()) {
+      p.vx += (W / 2 - p.x) * 0.005; p.vy += (H / 2 - p.y) * 0.005;
+      p.x = Math.min(W - 40, Math.max(40, p.x + p.vx * cool)); p.y = Math.min(H - 30, Math.max(30, p.y + p.vy * cool));
+      p.vx *= 0.5; p.vy *= 0.5;
+    }
+  }
+  const groups = [...new Set(nodes.map((n) => n.group))];
+  const palette = ["#2f6fde", "#e0742b", "#2a9d6f", "#b5479b", "#8a6d1f", "#5b5bd6"];
+  const maxSize = Math.max(1, ...nodes.map((n) => n.size || 1));
+  const maxWeight = Math.max(1, ...edges.map((e) => e.weight || 1));
+  const svg = document.createElementNS(NS, "svg");
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  const title = document.createElementNS(NS, "text");
+  Object.entries({ x: 8, y: 20, "font-weight": 600, "font-size": 15 }).forEach(([k, v]) => title.setAttribute(k, v));
+  title.textContent = viz.title;
+  svg.append(title);
+  const nodeById = new Map(nodes.map((n) => [n.id, n]));
+  const tooltip = (el, text) => el.append(Object.assign(document.createElementNS(NS, "title"), { textContent: text }));
+  const labelled = new Set([...nodes].sort((a, b) => (b.size || 0) - (a.size || 0)).slice(0, 12).map((n) => n.id));
+  for (const e of edges) {
+    const p = pos.get(e.source), q = pos.get(e.target);
+    const line = document.createElementNS(NS, "line");
+    Object.entries({ x1: p.x, y1: p.y, x2: q.x, y2: q.y, stroke: "#b9b9b0", "stroke-width": 1 + 5 * ((e.weight || 1) / maxWeight) })
+      .forEach(([k, v]) => line.setAttribute(k, v));
+    line.style.cursor = "pointer";
+    tooltip(line, `${nodeById.get(e.source).label} — ${nodeById.get(e.target).label}: ${e.weight}`);
+    line.addEventListener("click", () => showCitations(`${nodeById.get(e.source).label} — ${nodeById.get(e.target).label}`, e.citations || []));
+    svg.append(line);
+  }
+  for (const n of nodes) {
+    const p = pos.get(n.id);
+    const g = document.createElementNS(NS, "g");
+    g.style.cursor = "pointer";
+    const c = document.createElementNS(NS, "circle");
+    Object.entries({ cx: p.x, cy: p.y, r: 6 + 14 * Math.sqrt((n.size || 1) / maxSize), fill: palette[groups.indexOf(n.group) % palette.length], stroke: "#fff", "stroke-width": 1.5 })
+      .forEach(([k, v]) => c.setAttribute(k, v));
+    const t = document.createElementNS(NS, "text");
+    Object.entries({ x: p.x, y: p.y - 12 - 14 * Math.sqrt((n.size || 1) / maxSize), "text-anchor": "middle", "font-size": 12 })
+      .forEach(([k, v]) => t.setAttribute(k, v));
+    t.textContent = n.label;
+    tooltip(g, `${n.label}${n.group ? ` (${n.group})` : ""}${n.size != null ? `: ${n.size}` : ""}`);
+    g.append(c);
+    if (labelled.has(n.id)) g.append(t);
+    g.addEventListener("click", () => showCitations(n.label, n.citations || []));
+    svg.append(g);
+  }
+  groups.filter((x) => x != null).forEach((grp, i) => {
+    const y = H - 12 - 18 * i;
+    const dot = document.createElementNS(NS, "circle");
+    Object.entries({ cx: 14, cy: y - 4, r: 5, fill: palette[i % palette.length] }).forEach(([k, v]) => dot.setAttribute(k, v));
+    const label = document.createElementNS(NS, "text");
+    Object.entries({ x: 24, y, "font-size": 12 }).forEach(([k, v]) => label.setAttribute(k, v));
+    label.textContent = grp;
+    svg.append(dot, label);
+  });
+  $("network").replaceChildren(svg);
+}
+
+$("copy-json").addEventListener("click", () => navigator.clipboard.writeText($("raw-json").textContent));
+
+// View a saved run (data/queries/<task_id>/response.json) without calling the agent.
+$("open-file").addEventListener("change", async (event) => {
+  const file = event.target.files[0];
+  event.target.value = "";
+  if (!file) return;
+  clearInterval(polling);
+  setBusy(false, file.name);
+  $("error").classList.add("hidden");
+  try {
+    const result = JSON.parse(await file.text());
+    if (!result.visualization || !result.meta) throw new Error("Not a cheiron response.json (needs visualization and meta).");
+    await render(result);
+  } catch (err) {
+    showError(`Could not open ${file.name}: ${err.message}`);
+  }
+});
+
+// Reopen a running or finished task from the URL (?task=<id>).
+const resumeId = new URLSearchParams(location.search).get("task");
+if (resumeId) poll(resumeId);
+</script>
+</body>
+</html>

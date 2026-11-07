@@ -6,7 +6,7 @@
 """
 
 from collections.abc import Awaitable, Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Protocol
 
 from cheiron.fetch.endpoints import FieldSizesStep, FieldValuesStep, RecordSizeStep, StudyStep
@@ -44,6 +44,17 @@ class TrialSource(Protocol):
 
 
 @dataclass
+class FetchRecord:
+    """One fetch_data call: its plan, and either the data + profile or the error."""
+
+    number: int
+    plan: SearchPlan
+    outcome: "FetchOutcome | None" = None
+    profile: DataProfile | None = None
+    error: str | None = None
+
+
+@dataclass
 class AgentResult:
     """What the agent hands back: its chart plan and the data it was chosen from."""
 
@@ -54,6 +65,7 @@ class AgentResult:
     skills_loaded: list[str]
     references_read: list[str]
     usage: Any = None
+    fetches: list[FetchRecord] = field(default_factory=list)  # every fetch, in order; the chart uses `outcome`
 
 
 class QueryPlanner(Protocol):

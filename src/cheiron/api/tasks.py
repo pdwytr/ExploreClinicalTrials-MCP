@@ -20,6 +20,7 @@ from cheiron.models.response import ErrorResponse, QueryResponse
 from cheiron.workflow.errors import WorkflowError
 from cheiron.workflow.pipeline import QueryWorkflow
 from cheiron.workflow.plans import Progress
+from cheiron.workflow.steps import FetchRecord
 
 log = logging.getLogger(__name__)
 
@@ -117,16 +118,23 @@ class TaskStore:
         folder = await asyncio.to_thread(self.outputs.create, task.id, task.request)
         task.update(output_dir=folder)
         try:
-            response, outcome = await self.workflow.run(task.request, progress=lambda p: task.update(progress=p))
+            response, result = await self.workflow.run(task.request, progress=lambda p: task.update(progress=p))
+            outcome = result.outcome
             saved = _saved_summary(outcome.trials_fetched, outcome.stats_fetched)
             task.update(progress=Progress(stage="saving", message=f"Saving {saved}"))
-            await asyncio.to_thread(self.outputs.save_fetch, folder, outcome)
+            records = result.fetches or [FetchRecord(1, outcome.plan, outcome, result.profile)]
+            for record in records:
+                await asyncio.to_thread(
+                    self.outputs.save_fetch, folder / f"fetch-{record.number}",
+                    record.plan, record.outcome, record.profile, record.error,
+                )  # fmt: skip
             await asyncio.to_thread(self.outputs.save_response, folder, response)
             meta |= {
                 "status": TaskStatus.SUCCEEDED.value,
                 "rationale": outcome.plan.rationale,
                 "total_trials_matched": outcome.total_matched,
                 "trials_fetched": outcome.trials_fetched,
+                "fetches": len(records),
                 "stats_fetched": outcome.stats_fetched,
                 "warnings": outcome.warnings,
                 "data_as_of": outcome.version.data_timestamp.isoformat(),

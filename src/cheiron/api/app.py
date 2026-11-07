@@ -4,14 +4,17 @@ written to data/queries/<task_id>/.
     POST /queries          QueryRequest -> 202 TaskView (Location: /queries/{task_id})
     GET  /queries/{id}     TaskView: status, progress, result (QueryResponse when done), error
     GET  /health
+    GET  /                 the web UI (src/cheiron/web/index.html)
 
 Run:  uv run uvicorn cheiron.api.app:app
 """
 
 from collections.abc import Callable
 from contextlib import AsyncExitStack, asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Response
+from fastapi.responses import FileResponse
 
 from cheiron.agents.query_agent import QueryAgent
 from cheiron.api.outputs import QueryOutputs
@@ -19,6 +22,8 @@ from cheiron.api.tasks import TaskStore, TaskView
 from cheiron.fetch.client import CtgovClient
 from cheiron.models.request import QueryRequest
 from cheiron.workflow.pipeline import QueryWorkflow
+
+WEB_UI = Path(__file__).parent.parent / "web" / "index.html"
 
 
 async def build_task_store(stack: AsyncExitStack) -> TaskStore:
@@ -59,6 +64,10 @@ def create_app(task_store_factory: Callable[[AsyncExitStack], object] = build_ta
     @app.get("/health")
     async def health() -> dict[str, str]:
         return {"status": "ok"}
+
+    @app.get("/", include_in_schema=False)
+    async def web_ui() -> FileResponse:
+        return FileResponse(WEB_UI, media_type="text/html")
 
     return app
 

@@ -98,7 +98,7 @@ def run(wf, progress=None, **request):
 def test_run_returns_a_full_response():
     wf, _ = make_workflow(search_plan("pembrolizumab"), {"pembrolizumab": FOUND})
 
-    response, outcome = run(wf)
+    response, result = run(wf)
 
     assert [(r.phase, r.trial_count) for r in response.visualization.data] == [("PHASE2", 1), ("PHASE3", 1)]
     assert response.meta.interpretation == "Trials of pembrolizumab"
@@ -109,7 +109,7 @@ def test_run_returns_a_full_response():
     assert response.meta.data_as_of.isoformat() == "2026-11-06T10:00:05"
     assert "Counts are distinct trials." in response.meta.assumptions
     assert response.vega_lite["mark"] == "bar"
-    assert outcome.trials_fetched == 2
+    assert result.outcome.trials_fetched == 2
 
 
 def test_comparison_is_charted_by_side_with_overlap_noted():

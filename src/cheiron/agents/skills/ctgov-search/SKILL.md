@@ -101,6 +101,20 @@ Rules for the `stats/*` endpoints (checked against the live API):
 - Do not narrow a question beyond what it asks just to get fewer results: large
   result sets are code's problem, not yours.
 
+## Multi-step questions
+
+When the question depends on a value you must find first ("the sponsor with the most melanoma
+trials", "the three drugs most often combined with X"):
+1. fetch the set that reveals it, call describe_data, and read the value from the profile's
+   top values (code-computed counts; never guess it);
+2. fetch again with that value, and say in the rationale what you found and how many trials
+   it was based on ("NCI leads melanoma with 205 trials");
+3. the chart is built from the latest successful fetch, so that fetch must hold everything shown.
+Every fetch is recorded and shown to the reader.
+
+**Lead sponsors:** profiles rank `lead_sponsor`. To fetch "that sponsor's trials", search
+`query.lead` (lead sponsor only); `query.spons` also matches trials it only collaborates on.
+
 ## Comparisons
 
 One search per side, identical except for the compared concept, so the sides are
