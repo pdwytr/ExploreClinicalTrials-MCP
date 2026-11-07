@@ -1,7 +1,8 @@
-"""HTTP service: submit a question, poll its status. Outputs are written to data/queries/.
+"""HTTP service: submit a question, poll its status, get the visualization. Outputs are also
+written to data/queries/<task_id>/.
 
     POST /queries          QueryRequest -> 202 TaskView (Location: /queries/{task_id})
-    GET  /queries/{id}     TaskView: status, progress, output folder, error
+    GET  /queries/{id}     TaskView: status, progress, result (QueryResponse when done), error
     GET  /health
 
 Run:  uv run uvicorn cheiron.api.app:app
@@ -12,7 +13,7 @@ from contextlib import AsyncExitStack, asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Response
 
-from cheiron.agents.search_planner import SearchPlannerAgent
+from cheiron.agents.query_agent import QueryAgent
 from cheiron.api.outputs import QueryOutputs
 from cheiron.api.tasks import TaskStore, TaskView
 from cheiron.fetch.client import CtgovClient
@@ -23,7 +24,7 @@ from cheiron.workflow.pipeline import QueryWorkflow
 async def build_task_store(stack: AsyncExitStack) -> TaskStore:
     """Real dependencies, created once per process and shared by every request."""
     client = await stack.enter_async_context(CtgovClient())
-    workflow = QueryWorkflow(search_planner=SearchPlannerAgent(), source=client)
+    workflow = QueryWorkflow(agent=QueryAgent(), source=client)
     return TaskStore(workflow, QueryOutputs())
 
 

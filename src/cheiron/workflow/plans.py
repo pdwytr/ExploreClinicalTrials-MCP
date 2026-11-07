@@ -48,21 +48,11 @@ class SearchPlan(BaseModel):
         return self
 
 
-# What the search planner's LLM returns: a plan, or a reason the question can't be
-# answered from trial records (e.g. "Is drug X effective?", or "this drug" with no drug given).
-
-
-class SearchDecision(BaseModel):
-    kind: Literal["search"] = "search"
-    plan: SearchPlan
-
-
 class Unanswerable(BaseModel):
-    kind: Literal["unanswerable"] = "unanswerable"
+    """The agent's answer when registry records cannot answer the question
+    (e.g. "Is drug X effective?", or "this drug" with no drug given)."""
+
     reason: str = Field(min_length=1, max_length=300)
-
-
-SearchPlannerOutput = Annotated[SearchDecision | Unanswerable, Field(discriminator="kind")]
 
 
 # --- Progress (for task status) --------------------------------------------------------

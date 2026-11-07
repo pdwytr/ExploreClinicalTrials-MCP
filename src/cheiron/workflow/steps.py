@@ -1,25 +1,21 @@
-"""The five steps of the workflow, as interfaces. Implementations come later;
-tests plug in fakes. Agents are async because they call an LLM; the source is
-async because it calls the ClinicalTrials.gov API."""
+"""The workflow's two pluggable parts, as interfaces. Tests plug in fakes.
 
-from collections.abc import Callable
-from typing import Protocol
+    TrialSource   code: talks to ClinicalTrials.gov (implemented by CtgovClient)
+    QueryPlanner  the LLM agent: plans, fetches through the given function, chooses the chart
+                  (implemented by QueryAgent)
+"""
+
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any, Protocol
 
 from cheiron.fetch.endpoints import FieldSizesStep, FieldValuesStep, RecordSizeStep, StudyStep
-from cheiron.fetch.models import DataVersion, StudySearchParams, Trial
+from cheiron.fetch.models import DataVersion, StudySearchParams
 from cheiron.models.request import QueryRequest
-from cheiron.models.response import ChartVisualization, NetworkVisualization
 from cheiron.workflow.plans import ChartPlan, DataProfile, FetchResult, SearchPlan, StatsResult
 
-
-class SearchPlanner(Protocol):
-    """Agent 1: question -> which API searches to run.
-
-    Its LLM answers with SearchPlannerOutput; an Unanswerable answer is raised as
-    UnsupportedQuery, so the workflow only ever receives a valid SearchPlan.
-    `feedback` explains why the previous plan failed (API error, no results)."""
-
-    async def plan(self, request: QueryRequest, feedback: list[str] | None = None) -> SearchPlan: ...
+if TYPE_CHECKING:
+    from cheiron.workflow.pipeline import FetchOutcome
 
 
 class TrialSource(Protocol):
@@ -47,21 +43,21 @@ class TrialSource(Protocol):
         ...
 
 
-class Profiler(Protocol):
-    """Code: summarizes fetched trials for the chart planner."""
+@dataclass
+class AgentResult:
+    """What the agent hands back: its chart plan and the data it was chosen from."""
 
-    def profile(self, trials_by_group: dict[str, list[Trial]], total_matched: int) -> DataProfile: ...
+    chart: ChartPlan
+    outcome: "FetchOutcome"
+    profile: DataProfile
+    chart_warnings: list[str]
+    skills_loaded: list[str]
+    references_read: list[str]
+    usage: Any = None
 
 
-class ChartPlanner(Protocol):
-    """Agent 2: question + data profile -> how to show it."""
+class QueryPlanner(Protocol):
+    """The agent. `fetch` executes a plan in code (user filters, every page) and returns the data;
+    raises UnsupportedQuery if the question cannot be answered from registry data."""
 
-    async def plan(self, request: QueryRequest, search: SearchPlan, profile: DataProfile) -> ChartPlan: ...
-
-
-class Visualizer(Protocol):
-    """Code: aggregates trials per the chart plan into a visualization with citations."""
-
-    def build(
-        self, trials_by_group: dict[str, list[Trial]], plan: ChartPlan
-    ) -> ChartVisualization | NetworkVisualization: ...
+    async def decide(self, request: QueryRequest, fetch: Callable[[SearchPlan], Awaitable["FetchOutcome"]]) -> AgentResult: ...

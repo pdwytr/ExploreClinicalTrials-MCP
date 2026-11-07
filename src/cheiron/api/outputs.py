@@ -6,6 +6,7 @@
         steps.json          each step as executed (endpoint, params with user filters), totals, data file
         trials/<n>-<label>.json   trials from a /studies search or single-study lookup
         stats/<n>-<label>.json    a validated registry-wide /stats response
+        response.json       the QueryResponse returned to the client (visualization + meta + vega_lite)
         meta.json           status, data version, warnings, timings, error (written at the end)
 """
 
@@ -15,6 +16,7 @@ from pathlib import Path
 from typing import Any
 
 from cheiron.models.request import QueryRequest
+from cheiron.models.response import QueryResponse
 from cheiron.settings import PROJECT_ROOT
 from cheiron.workflow.pipeline import FetchOutcome
 from cheiron.workflow.plans import StatsResult
@@ -58,6 +60,9 @@ class QueryOutputs:
                 }
             steps.append(entry)
         _write_json(folder / "steps.json", steps)
+
+    def save_response(self, folder: Path, response: QueryResponse) -> None:
+        _write_json(folder / "response.json", response.model_dump(mode="json", by_alias=True))
 
     def save_meta(self, folder: Path, meta: dict[str, Any]) -> None:
         _write_json(folder / "meta.json", meta)

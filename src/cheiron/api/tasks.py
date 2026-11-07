@@ -16,7 +16,7 @@ from pydantic import BaseModel
 
 from cheiron.api.outputs import QueryOutputs
 from cheiron.models.request import QueryRequest
-from cheiron.models.response import ErrorResponse
+from cheiron.models.response import ErrorResponse, QueryResponse
 from cheiron.workflow.errors import WorkflowError
 from cheiron.workflow.pipeline import QueryWorkflow
 from cheiron.workflow.plans import Progress
@@ -38,6 +38,7 @@ class TaskView(BaseModel):
     status: TaskStatus
     progress: Progress
     output_dir: str | None = None  # data/queries/<task_id>
+    result: QueryResponse | None = None  # the visualization, once succeeded
     error: ErrorResponse | None = None
     created_at: datetime
     updated_at: datetime
@@ -61,6 +62,7 @@ class Task:
     status: TaskStatus = TaskStatus.QUEUED
     progress: Progress = field(default_factory=lambda: Progress(stage="queued", message="Waiting to start"))
     output_dir: Path | None = None
+    result: QueryResponse | None = None
     error: ErrorResponse | None = None
     created_at: datetime = field(default_factory=_now)
     updated_at: datetime = field(default_factory=_now)
@@ -95,6 +97,7 @@ class TaskStore:
             status=task.status,
             progress=task.progress,
             output_dir=self.outputs.relative(task.output_dir) if task.output_dir else None,
+            result=task.result,
             error=task.error,
             created_at=task.created_at,
             updated_at=task.updated_at,
@@ -114,10 +117,11 @@ class TaskStore:
         folder = await asyncio.to_thread(self.outputs.create, task.id, task.request)
         task.update(output_dir=folder)
         try:
-            outcome = await self.workflow.plan_and_fetch(task.request, progress=lambda p: task.update(progress=p))
+            response, outcome = await self.workflow.run(task.request, progress=lambda p: task.update(progress=p))
             saved = _saved_summary(outcome.trials_fetched, outcome.stats_fetched)
             task.update(progress=Progress(stage="saving", message=f"Saving {saved}"))
             await asyncio.to_thread(self.outputs.save_fetch, folder, outcome)
+            await asyncio.to_thread(self.outputs.save_response, folder, response)
             meta |= {
                 "status": TaskStatus.SUCCEEDED.value,
                 "rationale": outcome.plan.rationale,
@@ -130,6 +134,7 @@ class TaskStore:
             }
             task.update(
                 status=TaskStatus.SUCCEEDED,
+                result=response,
                 progress=Progress(
                     stage="done",
                     message=f"Saved {saved}",

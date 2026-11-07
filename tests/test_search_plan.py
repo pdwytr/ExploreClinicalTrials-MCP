@@ -1,10 +1,10 @@
 """SearchPlan (the API searches the planner writes) and how code prepares them."""
 
 import pytest
-from pydantic import TypeAdapter, ValidationError
+from pydantic import ValidationError
 
 from cheiron.models.request import QueryRequest
-from cheiron.workflow import SearchPlan, SearchPlannerOutput, Unanswerable
+from cheiron.workflow import SearchPlan
 from cheiron.workflow.errors import InvalidSearch
 from cheiron.workflow.translate import apply_request_filters, filters_summary, phrase
 
@@ -45,16 +45,6 @@ def test_labels_unique_and_compared_searches_differ():
         plan(("Drug", {"query.intr": "a"}), ("drug", {"query.intr": "b"}))
     with pytest.raises(ValidationError, match="must differ"):
         plan(("A", {"query.intr": "a"}), ("B", {"query.intr": "a"}))
-
-
-def test_planner_output_is_a_plan_or_unanswerable():
-    adapter = TypeAdapter(SearchPlannerOutput)
-    decided = adapter.validate_python(
-        {"kind": "search", "plan": {"steps": [{"endpoint": "studies", "label": "x", "params": {"query.cond": "asthma"}}], "rationale": "r"}}
-    )
-    assert decided.plan.steps[0].label == "x"
-    refused = adapter.validate_python({"kind": "unanswerable", "reason": "Efficacy is not in registry records."})
-    assert isinstance(refused, Unanswerable)
 
 
 # --- Adding the user's structured filters ---------------------------------------------------

@@ -1,18 +1,13 @@
 """The query workflow: request in, one visualization out.
 
-    1. Search planner (agent)   request (all fields) -> SearchPlan (API searches it wrote)
-    2. Add user filters (code)  structured fields AND-ed onto every search
-    3. Fetch (code)             one search per side, in parallel, all pages
-       -> API error or no results: feedback to the planner, one retry
-       -> data refreshed mid-fetch: fetch again, so all results share one data version
-    4. Profile (code)           trials              -> DataProfile
-    5. Chart planner (agent)    request + profile   -> ChartPlan
-    6. Check the chart plan     against what was fetched
-    7. Visualize (code)         trials + ChartPlan  -> visualization with citations
-    8. Assemble                 visualization + meta -> QueryResponse
-
-Steps 1-3 are `plan_and_fetch()`; `run()` does all eight. The chart steps (4-7) are
-optional until they are built: a workflow without them can still plan and fetch.
+    1. Query agent (one LLM run)  plans API calls with the ctgov-search skill and calls
+                                  fetch_data -> code runs step 2 and 3 -> describe_data
+                                  -> loads the chart-planning skill -> ChartPlan
+    2. Add user filters (code)    structured fields AND-ed onto every /studies step
+    3. Fetch (code)               every step in parallel, every page, one data version
+    4. Check the chart plan       against the fetched data, before the agent's answer is accepted
+    5. Visualize (code)           trials + ChartPlan -> visualization with citations
+    6. Assemble                   visualization + meta -> QueryResponse
 """
 
 import asyncio
@@ -35,21 +30,20 @@ from cheiron.workflow.plans import (
     StatsResult,
     StepResult,
 )
-from cheiron.workflow.steps import ChartPlanner, Profiler, SearchPlanner, TrialSource, Visualizer
+from cheiron.workflow.steps import QueryPlanner, TrialSource
 from cheiron.workflow.translate import PreparedStep, apply_request_filters, filters_summary
 
 log = logging.getLogger(__name__)
 
 MISSING_WARNING_SHARE = 0.10  # warn when more than 10% of trials lack the plotted value
-PLANNING_ATTEMPTS = 2  # first plan + one retry with feedback
 FETCH_ATTEMPTS = 2  # first fetch + one redo if the data was refreshed mid-fetch
 
 
 @dataclass
 class FetchOutcome:
-    """Result of steps 1-3: every step executed, on one data version."""
+    """Everything one fetch_data call produced: every step executed, on one data version."""
 
-    plan: SearchPlan  # as the planner wrote it
+    plan: SearchPlan  # as the agent wrote it
     prepared: list[PreparedStep]  # as executed, after the user's filters were added
     results: list[StepResult]  # one per prepared step, same order
     version: DataVersion
@@ -79,74 +73,70 @@ def _report(progress: ProgressCallback | None, stage: str, message: str, **numbe
 
 @dataclass
 class QueryWorkflow:
-    search_planner: SearchPlanner
+    agent: QueryPlanner
     source: TrialSource
-    profiler: Profiler | None = None
-    chart_planner: ChartPlanner | None = None
-    visualizer: Visualizer | None = None
     # None = fetch every matching trial. Counts must be exact; long fetches run as
     # async tasks with status updates, so correctness wins over latency.
     max_trials_per_search: int | None = None
 
-    async def run(self, request: QueryRequest, progress: ProgressCallback | None = None) -> QueryResponse:
-        if not (self.profiler and self.chart_planner and self.visualizer):
-            raise RuntimeError("run() needs the profiler, chart planner and visualizer; use plan_and_fetch().")
-        fetched = await self.plan_and_fetch(request, progress)
-        warnings = list(fetched.warnings)
+    async def run(
+        self, request: QueryRequest, progress: ProgressCallback | None = None
+    ) -> tuple[QueryResponse, FetchOutcome]:
+        """Answer one question: the agent plans, fetches and chooses; code builds the response."""
+        from cheiron.visualize.builder import build_visualization  # visualize depends on workflow
 
-        # 4-6. How to show it
-        _report(progress, "analyzing", "Choosing the chart")
-        profile = self.profiler.profile(fetched.trials_by_group, fetched.total_matched)
-        chart = await self.chart_planner.plan(request, fetched.plan, profile)
-        warnings += check_chart_plan(chart, fetched.plan, profile)
+        _report(progress, "planning", "Planning API calls")
 
-        # 7-8. Build and assemble
+        async def fetch(plan: SearchPlan) -> FetchOutcome:
+            return await self.fetch_plan(plan, request, progress)
+
+        result = await self.agent.decide(request, fetch)
+        outcome, chart = result.outcome, result.chart
+
         _report(progress, "building", "Building the chart")
-        visualization = self.visualizer.build(fetched.trials_by_group, chart)
+        visualization, viz_warnings = build_visualization(outcome.trials_by_group, chart)
         meta = Meta(
-            interpretation=fetched.plan.rationale,
-            filters_applied=filters_summary(fetched.prepared),
-            warnings=warnings,
-            total_trials_matched=fetched.total_matched,
-            trials_analyzed=fetched.trials_fetched,
+            interpretation=outcome.plan.rationale,
+            filters_applied=filters_summary(outcome.prepared),
+            assumptions=_assumptions(chart, result.profile),
+            warnings=outcome.warnings + result.chart_warnings + viz_warnings,
+            total_trials_matched=outcome.total_matched,
+            trials_analyzed=outcome.trials_fetched,
             units={"trial_count": "trials"},
-            data_as_of=fetched.version.data_timestamp,
-            api_version=fetched.version.api_version,
+            data_as_of=outcome.version.data_timestamp,
+            api_version=outcome.version.api_version,
         )
-        return QueryResponse(visualization=visualization, meta=meta)
+        return QueryResponse(visualization=visualization, meta=meta), outcome
 
-    async def plan_and_fetch(self, request: QueryRequest, progress: ProgressCallback | None = None) -> FetchOutcome:
-        """Steps 1-3: plan the searches, add the user's filters, fetch every matching trial."""
-        feedback: list[str] | None = None
-        for attempt in range(1, PLANNING_ATTEMPTS + 1):
-            _report(progress, "planning", "Planning searches" if feedback is None else "Revising searches after feedback")
-            search = await self.search_planner.plan(request, feedback)
-            try:
-                prepared, warnings = apply_request_filters(search, request)
-                results, version = await self._fetch_consistent(prepared, progress)
-            except InvalidSearch as exc:
-                if attempt == PLANNING_ATTEMPTS:
-                    raise
-                feedback = [f"The plan was rejected: {exc.message}"]
+    async def fetch_plan(
+        self, search: SearchPlan, request: QueryRequest, progress: ProgressCallback | None = None
+    ) -> FetchOutcome:
+        """Execute a plan: add the user's filters, fetch every step on one data version.
+
+        Raises InvalidSearch (the API or a rule rejected the plan) or NoResults (nothing matched);
+        both carry a message meant for the agent to fix its plan.
+        """
+        try:
+            prepared, warnings = apply_request_filters(search, request)
+            results, version = await self._fetch_consistent(prepared, progress)
+        except InvalidSearch as exc:
+            raise InvalidSearch(f"The plan was rejected: {exc.message}", exc.details) from exc
+        if not any(isinstance(r, StatsResult) or r.total_matched for r in results):
+            summary = filters_summary(prepared)
+            raise NoResults(f"No trials matched these steps: {summary['steps']}", summary)
+        for (label, _), result in zip(prepared, results):
+            if isinstance(result, StatsResult):
+                if result.incomplete_fields:
+                    warnings.append(
+                        f"{label}: the API returns only the top values for {result.incomplete_fields}; "
+                        "registry-wide counts for the rest are not available."
+                    )
                 continue
-            if any(isinstance(r, StatsResult) or r.total_matched for r in results):
-                for (label, _), result in zip(prepared, results):
-                    if isinstance(result, StatsResult):
-                        if result.incomplete_fields:
-                            warnings.append(
-                                f"{label}: the API returns only the top values for {result.incomplete_fields}; "
-                                "registry-wide counts for the rest are not available."
-                            )
-                        continue
-                    if result.truncated:
-                        warnings.append(f"{label}: analyzed {len(result.trials)} of {result.total_matched} matching trials.")
-                    if not result.trials and search.is_comparison:
-                        warnings.append(f"{label}: no matching trials.")
-                return FetchOutcome(search, prepared, results, version, warnings)
-            if attempt == PLANNING_ATTEMPTS:
-                raise NoResults("No trials matched the search.", filters_summary(prepared))
-            feedback = [f"No trials matched these steps: {filters_summary(prepared)['steps']}"]
-        raise AssertionError("unreachable")
+            if result.truncated:
+                warnings.append(f"{label}: analyzed {len(result.trials)} of {result.total_matched} matching trials.")
+            if not result.trials and search.is_comparison:
+                warnings.append(f"{label}: no matching trials.")
+        return FetchOutcome(search, prepared, results, version, warnings)
 
     def _execute(self, index: int, target, tracker: "_FetchTracker"):
         """The client call for one prepared step."""
@@ -236,3 +226,14 @@ def check_chart_plan(chart: ChartPlan, search: SearchPlan, profile: DataProfile)
         if field.missing > MISSING_WARNING_SHARE * profile.trials_fetched:
             warnings.append(f"{field.missing} of {profile.trials_fetched} trials have no {dim.value} and are excluded.")
     return warnings
+
+
+def _assumptions(chart: ChartPlan, profile: DataProfile) -> list[str]:
+    """Counting rules the reader needs to read the chart correctly."""
+    notes = ["Counts are distinct trials."]
+    multi = [d.value for d in (chart.x, chart.series) if d and d in profile.fields and profile.fields[d].multi_valued]
+    if multi:
+        notes.append(f"A trial can have several values of {', '.join(sorted(set(multi)))}, so counts can sum to more than the trials.")
+    if len(profile.group_sizes) > 1:
+        notes.append("Compared sides are separate searches; a trial matching several sides is counted in each.")
+    return notes
