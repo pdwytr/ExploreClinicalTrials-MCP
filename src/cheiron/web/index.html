@@ -375,82 +375,131 @@ function renderMeta(meta, viz) {
   add("Source", `ClinicalTrials.gov${meta.api_version ? ` API ${meta.api_version}` : ""}`);
 }
 
-// Network graphs have no Vega-Lite spec: a small force layout drawn as SVG.
+// Network graphs have no Vega-Lite spec: a Fruchterman–Reingold layout drawn as SVG.
+// Deterministic (no randomness), so the same response always draws the same picture.
 function renderNetwork(viz) {
   const { nodes, edges } = viz.data;
-  const W = 800, H = 520, NS = "http://www.w3.org/2000/svg";
-  const pos = new Map(nodes.map((n, i) => {
-    const a = (2 * Math.PI * i) / nodes.length;
-    return [n.id, { x: W / 2 + 200 * Math.cos(a), y: H / 2 + 200 * Math.sin(a), vx: 0, vy: 0 }];
-  }));
-  for (let step = 0; step < 300; step++) {
-    const cool = 1 - step / 300;
-    for (const a of nodes) for (const b of nodes) {
-      if (a === b) continue;
-      const p = pos.get(a.id), q = pos.get(b.id);
-      const dx = p.x - q.x, dy = p.y - q.y, d2 = Math.max(dx * dx + dy * dy, 25);
-      p.vx += (dx / d2) * 800; p.vy += (dy / d2) * 800;
-    }
-    for (const e of edges) {
-      const p = pos.get(e.source), q = pos.get(e.target);
-      const dx = q.x - p.x, dy = q.y - p.y;
-      p.vx += dx * 0.01; p.vy += dy * 0.01; q.vx -= dx * 0.01; q.vy -= dy * 0.01;
-    }
-    for (const p of pos.values()) {
-      p.vx += (W / 2 - p.x) * 0.005; p.vy += (H / 2 - p.y) * 0.005;
-      p.x = Math.min(W - 40, Math.max(40, p.x + p.vx * cool)); p.y = Math.min(H - 30, Math.max(30, p.y + p.vy * cool));
-      p.vx *= 0.5; p.vy *= 0.5;
-    }
-  }
-  const groups = [...new Set(nodes.map((n) => n.group))];
-  const palette = ["#2f6fde", "#e0742b", "#2a9d6f", "#b5479b", "#8a6d1f", "#5b5bd6"];
+  const W = 800, H = 580, NS = "http://www.w3.org/2000/svg";
+  const box = { x0: 20, x1: W - 20, y0: 70, y1: H - 14 }; // title and legend rows sit above the plot
+  const pw = box.x1 - box.x0, ph = box.y1 - box.y0, cx = (box.x0 + box.x1) / 2, cy = (box.y0 + box.y1) / 2;
   const maxSize = Math.max(1, ...nodes.map((n) => n.size || 1));
   const maxWeight = Math.max(1, ...edges.map((e) => e.weight || 1));
+  // Start on a sunflower spiral, nodes in the given order (largest first) from the centre out.
+  const pts = nodes.map((n, i) => {
+    const a = i * 2.39996, s = Math.sqrt((i + 0.5) / nodes.length);
+    return { n, r: 5 + 13 * Math.sqrt((n.size || 1) / maxSize), x: cx + 0.4 * pw * s * Math.cos(a), y: cy + 0.4 * ph * s * Math.sin(a) };
+  });
+  const at = new Map(pts.map((p) => [p.n.id, p]));
+  const links = edges.map((e) => ({ e, p: at.get(e.source), q: at.get(e.target) })).filter((l) => l.p && l.q);
+  // Fruchterman–Reingold: repulsion k²/d between all nodes, attraction d²/k along edges (stronger
+  // for heavier edges), mild gravity to the centre, moves capped by a cooling temperature.
+  const k = 0.8 * Math.sqrt((pw * ph) / Math.max(1, pts.length));
+  // Gravity G per pixel from the centre: stronger vertically (the box is wide) and for nodes
+  // without edges, which repulsion alone would push far out.
+  const ITER = 500, T0 = pw / 8, G = 0.5;
+  for (const { p, q } of links) { p.deg = (p.deg || 0) + 1; q.deg = (q.deg || 0) + 1; }
+  for (let it = 0; it < ITER; it++) {
+    const temp = T0 * (1 - it / ITER) + 0.5;
+    for (const p of pts) { const g = p.deg ? G : 5 * G; p.dx = g * (cx - p.x); p.dy = g * (cy - p.y) * (pw / ph); }
+    for (let i = 0; i < pts.length; i++) for (let j = i + 1; j < pts.length; j++) {
+      const p = pts[i], q = pts[j];
+      let dx = p.x - q.x, dy = p.y - q.y, d = Math.hypot(dx, dy);
+      if (d < 0.01) { dx = 0.01 * (i - j); dy = 0.01; d = Math.hypot(dx, dy); }
+      const f = (k * k) / d / d;
+      p.dx += dx * f; p.dy += dy * f; q.dx -= dx * f; q.dy -= dy * f;
+    }
+    for (const { e, p, q } of links) {
+      const dx = p.x - q.x, dy = p.y - q.y, d = Math.hypot(dx, dy) || 0.01;
+      const f = (d / k) * (0.4 + 0.6 * (e.weight || 1) / maxWeight); // (d²/k) / d
+      p.dx -= dx * f; p.dy -= dy * f; q.dx += dx * f; q.dy += dy * f;
+    }
+    for (const p of pts) {
+      const d = Math.hypot(p.dx, p.dy) || 1, step = Math.min(d, temp) / d;
+      p.x += p.dx * step; p.y += p.dy * step;
+    }
+  }
+  // Fit the layout into the plot box, then push apart any circles that still overlap.
+  const xs = pts.map((p) => p.x), ys = pts.map((p) => p.y);
+  const [minX, maxX, minY, maxY] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+  const pad = 22;
+  for (const p of pts) {
+    p.x = box.x0 + pad + (maxX > minX ? (p.x - minX) / (maxX - minX) : 0.5) * (pw - 2 * pad);
+    p.y = box.y0 + pad + (maxY > minY ? (p.y - minY) / (maxY - minY) : 0.5) * (ph - 2 * pad);
+  }
+  for (let it = 0; it < 60; it++) for (let i = 0; i < pts.length; i++) for (let j = i + 1; j < pts.length; j++) {
+    const p = pts[i], q = pts[j], dx = p.x - q.x, dy = p.y - q.y, d = Math.hypot(dx, dy) || 0.01, gap = p.r + q.r + 3 - d;
+    if (gap <= 0) continue;
+    const ux = (dx / d) * gap / 2, uy = (dy / d) * gap / 2;
+    p.x += ux; p.y += uy; q.x -= ux; q.y -= uy;
+    for (const s of [p, q]) {
+      s.x = Math.min(box.x1 - s.r, Math.max(box.x0 + s.r, s.x)); s.y = Math.min(box.y1 - s.r, Math.max(box.y0 + s.r, s.y));
+    }
+  }
+
   const svg = document.createElementNS(NS, "svg");
   svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
-  const title = document.createElementNS(NS, "text");
-  Object.entries({ x: 8, y: 20, "font-weight": 600, "font-size": 15 }).forEach(([k, v]) => title.setAttribute(k, v));
-  title.textContent = viz.title;
-  svg.append(title);
-  const nodeById = new Map(nodes.map((n) => [n.id, n]));
-  const tooltip = (el, text) => el.append(Object.assign(document.createElementNS(NS, "title"), { textContent: text }));
-  const labelled = new Set([...nodes].sort((a, b) => (b.size || 0) - (a.size || 0)).slice(0, 12).map((n) => n.id));
-  for (const e of edges) {
-    const p = pos.get(e.source), q = pos.get(e.target);
-    const line = document.createElementNS(NS, "line");
-    Object.entries({ x1: p.x, y1: p.y, x2: q.x, y2: q.y, stroke: "#b9b9b0", "stroke-width": 1 + 5 * ((e.weight || 1) / maxWeight) })
-      .forEach(([k, v]) => line.setAttribute(k, v));
+  const el = (tag, attrs, parent = svg) => {
+    const node = document.createElementNS(NS, tag);
+    for (const [key, v] of Object.entries(attrs)) node.setAttribute(key, v);
+    parent.append(node);
+    return node;
+  };
+  const tooltip = (node, text) => el("title", {}, node).textContent = text;
+  el("text", { x: 8, y: 22, "font-weight": 600, "font-size": 15 }).textContent = viz.title;
+  // Legend: one row under the title, never over the plot.
+  const groups = [...new Set(nodes.map((n) => n.group))];
+  const palette = ["#2f6fde", "#e0742b", "#2a9d6f", "#b5479b", "#8a6d1f", "#5b5bd6"];
+  const color = (g) => palette[groups.indexOf(g) % palette.length];
+  let lx = 14;
+  for (const grp of groups.filter((g) => g != null)) {
+    const name = String(grp).replaceAll("_", " ");
+    el("circle", { cx: lx, cy: 44, r: 5, fill: color(grp) });
+    el("text", { x: lx + 10, y: 48, "font-size": 12, fill: "#444" }).textContent = name[0].toUpperCase() + name.slice(1);
+    lx += 34 + 6.5 * name.length;
+  }
+  const labelOf = (p) => `${p.n.label}${p.n.group ? ` (${String(p.n.group).replaceAll("_", " ")})` : ""}`;
+  for (const { e, p, q } of links) {
+    const line = el("line", { x1: p.x, y1: p.y, x2: q.x, y2: q.y, stroke: "#a9a9a0", "stroke-opacity": 0.55,
+      "stroke-width": 0.8 + 5 * ((e.weight || 1) / maxWeight) });
     line.style.cursor = "pointer";
-    tooltip(line, `${nodeById.get(e.source).label} — ${nodeById.get(e.target).label}: ${e.weight}`);
-    line.addEventListener("click", () => showCitations(`${nodeById.get(e.source).label} — ${nodeById.get(e.target).label}`, e.citations || []));
-    svg.append(line);
+    tooltip(line, `${p.n.label} — ${q.n.label}: ${e.weight} trial${e.weight === 1 ? "" : "s"}`);
+    line.addEventListener("click", () => showCitations(`${p.n.label} — ${q.n.label}`, e.citations || []));
   }
-  for (const n of nodes) {
-    const p = pos.get(n.id);
-    const g = document.createElementNS(NS, "g");
+  for (const p of [...pts].sort((a, b) => a.r - b.r)) { // big nodes on top
+    const g = el("g", {});
     g.style.cursor = "pointer";
-    const c = document.createElementNS(NS, "circle");
-    Object.entries({ cx: p.x, cy: p.y, r: 6 + 14 * Math.sqrt((n.size || 1) / maxSize), fill: palette[groups.indexOf(n.group) % palette.length], stroke: "#fff", "stroke-width": 1.5 })
-      .forEach(([k, v]) => c.setAttribute(k, v));
-    const t = document.createElementNS(NS, "text");
-    Object.entries({ x: p.x, y: p.y - 12 - 14 * Math.sqrt((n.size || 1) / maxSize), "text-anchor": "middle", "font-size": 12 })
-      .forEach(([k, v]) => t.setAttribute(k, v));
-    t.textContent = n.label;
-    tooltip(g, `${n.label}${n.group ? ` (${n.group})` : ""}${n.size != null ? `: ${n.size}` : ""}`);
-    g.append(c);
-    if (labelled.has(n.id)) g.append(t);
-    g.addEventListener("click", () => showCitations(n.label, n.citations || []));
-    svg.append(g);
+    el("circle", { cx: p.x, cy: p.y, r: p.r, fill: color(p.n.group), stroke: "#fff", "stroke-width": 1.5 }, g);
+    tooltip(g, `${labelOf(p)}${p.n.size != null ? `: ${p.n.size} trial${p.n.size === 1 ? "" : "s"}` : ""}`);
+    g.addEventListener("click", () => showCitations(p.n.label, p.n.citations || []));
   }
-  groups.filter((x) => x != null).forEach((grp, i) => {
-    const y = H - 12 - 18 * i;
-    const dot = document.createElementNS(NS, "circle");
-    Object.entries({ cx: 14, cy: y - 4, r: 5, fill: palette[i % palette.length] }).forEach(([k, v]) => dot.setAttribute(k, v));
-    const label = document.createElementNS(NS, "text");
-    Object.entries({ x: 24, y, "font-size": 12 }).forEach(([k, v]) => label.setAttribute(k, v));
-    label.textContent = grp;
-    svg.append(dot, label);
-  });
+  // Labels for the 12 largest nodes: try right, left, above, below; keep the spot that overlaps
+  // other labels and nodes least.
+  const placed = [];
+  const overlap = (a, b) => Math.max(0, Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0)) * Math.max(0, Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0));
+  const discs = pts.map((p) => ({ x0: p.x - p.r, x1: p.x + p.r, y0: p.y - p.r, y1: p.y + p.r }));
+  for (const p of [...pts].sort((a, b) => (b.n.size || 0) - (a.n.size || 0)).slice(0, 12)) {
+    const text = p.n.label.length > 30 ? `${p.n.label.slice(0, 29)}…` : p.n.label;
+    const w = 6.3 * text.length, h = 14;
+    const spots = [
+      { x: p.x + p.r + 4, y: p.y + 4, anchor: "start", bx: p.x + p.r + 4 },
+      { x: p.x - p.r - 4, y: p.y + 4, anchor: "end", bx: p.x - p.r - 4 - w },
+      { x: p.x, y: p.y - p.r - 5, anchor: "middle", bx: p.x - w / 2 },
+      { x: p.x, y: p.y + p.r + 14, anchor: "middle", bx: p.x - w / 2 },
+    ].map((s) => {
+      const b = { x0: s.bx, x1: s.bx + w, y0: s.y - h + 3, y1: s.y + 3 };
+      const out = Math.max(0, box.x0 - 12 - b.x0) + Math.max(0, b.x1 - box.x1 - 12) + Math.max(0, box.y0 - b.y0) + Math.max(0, b.y1 - H);
+      const cost = out * 1000 + placed.reduce((c, o) => c + 3 * overlap(b, o), 0) + discs.reduce((c, o) => c + overlap(b, o), 0);
+      return { ...s, b, cost };
+    });
+    const best = spots.reduce((a, b) => (b.cost < a.cost ? b : a));
+    placed.push(best.b);
+    const t = el("text", { x: best.x, y: best.y, "text-anchor": best.anchor, "font-size": 12, fill: "#222",
+      stroke: "#fff", "stroke-width": 3, "stroke-linejoin": "round", "paint-order": "stroke" });
+    t.textContent = text;
+    t.style.cursor = "pointer";
+    tooltip(t, labelOf(p));
+    t.addEventListener("click", () => showCitations(p.n.label, p.n.citations || []));
+  }
   $("network").replaceChildren(svg);
 }
 
