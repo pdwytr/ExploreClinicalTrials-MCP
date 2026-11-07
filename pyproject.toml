@@ -12,6 +12,7 @@ dev = [
     "pytest>=8",
     "altair>=5",    # validates generated specs against the official Vega-Lite schema
     "networkx>=3.4", # checks NetworkData round-trips through node_link_graph
+    "pyyaml>=6",     # skill frontmatter tests and scripts/build_ctgov_skill.py
 ]
 
 [build-system]
