@@ -8,7 +8,7 @@
 from collections.abc import Callable
 from datetime import datetime
 from enum import Enum
-from typing import Annotated, Literal
+from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
 
