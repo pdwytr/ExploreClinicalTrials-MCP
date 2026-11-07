@@ -126,6 +126,36 @@ def test_bipartite_network_links_two_fields():
     assert [(e.source, e.target, e.weight) for e in viz.data.edges] == [("lead_sponsor:Merck", "intervention:pembrolizumab", 1)]
 
 
+def test_network_merges_values_that_differ_only_by_case_or_spacing():
+    drugs = lambda *names: [Intervention(name=n, type="DRUG") for n in names]  # noqa: E731
+    trials = [
+        trial(1, interventions=drugs("Rituximab", "Cyclophosphamide")),
+        trial(2, interventions=drugs("rituximab", "cyclophosphamide")),
+        trial(3, interventions=drugs("Rituximab", "rituximab ", "Cyclophosphamide")),  # one trial, two spellings
+        trial(4, interventions=drugs("Rituximab")),
+    ]
+    viz, _ = build_visualization(
+        {"All": trials},
+        plan(intent="relationship", chart_type="network_graph", x=Dimension.INTERVENTION, series=Dimension.INTERVENTION),
+    )
+    # one node per drug, labelled with the most frequent spelling; trial 3 counts once
+    assert {n.label: n.size for n in viz.data.nodes} == {"Rituximab": 4, "Cyclophosphamide": 3}
+    # no self-loop from trial 3's two spellings; one edge, three trials
+    assert [(e.source, e.target, e.weight) for e in viz.data.edges] == [
+        ("intervention:Cyclophosphamide", "intervention:Rituximab", 3)
+    ]
+    # citations still quote each trial's own spelling
+    ritux = next(n for n in viz.data.nodes if n.label == "Rituximab")
+    assert [(c.nct_id, c.excerpt) for c in ritux.citations][:2] == [("NCT00000001", "Rituximab"), ("NCT00000002", "rituximab")]
+    as_response(viz)
+
+
+def test_bar_categories_merge_values_that_differ_only_by_case():
+    trials = [trial(1, conditions=["Lupus Nephritis"]), trial(2, conditions=["lupus nephritis"]), trial(3, conditions=["Lupus  Nephritis"])]
+    viz, _ = build_visualization({"All": trials}, plan(intent="ranking", chart_type="bar_chart", x=Dimension.CONDITION))
+    assert [(r.condition, r.trial_count) for r in viz.data] == [("Lupus Nephritis", 3)]
+
+
 # --- Rules -----------------------------------------------------------------------------------------
 
 

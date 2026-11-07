@@ -9,12 +9,14 @@ Counting rules:
     number of trials, which the caller reports in meta
   - phases keep clinical order, years run ascending with empty years shown as 0, other
     categories are sorted by count; more than MAX_CATEGORIES are cut to the top ones
+  - values that differ only by case or spacing ("Rituximab", "rituximab ") are one category,
+    shown with the spelling most trials use; citations still quote each trial's own spelling
   - enrollment is binned into fixed edges for histograms
   - networks link values of two fields (or one field with itself = co-occurrence);
     edge weight = trials sharing both values
 """
 
-from collections import defaultdict
+from collections import Counter, defaultdict
 from collections.abc import Callable
 from datetime import date
 
@@ -48,11 +50,24 @@ FIELD_PATHS = {
 Pair = tuple[str, Trial]  # (comparison side label, trial)
 
 
-def _reader(dim: Dimension) -> Callable[[str, Trial], set[str]]:
+def _key(value: str) -> str:
+    """Values equal under this key are the same category."""
+    return " ".join(value.split()).casefold()
+
+
+def _reader(dim: Dimension, pairs: list[Pair]) -> Callable[[str, Trial], set[str]]:
+    """Reads a field's distinct values per trial, merging spellings that differ only by case or
+    spacing into the one most trials in `pairs` use (ties: the alphabetically first)."""
     if dim is Dimension.GROUP:
         return lambda group, trial: {group}
     read = FIELD_VALUES[dim]
-    return lambda group, trial: set(read(trial))
+    spellings: Counter[str] = Counter()
+    for _, trial in pairs:
+        spellings.update({" ".join(v.split()) for v in read(trial)})
+    label: dict[str, str] = {}
+    for spelling, _ in sorted(spellings.items(), key=lambda s: (-s[1], s[0])):
+        label.setdefault(_key(spelling), spelling)
+    return lambda group, trial: {label.get(_key(v), v) for v in read(trial)}
 
 
 def _excerpt(dim: Dimension, value: str, trial: Trial) -> str:
@@ -60,7 +75,8 @@ def _excerpt(dim: Dimension, value: str, trial: Trial) -> str:
         return trial.start_date.isoformat()  # the exact date the year came from
     if dim is Dimension.COMPLETION_YEAR and trial.completion_date:
         return trial.completion_date.isoformat()
-    return value
+    # the trial's own spelling of the (possibly merged) value
+    return next((v for v in FIELD_VALUES[dim](trial) if _key(v) == _key(value)), value)
 
 
 def _citations(dims: list[tuple[Dimension, str]], trials: list[Trial]) -> list[Citation]:
@@ -156,11 +172,13 @@ def build_visualization(
     windows, year_notes = _year_windows(plan, bounds, as_of)
     future = set()
     for dim, (_, hi) in windows.items():
-        read = _reader(dim)
+        read = _reader(dim, pairs)
         if hi is not None:
             future |= {t.nct_id for g, t in pairs if read(g, t) and all(int(v) > hi for v in read(g, t))}
 
-    read_x = _reader(plan.x) if plan.x not in windows else _within(plan.x, _reader(plan.x), windows[plan.x])
+    read_x = _reader(plan.x, pairs)
+    if plan.x in windows:
+        read_x = _within(plan.x, read_x, windows[plan.x])
     if plan.series is None:
         buckets: dict[str, list[Trial]] = defaultdict(list)
         for group, trial in pairs:
@@ -178,7 +196,9 @@ def build_visualization(
         ordered_axis = plan.x is Dimension.PHASE or plan.x in YEAR_DIMENSIONS
         encoding = {"x": _channel(plan.x) | ({} if ordered_axis else {"sort": "-y"}), "y": Y}
     else:
-        read_s = _reader(plan.series) if plan.series not in windows else _within(plan.series, _reader(plan.series), windows[plan.series])
+        read_s = _reader(plan.series, pairs)
+        if plan.series in windows:
+            read_s = _within(plan.series, read_s, windows[plan.series])
         cells: dict[tuple[str, str], list[Trial]] = defaultdict(list)
         x_totals: dict[str, list[Trial]] = defaultdict(list)
         s_totals: dict[str, list[Trial]] = defaultdict(list)
@@ -246,7 +266,7 @@ def _histogram(pairs: list[Pair], plan: ChartPlan) -> ChartVisualization:
 
 def _network(pairs: list[Pair], plan: ChartPlan) -> tuple[NetworkVisualization, list[str]]:
     assert plan.series is not None
-    read_a, read_b = _reader(plan.x), _reader(plan.series)
+    read_a, read_b = _reader(plan.x, pairs), _reader(plan.series, pairs)
     same_kind = plan.x == plan.series
     node_trials: dict[tuple[Dimension, str], list[Trial]] = defaultdict(list)
     edge_trials: dict[tuple[tuple[Dimension, str], tuple[Dimension, str]], list[Trial]] = defaultdict(list)
