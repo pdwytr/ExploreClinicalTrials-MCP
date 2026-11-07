@@ -12,6 +12,7 @@
 
 import asyncio
 import logging
+import time
 from dataclasses import dataclass
 
 from cheiron.fetch.endpoints import StudyStep
@@ -32,6 +33,7 @@ from cheiron.workflow.plans import (
     YEAR_DIMENSIONS,
 )
 from cheiron.workflow.steps import AgentResult, QueryPlanner, TrialSource
+from cheiron.workflow.trace import run_metrics
 from cheiron.workflow.translate import PreparedStep, apply_request_filters, filters_summary, year_bounds
 
 log = logging.getLogger(__name__)
@@ -96,6 +98,7 @@ class QueryWorkflow:
         outcome, chart = result.outcome, result.chart
 
         _report(progress, "building", "Building the chart")
+        build_started = time.perf_counter()
         bounds = year_bounds(outcome.plan, request)
         stats = [(label, r) for (label, _), r in zip(outcome.prepared, outcome.results) if isinstance(r, StatsResult)]
         visualization, viz_warnings = build_visualization(
@@ -113,6 +116,7 @@ class QueryWorkflow:
             api_version=outcome.version.api_version,
             chain=_chain(result),
         )
+        meta.metrics = run_metrics(result.messages, result.fetches, result.seconds, time.perf_counter() - build_started)
         return QueryResponse(visualization=visualization, meta=meta), result
 
     async def fetch_plan(

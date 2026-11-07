@@ -17,11 +17,12 @@ accepted) or Unanswerable. Create one QueryAgent per process: each run keeps its
 
 import json
 import re
+import time
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from pydantic_ai import Agent, ModelRetry, RunContext
+from pydantic_ai import Agent, ModelRetry, RunContext, capture_run_messages
 from pydantic_ai.models import Model
 from pydantic_ai.models.openai import OpenAIResponsesModel
 from pydantic_ai.providers.openai import OpenAIProvider
@@ -105,13 +106,15 @@ class QueryAgent:
 
     async def decide(self, request: QueryRequest, fetch: Fetch) -> AgentResult:
         state = RunState(request=request, fetch=fetch)
-        try:
-            result = await self._agent.run(build_prompt(request), deps=state)
-            if isinstance(result.output, Unanswerable):
-                raise UnsupportedQuery(result.output.reason)
-        except BaseException as exc:  # incl. cancellation: keep what was fetched so it can be saved
-            exc.fetches = state.fetches
-            raise
+        started = time.perf_counter()
+        with capture_run_messages() as messages:
+            try:
+                result = await self._agent.run(build_prompt(request), deps=state)
+                if isinstance(result.output, Unanswerable):
+                    raise UnsupportedQuery(result.output.reason)
+            except BaseException as exc:  # incl. cancellation: keep what was fetched and the trace
+                exc.fetches, exc.messages, exc.seconds = state.fetches, list(messages), time.perf_counter() - started
+                raise
         assert state.outcome is not None and state.profile is not None  # guaranteed by validate_output
         return AgentResult(
             chart=result.output,
@@ -122,6 +125,8 @@ class QueryAgent:
             references_read=state.references_read,
             usage=result.usage,
             fetches=state.fetches,
+            messages=result.all_messages(),
+            seconds=time.perf_counter() - started,
         )
 
 
@@ -137,11 +142,14 @@ async def fetch_data(ctx: RunContext[RunState], plan: SearchPlan) -> str:
     record = FetchRecord(number=len(state.fetches) + 1, plan=plan)
     state.fetches.append(record)
     left = FETCH_BUDGET - len(state.fetches)
+    started = time.perf_counter()
     try:
         outcome = await state.fetch(plan)
     except (InvalidSearch, NoResults) as exc:
         record.error = exc.message
+        record.seconds = time.perf_counter() - started
         return f"Fetch {record.number} failed: {exc.message} Fix the plan and call fetch_data again ({left} call(s) left)."
+    record.seconds = time.perf_counter() - started
     stats = [(label, r) for (label, _), r in zip(outcome.prepared, outcome.results) if isinstance(r, StatsResult)]
     profile = build_profile(outcome.trials_by_group, outcome.total_matched, stats, outcome.version.data_timestamp)
     record.outcome, record.profile = outcome, profile

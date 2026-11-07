@@ -231,6 +231,22 @@ Visualization = ChartVisualization | NetworkVisualization
 # --- Metadata --------------------------------------------------------------------
 
 
+class RunMetrics(BaseModel):
+    """How the run went: time, cost and agent behaviour. The full trace is in trace.json."""
+
+    seconds_total: float = Field(description="Agent run plus building the chart.")
+    seconds_model: float = Field(description="Agent run time not spent fetching (model turns, other tools).")
+    seconds_fetching: float = Field(description="Time in fetch_data calls (ClinicalTrials.gov API).")
+    seconds_building: float = Field(description="Building the visualization from the fetched trials.")
+    model_turns: int
+    input_tokens: int
+    output_tokens: int
+    tool_calls: dict[str, int] = Field(description="Calls per tool, incl. the final-answer tool.")
+    sent_back: int = Field(description="Tool calls or answers code rejected and sent back to the model.")
+    fetches: int
+    failed_fetches: int
+
+
 class ChainStep(BaseModel):
     """One fetch_data call the agent made, in order. Lets a reader check intermediate findings."""
 
@@ -258,6 +274,7 @@ class Meta(BaseModel):
     data_as_of: datetime | None = Field(default=None, description="When ClinicalTrials.gov last refreshed the data used.")
     api_version: str | None = Field(default=None, description="ClinicalTrials.gov API version that served the data.")
     chain: list[ChainStep] = Field(default_factory=list, description="Every fetch the agent made, in order.")
+    metrics: RunMetrics | None = Field(default=None, description="Time, tokens and tool calls of this run.")
     generated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 

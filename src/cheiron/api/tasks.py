@@ -21,6 +21,7 @@ from cheiron.workflow.errors import WorkflowError
 from cheiron.workflow.pipeline import QueryWorkflow
 from cheiron.workflow.plans import Progress
 from cheiron.workflow.steps import FetchRecord
+from cheiron.workflow.trace import build_trace, run_metrics
 
 log = logging.getLogger(__name__)
 
@@ -129,7 +130,9 @@ class TaskStore:
                     record.plan, record.outcome, record.profile, record.error,
                 )  # fmt: skip
             await asyncio.to_thread(self.outputs.save_response, folder, response)
+            await asyncio.to_thread(self.outputs.save_trace, folder, build_trace(result.messages, records))
             meta |= {
+                "metrics": response.meta.metrics.model_dump() if response.meta.metrics else None,
                 "status": TaskStatus.SUCCEEDED.value,
                 "rationale": outcome.plan.rationale,
                 "total_trials_matched": outcome.total_matched,
@@ -152,10 +155,10 @@ class TaskStore:
             )
         except asyncio.CancelledError as exc:
             meta |= {"status": TaskStatus.FAILED.value, "error": {"error": "internal_error", "message": "Cancelled"}}
-            self._save_partial(folder, exc)
+            meta |= self._save_partial(folder, exc)
             raise
         except Exception as exc:
-            self._save_partial(folder, exc)
+            meta |= self._save_partial(folder, exc)
             if isinstance(exc, WorkflowError):
                 error = exc.to_response()
             else:
@@ -168,14 +171,23 @@ class TaskStore:
             meta |= {"finished_at": finished.isoformat(), "duration_seconds": round((finished - started).total_seconds(), 2)}
             await asyncio.to_thread(self.outputs.save_meta, folder, meta)
 
-    def _save_partial(self, folder: Path, exc: BaseException) -> None:
-        """Save the fetches a failed or cancelled run made, so nothing fetched is lost."""
-        for record in getattr(exc, "fetches", []):
+    def _save_partial(self, folder: Path, exc: BaseException) -> dict:
+        """Save the fetches and trace of a failed or cancelled run; return its metrics for meta.json."""
+        fetches, messages = getattr(exc, "fetches", []), getattr(exc, "messages", [])
+        for record in fetches:
             error = record.error or (None if record.outcome else "did not finish")
             try:
                 self.outputs.save_fetch(folder / f"fetch-{record.number}", record.plan, record.outcome, record.profile, error)
             except Exception:  # never let saving hide the original failure
                 log.exception("could not save fetch %s of task folder %s", record.number, folder)
+        if not messages:
+            return {}
+        try:
+            self.outputs.save_trace(folder, build_trace(messages, fetches))
+            return {"metrics": run_metrics(messages, fetches, getattr(exc, "seconds", 0.0)).model_dump()}
+        except Exception:
+            log.exception("could not save the trace of task folder %s", folder)
+            return {}
 
     def _forget_old(self) -> None:
         cutoff = _now() - self.keep_finished

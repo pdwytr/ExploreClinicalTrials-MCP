@@ -201,3 +201,21 @@ def test_openai_model_is_built_from_settings(monkeypatch):
     fake = Settings(_env_file=None, openai_api_key="sk-test", cheiron_planner_model="openai:gpt-5.4")
     monkeypatch.setattr(query_agent, "get_settings", lambda: fake)
     assert query_agent.model_from_settings().model_name == "gpt-5.4"
+
+
+# --- Trace and metrics ----------------------------------------------------------------------------
+
+
+def test_trace_and_metrics_record_the_run_without_records():
+    from cheiron.workflow.trace import build_trace, run_metrics
+
+    model, _ = scripted(("ChartPlan", BY_PHASE), *HAPPY)  # one answer sent back, then the normal path
+    result = decide(model)
+    trace = build_trace(result.messages, result.fetches)
+    metrics = run_metrics(result.messages, result.fetches, result.seconds)
+
+    assert any(e["event"] == "sent_back" and "before choosing a chart" in e["reason"] for e in trace)
+    assert next(e for e in trace if e["event"] == "tool_result" and e["tool"] == "fetch_data")["seconds"] is not None
+    assert metrics.model_turns == 5 and metrics.sent_back == 1 and metrics.fetches == 1
+    assert metrics.tool_calls["fetch_data"] == 1 and metrics.tool_calls["describe_data"] == 1
+    assert "NCT00000001" not in str(trace)

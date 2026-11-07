@@ -52,6 +52,7 @@ class FetchRecord:
     outcome: "FetchOutcome | None" = None
     profile: DataProfile | None = None
     error: str | None = None
+    seconds: float | None = None  # how long the fetch took
 
 
 @dataclass
@@ -66,6 +67,8 @@ class AgentResult:
     references_read: list[str]
     usage: Any = None
     fetches: list[FetchRecord] = field(default_factory=list)  # every fetch, in order; the chart uses `outcome`
+    messages: list = field(default_factory=list)  # the agent's message history, for the trace
+    seconds: float = 0.0  # the agent run, fetches included
 
 
 class QueryPlanner(Protocol):

@@ -3,7 +3,8 @@
     data/queries/<task_id>/
         request.json        the request (written when the query starts)
         response.json       the QueryResponse returned to the client (visualization + meta + vega_lite)
-        meta.json           status, data version, warnings, timings, error (written at the end)
+        meta.json           status, data version, warnings, metrics, timings, error (written at the end)
+        trace.json          every model turn, tool call, tool result preview and send-back, in order
         fetch-<n>/          one folder per fetch_data call the agent made, in order
             plan.json           the agent's steps + rationale for this fetch
             error.json          why the fetch failed (failed fetches only)
@@ -79,6 +80,9 @@ class QueryOutputs:
 
     def save_response(self, folder: Path, response: QueryResponse) -> None:
         _write_json(folder / "response.json", response.model_dump(mode="json", by_alias=True))
+
+    def save_trace(self, folder: Path, events: list[dict[str, Any]]) -> None:
+        _write_json(folder / "trace.json", events)
 
     def save_meta(self, folder: Path, meta: dict[str, Any]) -> None:
         _write_json(folder / "meta.json", meta)

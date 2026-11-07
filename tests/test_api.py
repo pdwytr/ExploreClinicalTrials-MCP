@@ -105,7 +105,7 @@ def test_outputs_on_disk_include_the_response(tmp_path):
 
     folder = tmp_path / task_id  # one folder per query, named by its UUID
     names = sorted(p.name for p in folder.iterdir())
-    assert names == ["fetch-1", "meta.json", "request.json", "response.json"]
+    assert names == ["fetch-1", "meta.json", "request.json", "response.json", "trace.json"]
     fetch = folder / "fetch-1"
     assert sorted(p.name for p in fetch.iterdir()) == ["plan.json", "profile.json", "steps.json", "trials"]
     assert json.loads((folder / "request.json").read_text()) == QUESTION
