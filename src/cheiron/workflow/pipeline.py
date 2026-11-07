@@ -1,7 +1,7 @@
 """The query workflow: request in, one visualization out.
 
-    1. Search planner (agent)   request             -> SearchPlan
-    2. Merge user filters       SearchPlan + request -> SearchPlan   (user fields win)
+    1. Search planner (agent)   request (all fields) -> SearchPlan
+    2. Verify user filters      restore any structured field the planner dropped
     3. Fetch (code)             one search per group, in parallel
     4. Profile (code)           trials              -> DataProfile
     5. Chart planner (agent)    request + profile   -> ChartPlan
@@ -18,7 +18,7 @@ from cheiron.models.response import Meta, QueryResponse
 from cheiron.workflow.errors import NoResults, UnsupportedQuery
 from cheiron.workflow.plans import ChartPlan, DataProfile, Dimension, SearchPlan
 from cheiron.workflow.steps import ChartPlanner, Profiler, SearchPlanner, TrialSource, Visualizer
-from cheiron.workflow.translate import apply_request_filters, filters_summary, search_params_for
+from cheiron.workflow.translate import enforce_request_filters, filters_summary, search_params_for
 
 MISSING_WARNING_SHARE = 0.10  # warn when more than 10% of trials lack the plotted value
 
@@ -35,7 +35,7 @@ class QueryWorkflow:
     async def run(self, request: QueryRequest) -> QueryResponse:
         # 1-2. What to search for
         search = await self.search_planner.plan(request)
-        search, warnings = apply_request_filters(search, request)
+        search, warnings = enforce_request_filters(search, request)
 
         # 3. Fetch every group in parallel
         results = await asyncio.gather(

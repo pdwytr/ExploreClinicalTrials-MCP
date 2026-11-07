@@ -153,6 +153,34 @@ def test_structured_fields_override_the_plan():
     assert resp.meta.filters_applied["phases"] == ["PHASE3"]
 
 
+def test_plan_that_honours_user_filters_is_left_alone(caplog):
+    honouring = SearchPlan(
+        groups=[SearchGroup(label="Keytruda", intervention="keytruda")],  # case differs: still a match
+        phases=["PHASE3"],
+        interpretation="Keytruda phase 3 trials",
+    )
+    fetched = {'"keytruda"': FetchResult(trials=[trial(1)], total_matched=1)}
+    wf, source, _ = make_workflow(honouring, fetched)
+
+    with caplog.at_level("INFO", logger="cheiron.workflow.translate"):
+        run(wf, drug_name="Keytruda", trial_phase=["PHASE3"])
+
+    assert source.calls[0].intervention == '"keytruda"'  # planner's value kept
+    assert "planner correction" not in caplog.text
+
+
+def test_dropped_user_filter_is_restored_and_logged(caplog):
+    fetched = {'"pembrolizumab"': FetchResult(trials=[trial(1)], total_matched=1)}
+    wf, source, _ = make_workflow(ONE_DRUG, fetched)  # plan has no phase filter
+
+    with caplog.at_level("INFO", logger="cheiron.workflow.translate"):
+        resp = run(wf, trial_phase=["PHASE3"])
+
+    assert source.calls[0].advanced == "AREA[Phase](PHASE3)"
+    assert "planner correction: phases" in caplog.text
+    assert resp.meta.warnings == []  # the user got what they asked for: nothing to warn about
+
+
 def test_structured_field_does_not_erase_a_comparison():
     fetched = {
         '"nivolumab"': FetchResult(trials=[trial(1)], total_matched=1),
