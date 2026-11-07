@@ -11,7 +11,9 @@ Counting rules:
     categories are sorted by count; more than MAX_CATEGORIES are cut to the top ones
   - values that differ only by case or spacing ("Rituximab", "rituximab ") are one category,
     shown with the spelling most trials use; citations still quote each trial's own spelling
-  - enrollment is binned into fixed edges for histograms
+  - enrollment is binned into fixed edges for histograms; the edges grow geometrically, so bins
+    are drawn as ordered range labels of equal width ("50–99", "10,000+"), not on a linear axis
+    where the open top bin (10,000 .. largest trial) would fill the chart
   - networks link values of two fields (or one field with itself = co-occurrence);
     edge weight = trials sharing both values
 """
@@ -239,14 +241,17 @@ def build_visualization(
 
 
 def _histogram(pairs: list[Pair], plan: ChartPlan) -> ChartVisualization:
+    """Bins [from, to) with `to` exclusive; the last bin is open-ended (to = None) past the top edge."""
     values = [(t.enrollment, t) for _, t in pairs if t.enrollment is not None]
     top = max((v for v, _ in values), default=0)
-    edges = [e for e in ENROLLMENT_EDGES if e <= top] + [max(top + 1, ENROLLMENT_EDGES[0] + 1)]
+    edges: list[int | None] = [e for e in ENROLLMENT_EDGES if e <= top]
+    edges.append(None if top >= ENROLLMENT_EDGES[-1] else max(top + 1, ENROLLMENT_EDGES[0] + 1))
     rows = []
     for lo, hi in zip(edges, edges[1:]):
-        trials = [t for v, t in values if lo <= v < hi]
+        trials = [t for v, t in values if lo <= v and (hi is None or v < hi)]
         rows.append(
             {
+                "enrollment_range": f"{lo:,}+" if hi is None else f"{lo:,}–{hi - 1:,}",
                 "enrollment_from": lo,
                 "enrollment_to": hi,
                 "trial_count": len(trials),
@@ -257,8 +262,12 @@ def _histogram(pairs: list[Pair], plan: ChartPlan) -> ChartVisualization:
             }
         )
     encoding = {
-        "x": {"field": "enrollment_from", "type": "quantitative", "bin": "binned", "title": "Enrollment (participants)"},
-        "x2": {"field": "enrollment_to"},
+        "x": {
+            "field": "enrollment_range",
+            "type": "ordinal",
+            "sort": [r["enrollment_range"] for r in rows],
+            "title": "Enrollment (participants)",
+        },
         "y": Y,
     }
     return ChartVisualization(type="histogram", intent=plan.intent, title=plan.title, encoding=encoding, data=rows)

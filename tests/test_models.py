@@ -60,6 +60,15 @@ def test_pre_binned_histogram_requires_bin_end():
         QueryResponse.model_validate(chart("histogram", "distribution", {"x": x, "y": Y_COUNT}, row))
 
 
+def test_histogram_accepts_ordered_bin_labels_but_not_a_plain_quantitative_x():
+    row = [{"range": "0–49", "trial_count": 7}]
+    ordinal = {"field": "range", "type": "ordinal", "sort": ["0–49"]}
+    QueryResponse.model_validate(chart("histogram", "distribution", {"x": ordinal, "y": Y_COUNT}, row))
+    plain = {"field": "range", "type": "quantitative"}
+    with pytest.raises(ValidationError, match="histogram requires"):
+        QueryResponse.model_validate(chart("histogram", "distribution", {"x": plain, "y": Y_COUNT}, row))
+
+
 def test_bad_nct_id_is_rejected():
     with pytest.raises(ValidationError):
         QueryResponse.model_validate(

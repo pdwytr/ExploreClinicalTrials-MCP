@@ -206,8 +206,10 @@ class ChartVisualization(BaseModel):
         if self.type == "stacked_bar_chart" and enc.color is None:
             raise ValueError("stacked_bar_chart requires encoding.color")
         if self.type == "histogram":
-            if not enc.x.bin:
-                raise ValueError("histogram requires encoding.x.bin")
+            # Either numeric bins (x.bin) or pre-binned ranges given as ordered labels (ordinal x),
+            # which suits skewed data whose bin widths grow geometrically.
+            if not enc.x.bin and enc.x.type != FieldType.ORDINAL:
+                raise ValueError("histogram requires encoding.x.bin or an ordinal x of ordered bin labels")
             if enc.x.bin == "binned" and enc.x2 is None:
                 raise ValueError("pre-binned histogram requires encoding.x2 (bin end)")
         if self.type == "time_series" and enc.x.type not in (FieldType.TEMPORAL, FieldType.ORDINAL):

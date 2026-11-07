@@ -103,6 +103,30 @@ def test_histogram_bins_enrollment():
     as_response(viz)
 
 
+def test_histogram_bins_get_equal_width_ordered_labels_and_an_open_last_bin():
+    # Bin edges grow geometrically and enrollment is heavily skewed: on a linear axis the
+    # top bin (10,000 .. max) would fill the chart, so bins are drawn as ordered labels.
+    trials = [trial(1, enrollment=10), trial(2, enrollment=60), trial(3, enrollment=12000), trial(4, enrollment=5_132_201)]
+    viz, _ = build_visualization({"All": trials}, plan(intent="distribution", chart_type="histogram", x=Dimension.ENROLLMENT))
+    x = viz.encoding.x
+    assert x.field == "enrollment_range" and x.type.value == "ordinal" and not x.bin and viz.encoding.x2 is None
+    labels = [r.enrollment_range for r in viz.data]
+    assert labels == ["0–49", "50–99", "100–249", "250–499", "500–999", "1,000–2,499", "2,500–4,999", "5,000–9,999", "10,000+"]
+    assert x.sort == labels
+    last = viz.data[-1]
+    assert (last.enrollment_from, last.enrollment_to, last.trial_count) == (10000, None, 2)
+    as_response(viz)
+
+
+def test_histogram_last_bin_ends_at_the_largest_value_below_the_top_edge():
+    viz, _ = build_visualization(
+        {"All": [trial(1, enrollment=0), trial(2, enrollment=3000)]},
+        plan(intent="distribution", chart_type="histogram", x=Dimension.ENROLLMENT),
+    )
+    assert viz.data[0].enrollment_range == "0–49"
+    assert (viz.data[-1].enrollment_range, viz.data[-1].enrollment_to) == ("2,500–3,000", 3001)
+
+
 def test_cooccurrence_network_links_values_within_one_trial():
     drugs = lambda *names: [Intervention(name=n, type="DRUG") for n in names]  # noqa: E731
     trials = [trial(1, interventions=drugs("A", "B")), trial(2, interventions=drugs("A", "B", "C")), trial(3, interventions=drugs("A"))]
