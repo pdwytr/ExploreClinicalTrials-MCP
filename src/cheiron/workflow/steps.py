@@ -21,10 +21,10 @@ class SearchPlanner(Protocol):
 
 
 class TrialSource(Protocol):
-    """Code: runs one search against ClinicalTrials.gov, following pages up to `limit`.
-    Raises InvalidSearch when the API rejects the search."""
+    """Code: runs one search against ClinicalTrials.gov, following every page
+    (or up to `limit` when one is set). Raises InvalidSearch when the API rejects the search."""
 
-    async def search(self, params: StudySearchParams, limit: int) -> FetchResult: ...
+    async def search(self, params: StudySearchParams, limit: int | None = None) -> FetchResult: ...
 
 
 class Profiler(Protocol):

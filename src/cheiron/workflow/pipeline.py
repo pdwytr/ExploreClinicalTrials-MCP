@@ -32,7 +32,9 @@ class QueryWorkflow:
     profiler: Profiler
     chart_planner: ChartPlanner
     visualizer: Visualizer
-    max_trials_per_search: int = 5000
+    # None = fetch every matching trial. Counts must be exact; long fetches run as
+    # async tasks with status updates, so correctness wins over latency.
+    max_trials_per_search: int | None = None
 
     async def run(self, request: QueryRequest) -> QueryResponse:
         # 1-3. Plan, add user filters, fetch (with one feedback round)

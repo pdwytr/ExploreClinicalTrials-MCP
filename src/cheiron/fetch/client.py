@@ -11,7 +11,7 @@ len(topValues) < uniqueValuesCount. They also take no search filters (whole regi
 
 import asyncio
 import logging
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable
 from typing import Any
 
 import httpx
@@ -23,6 +23,8 @@ from cheiron.workflow.plans import FetchResult
 log = logging.getLogger(__name__)
 
 RETRY_STATUSES = {429, 500, 502, 503, 504}
+
+ProgressCallback = Callable[[int, int | None], None]  # (trials fetched so far, total matching)
 
 
 class CtgovClient:
@@ -98,9 +100,16 @@ class CtgovClient:
 
     # --- TrialSource: /studies ---------------------------------------------------------
 
-    async def search(self, params: StudySearchParams, limit: int) -> FetchResult:
-        """Fetch up to `limit` trials for one search, across as many pages as needed."""
-        query = params.model_copy(update={"page_size": min(MAX_PAGE_SIZE, limit), "count_total": True})
+    async def search(
+        self, params: StudySearchParams, limit: int | None = None, on_progress: ProgressCallback | None = None
+    ) -> FetchResult:
+        """Fetch every trial matching one search (or the first `limit`), across as many pages as needed.
+
+        Default is no limit: counts must be exact, so all matching trials are fetched.
+        `on_progress(fetched, total)` is called after each page, for task status updates.
+        """
+        page_size = MAX_PAGE_SIZE if limit is None else min(MAX_PAGE_SIZE, limit)
+        query = params.model_copy(update={"page_size": page_size, "count_total": True})
         trials: list[Trial] = []
         total: int | None = None
         async for raw in self.pages("/studies", query.to_query_params(), items_key="studies", max_items=limit):
@@ -108,7 +117,10 @@ class CtgovClient:
             if total is None:
                 total = page.total_count
             trials.extend(Trial.from_raw(study) for study in page.studies)
-        trials = trials[:limit]
+            if on_progress:
+                on_progress(len(trials), total)
+        if limit is not None:
+            trials = trials[:limit]
         log.info("fetched %d of %s trials for %s", len(trials), total, params.search)
         return FetchResult(trials=trials, total_matched=total if total is not None else len(trials))
 

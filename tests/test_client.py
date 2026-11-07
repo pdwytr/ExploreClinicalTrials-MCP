@@ -46,12 +46,26 @@ def client(handler) -> CtgovClient:
 SEARCH = StudySearchParams(search={"query.cond": '"asthma"'})
 
 
-async def search(handler, limit: int):
+async def search(handler, limit: int | None = None, on_progress=None):
     async with client(handler) as c:
-        return await c.search(SEARCH, limit)
+        return await c.search(SEARCH, limit, on_progress)
 
 
 # --- Pagination ------------------------------------------------------------------------------
+
+
+def test_default_fetches_every_matching_trial():
+    api = FakeStudiesApi(total=13126)
+    result = run(search(api))
+
+    assert len(result.trials) == 13126 and not result.truncated
+    assert len(api.requests) == 14
+
+
+def test_progress_is_reported_after_each_page():
+    seen = []
+    run(search(FakeStudiesApi(total=2500), on_progress=lambda fetched, total: seen.append((fetched, total))))
+    assert seen == [(1000, 2500), (2000, 2500), (2500, 2500)]
 
 
 def test_follows_every_page_until_done():
