@@ -228,6 +228,11 @@ def check_chart_plan(chart: ChartPlan, search: SearchPlan, profile: DataProfile)
         field = profile.fields.get(dim)
         if field is None or field.missing == profile.trials_fetched:
             raise UnsupportedQuery(f"No fetched trial has a value for {dim.value}.")
+        if field.multi_valued and chart.chart_type == "stacked_bar_chart":
+            raise UnsupportedQuery(
+                f"{dim.value} can have several values per trial, so stacked parts would not add up to the whole; "
+                "use a grouped bar chart instead."
+            )
         if field.missing > MISSING_WARNING_SHARE * profile.trials_fetched:
             warnings.append(f"{field.missing} of {profile.trials_fetched} trials have no {dim.value} and are excluded.")
     return warnings

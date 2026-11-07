@@ -36,7 +36,7 @@ from cheiron.workflow.plans import (
 TOP_VALUES = 10  # per field: enough to choose a chart, small enough for the prompt
 
 # How each dimension is read from a trial; lists mean a trial can have several values.
-_VALUES: dict[Dimension, Callable[[Trial], list[str]]] = {
+FIELD_VALUES: dict[Dimension, Callable[[Trial], list[str]]] = {
     Dimension.PHASE: lambda t: t.phases,
     Dimension.START_YEAR: lambda t: [str(t.start_year)] if t.start_year else [],
     Dimension.STATUS: lambda t: [t.overall_status] if t.overall_status else [],
@@ -131,7 +131,7 @@ def build_profile(
     """Profile every fetched field (all of them: the agent needs them all to choose a chart)."""
     fields: dict[Dimension, FieldProfile] = {}
     if any(trials_by_group.values()):
-        for dim, read in _VALUES.items():
+        for dim, read in FIELD_VALUES.items():
             fields[dim] = _profile_values(trials_by_group, read, dim in _MULTI_VALUED)
         fields[Dimension.ENROLLMENT] = _profile_enrollment(trials_by_group)
     return DataProfile(

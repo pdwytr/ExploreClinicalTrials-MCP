@@ -187,10 +187,21 @@ class ChartPlan(BaseModel):
     top_n: int | None = Field(default=None, ge=1, le=50, description="Keep only the N largest categories.")
 
     @model_validator(mode="after")
-    def fits_catalog(self) -> "ChartPlan":
+    def renderable(self) -> "ChartPlan":
+        """Structural rules: what each chart type needs to be drawn from trial counts."""
         if self.chart_type not in INTENT_CHART_TYPES[self.intent]:
             raise ValueError(f"{self.chart_type} does not fit intent {self.intent.value}")
         needs_series = self.chart_type in ("grouped_bar_chart", "stacked_bar_chart", "network_graph")
         if needs_series and self.series is None:
             raise ValueError(f"{self.chart_type} needs a series dimension")
+        if self.chart_type == "time_series" and self.x is not Dimension.START_YEAR:
+            raise ValueError("time_series needs x = start_year")
+        if self.chart_type == "histogram" and self.x is not Dimension.ENROLLMENT:
+            raise ValueError("histogram needs x = enrollment (the only numeric field)")
+        if self.chart_type == "scatter_plot":
+            raise ValueError("scatter_plot needs two numeric fields per trial; only enrollment is numeric")
+        if Dimension.ENROLLMENT in (self.x, self.series) and self.chart_type != "histogram":
+            raise ValueError("enrollment is numeric: chart it as a histogram")
+        if self.series is not None and self.series == self.x and self.chart_type != "network_graph":
+            raise ValueError("series must differ from x (the same field twice only makes sense in a network)")
         return self
