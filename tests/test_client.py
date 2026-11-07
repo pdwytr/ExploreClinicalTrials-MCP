@@ -106,6 +106,25 @@ def test_endpoint_without_pagination_yields_one_page():
     assert run(collect()) == [{"apiVersion": "2.0.5"}]
 
 
+def test_never_more_than_five_requests_in_flight():
+    api = FakeStudiesApi(total=3)
+    in_flight = {"now": 0, "max": 0}
+
+    async def slow(request):
+        in_flight["now"] += 1
+        in_flight["max"] = max(in_flight["max"], in_flight["now"])
+        await asyncio.sleep(0.01)
+        in_flight["now"] -= 1
+        return api(request)
+
+    async def many_searches():
+        async with client(slow) as c:
+            await asyncio.gather(*(c.search(SEARCH) for _ in range(12)))
+
+    run(many_searches())
+    assert in_flight["max"] == 5
+
+
 # --- Errors and retries ------------------------------------------------------------------------
 
 

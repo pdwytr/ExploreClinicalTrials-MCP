@@ -24,6 +24,11 @@ log = logging.getLogger(__name__)
 
 RETRY_STATUSES = {429, 500, 502, 503, 504}
 
+# At most this many requests in flight per client, across all searches and pages,
+# so we never overload the ClinicalTrials.gov servers. Share one client per process
+# to make the limit global.
+MAX_CONCURRENT_REQUESTS = 5
+
 ProgressCallback = Callable[[int, int | None], None]  # (trials fetched so far, total matching)
 
 
@@ -38,7 +43,7 @@ class CtgovClient:
         timeout: float = 60.0,
         max_retries: int = 3,
         backoff_seconds: float = 1.0,
-        max_concurrency: int = 4,  # be polite: at most this many requests in flight
+        max_concurrency: int = MAX_CONCURRENT_REQUESTS,
     ):
         self._http = httpx.AsyncClient(
             base_url=base_url, transport=transport, timeout=timeout, headers={"User-Agent": "cheiron"}
