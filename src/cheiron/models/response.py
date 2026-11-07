@@ -21,7 +21,33 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, computed_field, model_validator
 
-from cheiron.models.catalog import INTENT_CHART_TYPES, ChartType, Intent
+# --- Chart vocabulary ----------------------------------------------------------
+# Which chart suits which question is judgement, taught by the chart-planning skill;
+# code only enforces what makes a chart renderable.
+
+ChartType = Literal[
+    "bar_chart",
+    "grouped_bar_chart",
+    "stacked_bar_chart",
+    "time_series",
+    "scatter_plot",
+    "histogram",
+]
+VisualizationType = ChartType | Literal["network_graph"]
+
+
+class Intent(str, Enum):
+    """What a chart shows (Financial Times Visual Vocabulary categories); a label for the reader."""
+
+    CHANGE_OVER_TIME = "change_over_time"
+    RANKING = "ranking"
+    DISTRIBUTION = "distribution"
+    MAGNITUDE = "magnitude"
+    PART_TO_WHOLE = "part_to_whole"
+    CORRELATION = "correlation"
+    SPATIAL = "spatial"
+    RELATIONSHIP = "relationship"
+
 
 # --- Citations (bonus: deep traceability) ------------------------------------
 
@@ -163,10 +189,6 @@ class ChartVisualization(BaseModel):
 
     @model_validator(mode="after")
     def check_consistency(self) -> "ChartVisualization":
-        if self.type not in INTENT_CHART_TYPES[self.intent]:
-            allowed = ", ".join(INTENT_CHART_TYPES[self.intent])
-            raise ValueError(f"{self.type} does not fit intent {self.intent.value}; use one of: {allowed}")
-
         needed = self.encoding.fields()
         for i, row in enumerate(self.data):
             missing = needed - set(row.model_extra or {})

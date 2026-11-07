@@ -1,14 +1,15 @@
-from cheiron.models.catalog import INTENT_CHART_TYPES, ChartType, Intent, VisualizationType
 from cheiron.models.request import QueryRequest, RecruitmentStatus, TrialPhase
 from cheiron.models.response import (
     Channel,
     ChartEncoding,
+    ChartType,
     ChartVisualization,
     Citation,
     DataRow,
     Edge,
     ErrorResponse,
     FieldType,
+    Intent,
     Meta,
     NetworkData,
     NetworkEncoding,
@@ -16,10 +17,10 @@ from cheiron.models.response import (
     Node,
     QueryResponse,
     SecondaryChannel,
+    VisualizationType,
 )
 
 __all__ = [
-    "INTENT_CHART_TYPES",
     "Channel",
     "ChartEncoding",
     "ChartType",

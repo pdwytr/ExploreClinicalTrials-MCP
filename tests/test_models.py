@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from cheiron.models import INTENT_CHART_TYPES, Intent, QueryResponse
+from cheiron.models import Intent, QueryResponse
 
 # Request validation lives in test_requests.py; this file covers responses.
 
@@ -14,21 +14,6 @@ Y_COUNT = {"field": "trial_count", "type": "quantitative"}
 
 def chart(type_, intent, encoding, data):
     return {"visualization": {"type": type_, "intent": intent, "title": "t", "encoding": encoding, "data": data}, "meta": META}
-
-
-# --- Catalog ---------------------------------------------------------------------
-
-
-def test_every_intent_has_chart_types():
-    assert set(INTENT_CHART_TYPES) == set(Intent)
-    assert all(INTENT_CHART_TYPES[i] for i in Intent)
-
-
-def test_chart_type_must_fit_intent():
-    with pytest.raises(ValidationError, match="does not fit intent"):
-        QueryResponse.model_validate(
-            chart("scatter_plot", "ranking", {"x": Y_COUNT, "y": Y_COUNT}, [{"trial_count": 1}])
-        )
 
 
 # --- Charts ------------------------------------------------------------------------

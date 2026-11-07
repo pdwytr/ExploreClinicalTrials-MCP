@@ -2,7 +2,7 @@ import pytest
 from pydantic import ValidationError
 from request_cases import INVALID_CASES, VALID_CASES
 
-from cheiron.models import INTENT_CHART_TYPES, Intent, QueryRequest
+from cheiron.models import Intent, QueryRequest
 
 
 @pytest.mark.parametrize("case", VALID_CASES, ids=lambda c: c.name)
@@ -10,11 +10,6 @@ def test_valid_request_is_accepted(case):
     req = QueryRequest.model_validate(case.request)
     expected_filters = {k: v for k, v in case.request.items() if k != "query"}
     assert req.filters() == expected_filters
-
-
-@pytest.mark.parametrize("case", VALID_CASES, ids=lambda c: c.name)
-def test_expected_chart_fits_intent(case):
-    assert case.chart in INTENT_CHART_TYPES[Intent(case.intent)]
 
 
 def test_cases_cover_every_intent():

@@ -300,8 +300,8 @@ def test_mostly_missing_dimension_is_warned():
     assert any("have no start_year" in w for w in resp.meta.warnings)
 
 
-def test_chart_plan_must_fit_catalog():
-    with pytest.raises(ValueError, match="does not fit"):
-        ChartPlan(intent="ranking", chart_type="scatter_plot", title="t", x=Dimension.ENROLLMENT)
+def test_chart_plan_structural_rules():
+    with pytest.raises(ValueError, match="scatter_plot needs two numeric fields"):
+        ChartPlan(intent="correlation", chart_type="scatter_plot", title="t", x=Dimension.ENROLLMENT)
     with pytest.raises(ValueError, match="needs a series"):
         ChartPlan(intent="relationship", chart_type="network_graph", title="t", x=Dimension.SPONSOR)

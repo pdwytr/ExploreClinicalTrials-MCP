@@ -15,7 +15,7 @@ from pydantic import BaseModel, Field, model_validator
 from cheiron.fetch.endpoints import PlanStep
 from cheiron.fetch.models import Trial
 from cheiron.fetch.stats import StatsResponse
-from cheiron.models.catalog import INTENT_CHART_TYPES, Intent, VisualizationType
+from cheiron.models.response import Intent, VisualizationType
 
 # --- Agent 1 output ------------------------------------------------------------------
 #
@@ -188,9 +188,8 @@ class ChartPlan(BaseModel):
 
     @model_validator(mode="after")
     def renderable(self) -> "ChartPlan":
-        """Structural rules: what each chart type needs to be drawn from trial counts."""
-        if self.chart_type not in INTENT_CHART_TYPES[self.intent]:
-            raise ValueError(f"{self.chart_type} does not fit intent {self.intent.value}")
+        """Structural rules: what each chart type needs to be drawn from trial counts.
+        Which chart fits which question is the chart-planning skill's job, not code's."""
         needs_series = self.chart_type in ("grouped_bar_chart", "stacked_bar_chart", "network_graph")
         if needs_series and self.series is None:
             raise ValueError(f"{self.chart_type} needs a series dimension")

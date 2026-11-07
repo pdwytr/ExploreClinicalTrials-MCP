@@ -9,7 +9,7 @@ import pytest
 import yaml
 
 from cheiron.fetch.models import SEARCH_PARAMS, SNAPSHOT_API_VERSION
-from cheiron.workflow import SearchPlan
+from cheiron.workflow import ChartPlan, Dimension, SearchPlan
 
 SKILL_DIR = Path(__file__).resolve().parent.parent / "src" / "cheiron" / "agents" / "skills" / "ctgov-search"
 SKILL_MD = SKILL_DIR / "SKILL.md"
@@ -90,3 +90,29 @@ def test_worked_examples_are_valid_plans():
 def test_skill_only_teaches_parameters_code_accepts(path):
     taught = set(re.findall(r"`((?:query|filter)\.\w+)`", path.read_text()))
     assert taught <= SEARCH_PARAMS, f"teaches parameters code rejects: {taught - SEARCH_PARAMS}"
+
+
+# --- chart-planning skill -----------------------------------------------------------------------
+
+CHART_SKILL = SKILL_DIR.parent / "chart-planning" / "SKILL.md"
+
+
+def test_chart_skill_follows_the_spec():
+    text = CHART_SKILL.read_text()
+    match = re.match(r"^---\n(.*?)\n---\n(.*)$", text, re.DOTALL)
+    meta, body = yaml.safe_load(match.group(1)), match.group(2)
+    assert meta["name"] == CHART_SKILL.parent.name and 1 <= len(meta["description"]) <= 1024
+    assert len(body.splitlines()) < 500 and len(body) / 4 < 5000
+
+
+def test_chart_skill_examples_are_valid_chart_plans():
+    examples = re.findall(r"```json\n(.*?)\n```", CHART_SKILL.read_text(), re.DOTALL)
+    assert len(examples) >= 4
+    for example in examples:
+        ChartPlan.model_validate(json.loads(example))
+
+
+def test_chart_skill_names_exactly_the_chartable_fields():
+    text = CHART_SKILL.read_text()
+    section = text.split("## Fields you can chart")[1].split("##")[0]
+    assert set(re.findall(r"`([a-z_]+)`", section)) == {d.value for d in Dimension}
