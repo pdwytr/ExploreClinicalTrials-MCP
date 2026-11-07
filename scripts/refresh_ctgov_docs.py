@@ -4,10 +4,12 @@ The search planner's prompt is built from these files, so the agent always sees
 the same, official reference. The API is versioned and changes rarely; rerun this
 when it does and review the diff.
 
-    uv run python scripts/refresh_ctgov_docs.py
+    uv run python scripts/refresh_ctgov_docs.py           # download fresh snapshots
+    uv run python scripts/refresh_ctgov_docs.py --check   # only check: exit 1 if the API version changed
 """
 
 import json
+import sys
 import urllib.request
 from pathlib import Path
 
@@ -29,7 +31,24 @@ def fetch(url: str) -> bytes:
         return resp.read()
 
 
+def check() -> int:
+    """Compare the live API version with the stored snapshot. Exit code 1 if they differ (for CI)."""
+    live = json.loads(fetch(SNAPSHOTS["version.json"]))["apiVersion"]
+    stored = json.loads((OUT / "version.json").read_text())["apiVersion"]
+    if live == stored:
+        print(f"OK: docs/ctgov matches the live API ({live}).")
+        return 0
+    print(
+        f"OUTDATED: live API is {live}, docs/ctgov describes {stored}.\n"
+        "Run scripts/refresh_ctgov_docs.py, re-capture essie-syntax.md if the page changed, "
+        "run scripts/build_ctgov_skill.py, update SNAPSHOT_API_VERSION, and review the diff."
+    )
+    return 1
+
+
 def main() -> None:
+    if "--check" in sys.argv[1:]:
+        sys.exit(check())
     OUT.mkdir(parents=True, exist_ok=True)
     for name, url in SNAPSHOTS.items():
         body = fetch(url)

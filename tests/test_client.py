@@ -95,6 +95,19 @@ def test_small_limit_uses_a_small_page():
     assert api.requests[0]["pageSize"] == "10"
 
 
+def test_data_version_is_parsed():
+    def handler(request):
+        assert request.url.path.endswith("/version")
+        return httpx.Response(200, json={"apiVersion": "2.0.5", "dataTimestamp": "2026-11-06T10:00:05"})
+
+    async def get_version():
+        async with client(handler) as c:
+            return await c.data_version()
+
+    v = run(get_version())
+    assert v.api_version == "2.0.5" and v.data_timestamp.day == 6
+
+
 def test_endpoint_without_pagination_yields_one_page():
     def handler(request):
         return httpx.Response(200, json={"apiVersion": "2.0.5"})

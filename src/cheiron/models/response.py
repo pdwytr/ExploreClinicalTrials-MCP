@@ -215,6 +215,8 @@ class Meta(BaseModel):
     total_trials_matched: int = Field(ge=0, description="Trials matching the filters at the source.")
     trials_analyzed: int = Field(ge=0, description="Trials actually aggregated (can be lower if capped).")
     units: dict[str, str] = Field(default_factory=dict, description="Field -> unit, e.g. {'trial_count': 'trials'}.")
+    data_as_of: datetime | None = Field(default=None, description="When ClinicalTrials.gov last refreshed the data used.")
+    api_version: str | None = Field(default=None, description="ClinicalTrials.gov API version that served the data.")
     generated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 

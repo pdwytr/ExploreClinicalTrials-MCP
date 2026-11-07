@@ -16,7 +16,7 @@ from typing import Any
 
 import httpx
 
-from cheiron.fetch.models import BASE_URL, MAX_PAGE_SIZE, StudiesPage, StudySearchParams, Trial
+from cheiron.fetch.models import BASE_URL, MAX_PAGE_SIZE, DataVersion, StudiesPage, StudySearchParams, Trial
 from cheiron.workflow.errors import InvalidSearch, UpstreamError
 from cheiron.workflow.plans import FetchResult
 
@@ -103,7 +103,10 @@ class CtgovClient:
             params["pageToken"] = token
             params.pop("countTotal", None)  # only meaningful on the first page
 
-    # --- TrialSource: /studies ---------------------------------------------------------
+    # --- TrialSource ------------------------------------------------------------------------
+
+    async def data_version(self) -> DataVersion:
+        return DataVersion.model_validate(await self.get("/version"))
 
     async def search(
         self, params: StudySearchParams, limit: int | None = None, on_progress: ProgressCallback | None = None

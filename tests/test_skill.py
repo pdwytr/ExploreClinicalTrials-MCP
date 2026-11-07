@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from cheiron.fetch.models import SEARCH_PARAMS
+from cheiron.fetch.models import SEARCH_PARAMS, SNAPSHOT_API_VERSION
 from cheiron.workflow import SearchPlan
 
 SKILL_DIR = Path(__file__).resolve().parent.parent / "src" / "cheiron" / "agents" / "skills" / "ctgov-search"
@@ -29,6 +29,13 @@ def test_frontmatter_follows_spec():
     assert name == SKILL_DIR.name, "name must match the directory name"
     assert 1 <= len(meta["description"]) <= 1024
     assert all(isinstance(v, str) for v in meta.get("metadata", {}).values()), "metadata values must be strings"
+
+
+def test_snapshot_api_version_is_the_same_everywhere():
+    """Code, stored docs and the skill must all describe the same API release."""
+    meta, _ = split_skill()
+    docs_version = json.loads((SKILL_DIR.parents[3].parent / "docs" / "ctgov" / "version.json").read_text())["apiVersion"]
+    assert SNAPSHOT_API_VERSION == docs_version == meta["metadata"]["api-version"]
 
 
 def test_body_stays_within_recommended_size():

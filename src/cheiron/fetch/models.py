@@ -11,7 +11,7 @@ OpenAPI spec: https://clinicaltrials.gov/api/oas/v2
 """
 
 import re
-from datetime import date
+from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from pydantic.alias_generators import to_camel
@@ -20,6 +20,19 @@ from cheiron.models.request import RecruitmentStatus, TrialPhase
 
 BASE_URL = "https://clinicaltrials.gov/api/v2"
 MAX_PAGE_SIZE = 1000  # the API silently caps larger values at 1,000
+
+# API version that docs/ctgov/ and the ctgov-search skill were generated from.
+# A test keeps this equal to docs/ctgov/version.json and the skill's metadata.
+SNAPSHOT_API_VERSION = "2.0.5"
+
+
+class DataVersion(BaseModel):
+    """GET /version: the API release and when the registry data was last refreshed (daily)."""
+
+    model_config = ConfigDict(alias_generator=to_camel, validate_by_name=True)
+
+    api_version: str
+    data_timestamp: datetime
 
 # Fields requested on every search (the API's "piece" names). Keeping the list
 # short cuts response size roughly 10x versus returning whole records.

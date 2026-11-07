@@ -4,7 +4,7 @@ async because it calls the ClinicalTrials.gov API."""
 
 from typing import Protocol
 
-from cheiron.fetch.models import StudySearchParams, Trial
+from cheiron.fetch.models import DataVersion, StudySearchParams, Trial
 from cheiron.models.request import QueryRequest
 from cheiron.models.response import ChartVisualization, NetworkVisualization
 from cheiron.workflow.plans import ChartPlan, DataProfile, FetchResult, SearchPlan
@@ -25,6 +25,10 @@ class TrialSource(Protocol):
     (or up to `limit` when one is set). Raises InvalidSearch when the API rejects the search."""
 
     async def search(self, params: StudySearchParams, limit: int | None = None) -> FetchResult: ...
+
+    async def data_version(self) -> DataVersion:
+        """API release and data refresh time (GET /version)."""
+        ...
 
 
 class Profiler(Protocol):

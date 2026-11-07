@@ -5,7 +5,8 @@ from collections import Counter
 
 import pytest
 
-from cheiron.fetch.models import Trial
+from cheiron.fetch.models import SNAPSHOT_API_VERSION, DataVersion, Trial
+from cheiron.workflow import pipeline
 from cheiron.models.request import QueryRequest
 from cheiron.models.response import ChartVisualization
 from cheiron.workflow import (
@@ -19,9 +20,14 @@ from cheiron.workflow import (
     QueryWorkflow,
     SearchPlan,
     UnsupportedQuery,
+    UpstreamError,
 )
 
 # --- Fakes ---------------------------------------------------------------------------
+
+
+def version(day: int = 6, api: str = SNAPSHOT_API_VERSION) -> DataVersion:
+    return DataVersion(api_version=api, data_timestamp=f"2026-11-{day:02d}T10:00:05")
 
 
 def trial(n: int, phase: str = "PHASE2", year: int | None = 2020) -> Trial:
@@ -48,11 +54,16 @@ class FakeSearchPlanner:
 
 
 class FakeSource:
-    """Returns canned results keyed by the query.intr searched; records every call."""
+    """Returns canned results keyed by the query.intr searched; records every call.
+    `versions` are returned by successive data_version() calls (the last one repeats)."""
 
-    def __init__(self, by_intervention: dict[str, FetchResult | Exception]):
+    def __init__(self, by_intervention: dict[str, FetchResult | Exception], versions=None):
         self.by_intervention = by_intervention
         self.calls = []
+        self.versions = list(versions or [version()])
+
+    async def data_version(self):
+        return self.versions.pop(0) if len(self.versions) > 1 else self.versions[0]
 
     async def search(self, params, limit):
         self.calls.append(params)
@@ -104,9 +115,9 @@ BY_PHASE = ChartPlan(intent="distribution", chart_type="bar_chart", title="Trial
 FOUND = FetchResult(trials=[trial(1), trial(2, "PHASE3")], total_matched=2)
 
 
-def make_workflow(plans, fetched, chart_plan=BY_PHASE):
+def make_workflow(plans, fetched, chart_plan=BY_PHASE, versions=None):
     planner = FakeSearchPlanner(*plans)
-    source = FakeSource(fetched)
+    source = FakeSource(fetched, versions)
     chart_planner = FakeChartPlanner(chart_plan)
     wf = QueryWorkflow(planner, source, FakeProfiler(), chart_planner, FakeVisualizer())
     return wf, planner, source, chart_planner
@@ -190,6 +201,48 @@ def test_still_rejected_after_retry_raises():
     wf, _, _, _ = make_workflow([search_plan("x"), search_plan("y")], {"x": bad, "y": bad})
     with pytest.raises(InvalidSearch):
         run(wf)
+
+
+# --- Data version ---------------------------------------------------------------------------
+
+
+def test_meta_records_the_data_version():
+    wf, _, _, _ = make_workflow([search_plan("pembrolizumab")], {"pembrolizumab": FOUND})
+
+    resp = run(wf)
+
+    assert resp.meta.data_as_of.isoformat() == "2026-11-06T10:00:05"
+    assert resp.meta.api_version == SNAPSHOT_API_VERSION
+
+
+def test_data_refreshed_mid_fetch_is_fetched_again():
+    # before=Nov 6, after=Nov 7 (refreshed!) -> redo: before=Nov 7, after=Nov 7
+    wf, _, source, _ = make_workflow(
+        [search_plan("pembrolizumab")], {"pembrolizumab": FOUND}, versions=[version(6), version(7), version(7)]
+    )
+
+    resp = run(wf)
+
+    assert len(source.calls) == 2  # the search ran twice
+    assert resp.meta.data_as_of.day == 7  # result reflects one consistent version
+
+
+def test_data_changing_on_every_attempt_raises():
+    versions = [version(6), version(7), version(8), version(9)]
+    wf, _, _, _ = make_workflow([search_plan("pembrolizumab")], {"pembrolizumab": FOUND}, versions=versions)
+    with pytest.raises(UpstreamError, match="data changed"):
+        run(wf)
+
+
+def test_newer_api_version_warns_that_docs_are_outdated(caplog, monkeypatch):
+    monkeypatch.setattr(pipeline, "_docs_warning_logged", False)
+    wf, _, _, _ = make_workflow([search_plan("pembrolizumab")], {"pembrolizumab": FOUND}, versions=[version(api="2.1.0")])
+
+    with caplog.at_level("WARNING", logger="cheiron.workflow.pipeline"):
+        resp = run(wf)
+
+    assert "API is 2.1.0 but docs/ctgov and the ctgov-search skill describe" in caplog.text
+    assert resp.meta.api_version == "2.1.0"  # still answers; the warning is for maintainers
 
 
 # --- Warnings and chart checks -------------------------------------------------------------
