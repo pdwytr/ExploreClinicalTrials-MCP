@@ -97,8 +97,9 @@ class QueryWorkflow:
 
         _report(progress, "building", "Building the chart")
         bounds = year_bounds(outcome.plan, request)
+        stats = [(label, r) for (label, _), r in zip(outcome.prepared, outcome.results) if isinstance(r, StatsResult)]
         visualization, viz_warnings = build_visualization(
-            outcome.trials_by_group, chart, bounds, outcome.version.data_timestamp.date()
+            outcome.trials_by_group, chart, bounds, outcome.version.data_timestamp.date(), stats
         )
         meta = Meta(
             interpretation=_interpretation(result),
@@ -226,6 +227,13 @@ def check_chart_plan(
                 f"The chart counts by {dim.value} but the searches are limited by {', '.join(bounds)} date; "
                 f"use the year field that matches the period ({', '.join(f'{f}_year' for f in bounds)})."
             )
+
+    if any(f.from_registry_stats for f in profile.fields.values()):
+        if chart.chart_type != "bar_chart" or chart.series is not None:
+            raise UnsupportedQuery("Registry-wide statistics give counts for one field: use a bar_chart with x only.")
+        if chart.x not in profile.fields:
+            raise UnsupportedQuery(f"No registry statistics were fetched for {chart.x.value}; add it to the stats step's fields.")
+        return []
 
     warnings = []
     if chart.chart_type == "time_series":

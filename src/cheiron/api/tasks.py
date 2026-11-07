@@ -150,10 +150,12 @@ class TaskStore:
                     trials_total=outcome.total_matched,
                 ),
             )
-        except asyncio.CancelledError:
+        except asyncio.CancelledError as exc:
             meta |= {"status": TaskStatus.FAILED.value, "error": {"error": "internal_error", "message": "Cancelled"}}
+            self._save_partial(folder, exc)
             raise
         except Exception as exc:
+            self._save_partial(folder, exc)
             if isinstance(exc, WorkflowError):
                 error = exc.to_response()
             else:
@@ -165,6 +167,15 @@ class TaskStore:
             finished = _now()
             meta |= {"finished_at": finished.isoformat(), "duration_seconds": round((finished - started).total_seconds(), 2)}
             await asyncio.to_thread(self.outputs.save_meta, folder, meta)
+
+    def _save_partial(self, folder: Path, exc: BaseException) -> None:
+        """Save the fetches a failed or cancelled run made, so nothing fetched is lost."""
+        for record in getattr(exc, "fetches", []):
+            error = record.error or (None if record.outcome else "did not finish")
+            try:
+                self.outputs.save_fetch(folder / f"fetch-{record.number}", record.plan, record.outcome, record.profile, error)
+            except Exception:  # never let saving hide the original failure
+                log.exception("could not save fetch %s of task folder %s", record.number, folder)
 
     def _forget_old(self) -> None:
         cutoff = _now() - self.keep_finished

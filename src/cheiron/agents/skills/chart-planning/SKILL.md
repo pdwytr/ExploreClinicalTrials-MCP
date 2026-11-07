@@ -38,6 +38,10 @@ trials gives a misleading chart (code warns above 10% missing, refuses at 100%).
 
 `scatter_plot` is not available: only one numeric field (enrollment) exists per trial.
 
+**Registry-wide statistics** (fields marked `from_registry_stats` in the profile, from a
+`stats/field/values` fetch): only a `bar_chart` of one field (`x`, no `series`) is possible; the
+counts cover all registered studies and carry no per-trial citations.
+
 ## Rules
 
 - **Comparisons:** when several steps were fetched (`group_sizes` has several sides),

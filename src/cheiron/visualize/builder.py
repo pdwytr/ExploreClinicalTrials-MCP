@@ -21,7 +21,7 @@ from datetime import date
 from cheiron.fetch.models import Trial
 from cheiron.models.response import ChartVisualization, Citation, NetworkVisualization
 from cheiron.workflow.plans import YEAR_DIMENSIONS, ChartPlan, Dimension
-from cheiron.workflow.profile import FIELD_VALUES
+from cheiron.workflow.profile import FIELD_VALUES, stats_fields
 
 MAX_CATEGORIES = 25
 MAX_NODES = 40
@@ -138,6 +138,7 @@ def build_visualization(
     plan: ChartPlan,
     bounds: dict[str, tuple[int | None, int | None]] | None = None,
     as_of: date | None = None,
+    stats: list | None = None,
 ) -> tuple[ChartVisualization | NetworkVisualization, list[str]]:
     """Returns the visualization and warnings for meta.
 
@@ -145,6 +146,8 @@ def build_visualization(
     data date: year axes cover the searched period and stop at the data date, because later dates
     are estimates for trials that have not started or finished yet."""
     pairs: list[Pair] = [(g, t) for g, ts in trials_by_group.items() for t in ts]
+    if not pairs and stats:
+        return _registry_bars(stats, plan)
     if plan.chart_type == "network_graph":
         return _network(pairs, plan)
     if plan.chart_type == "histogram":
@@ -286,4 +289,24 @@ def _network(pairs: list[Pair], plan: ChartPlan) -> tuple[NetworkVisualization, 
     if len(node_trials) > len(kept):
         warnings.append(f"Network shows the {len(kept)} most frequent of {len(node_trials)} values.")
     viz = NetworkVisualization(type="network_graph", title=plan.title, data={"nodes": nodes, "edges": links})
+    return viz, warnings
+
+
+def _registry_bars(stats: list, plan: ChartPlan) -> tuple[ChartVisualization, list[str]]:
+    """A bar chart straight from registry-wide /stats/field/values counts (all registered studies)."""
+    field = stats_fields(stats)[plan.x]
+    counts = {v.value: v.studies_count for v in field.top_values}
+    if plan.x is Dimension.PHASE:
+        order = [p for p in PHASE_ORDER if p in counts]
+    else:
+        order = sorted(counts, key=lambda v: (-counts[v], v))[: plan.top_n or MAX_CATEGORIES]
+    rows = [{plan.x.value: v, "trial_count": counts[v], "citations": []} for v in order]
+    encoding = {"x": _channel(plan.x) | ({} if plan.x is Dimension.PHASE else {"sort": "-y"}), "y": Y}
+    warnings = ["Counts are registry-wide statistics for all registered studies (/stats/field/values); "
+                "no per-trial citations exist for them."]  # fmt: skip
+    if len(field.top_values) < field.unique_values_count:
+        warnings.append(
+            f"The API returns only the top {len(field.top_values)} of {field.unique_values_count:,} values of {plan.x.value}."
+        )
+    viz = ChartVisualization(type="bar_chart", intent=plan.intent, title=plan.title, encoding=encoding, data=rows)
     return viz, warnings

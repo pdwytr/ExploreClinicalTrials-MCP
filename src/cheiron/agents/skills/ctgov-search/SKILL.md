@@ -38,6 +38,12 @@ or `sort` (they are rejected). Write each search for the whole question, however
 | How many items a list field holds across all trials ("how many conditions does a trial list?") | `stats/field/sizes` | `fields`, e.g. `["Condition"]` |
 | Study record sizes across the registry | `stats/size` | nothing |
 
+**Whole-registry questions** (no condition, drug, sponsor, place, phase or date, e.g. "which drug
+has the most trials?", "how are all trials split by status?"): use `stats/field/values` with the
+field (`InterventionName`, `LeadSponsorName`, `Condition`, `LocationCountry`, `Phase`,
+`OverallStatus`, `LeadSponsorClass`, `InterventionType`). It answers instantly; a `studies` search
+over the whole registry would fetch hundreds of thousands of trials (e.g. 214,000 with a drug).
+
 Rules for the `stats/*` endpoints (checked against the live API):
 - They cover the **whole registry and cannot filter**. If the question or the user's
   filters narrow the trials in any way, use `studies` instead (a stats step with user

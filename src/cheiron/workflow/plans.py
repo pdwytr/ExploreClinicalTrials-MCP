@@ -123,6 +123,9 @@ YEAR_DIMENSIONS = {Dimension.START_YEAR: "start", Dimension.COMPLETION_YEAR: "co
 
 
 class FieldProfile(BaseModel):
+    from_registry_stats: bool = Field(
+        default=False, description="Counts are registry-wide /stats values (all studies), not fetched trials."
+    )
     distinct: int = Field(ge=0)
     missing: int = Field(ge=0, description="Trials with no value for this dimension.")
     top_values: list[tuple[str, int]] = Field(

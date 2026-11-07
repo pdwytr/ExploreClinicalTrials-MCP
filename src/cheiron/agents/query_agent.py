@@ -105,9 +105,13 @@ class QueryAgent:
 
     async def decide(self, request: QueryRequest, fetch: Fetch) -> AgentResult:
         state = RunState(request=request, fetch=fetch)
-        result = await self._agent.run(build_prompt(request), deps=state)
-        if isinstance(result.output, Unanswerable):
-            raise UnsupportedQuery(result.output.reason)
+        try:
+            result = await self._agent.run(build_prompt(request), deps=state)
+            if isinstance(result.output, Unanswerable):
+                raise UnsupportedQuery(result.output.reason)
+        except BaseException as exc:  # incl. cancellation: keep what was fetched so it can be saved
+            exc.fetches = state.fetches
+            raise
         assert state.outcome is not None and state.profile is not None  # guaranteed by validate_output
         return AgentResult(
             chart=result.output,

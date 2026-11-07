@@ -63,7 +63,9 @@ def test_registry_stats_are_summarised_with_incomplete_fields_flagged():
     result = StatsResult(endpoint="stats/field/values", data=data, incomplete_fields=incomplete_fields(data))
     p = build_profile({}, total_matched=0, stats=[("All trials", result)])
 
-    assert p.fields == {}  # no trials fetched, so no trial fields
+    # no trials fetched: chartable fields come from the registry-wide counts
+    assert {d.value for d in p.fields} == {"phase", "lead_sponsor"}
+    assert all(f.from_registry_stats for f in p.fields.values())
     by_piece = {f.piece: f for f in p.stats[0].fields}
     assert by_piece["Phase"].distinct == 6 and not by_piece["Phase"].incomplete
     assert by_piece["LeadSponsorName"].incomplete and len(by_piece["LeadSponsorName"].top_values) == TOP_VALUES

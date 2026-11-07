@@ -135,10 +135,20 @@ def build_profile(
 ) -> DataProfile:
     """Profile every fetched field (all of them: the agent needs them all to choose a chart)."""
     fields: dict[Dimension, FieldProfile] = {}
+    stats = list(stats)
     if any(trials_by_group.values()):
         for dim, read in FIELD_VALUES.items():
             fields[dim] = _profile_values(trials_by_group, read, dim in _MULTI_VALUED)
         fields[Dimension.ENROLLMENT] = _profile_enrollment(trials_by_group)
+    else:  # registry-wide question: chartable fields come from /stats/field/values counts
+        for dim, f in stats_fields(stats).items():
+            fields[dim] = FieldProfile(
+                from_registry_stats=True,
+                distinct=f.unique_values_count,
+                missing=f.missing_studies_count,
+                top_values=[(v.value, v.studies_count) for v in f.top_values[:TOP_VALUES]],
+                multi_valued=dim in _MULTI_VALUED,
+            )
     return DataProfile(
         total_matched=total_matched,
         trials_fetched=sum(len(t) for t in trials_by_group.values()),
@@ -147,3 +157,27 @@ def build_profile(
         stats=[_summarise_stats(label, result) for label, result in stats],
         data_as_of=data_as_of,
     )
+
+
+# /stats/field/values pieces that map onto chartable dimensions.
+STATS_PIECES = {
+    "Phase": Dimension.PHASE,
+    "OverallStatus": Dimension.STATUS,
+    "LeadSponsorName": Dimension.SPONSOR,
+    "LeadSponsorClass": Dimension.SPONSOR_CLASS,
+    "Condition": Dimension.CONDITION,
+    "InterventionName": Dimension.INTERVENTION,
+    "InterventionType": Dimension.INTERVENTION_TYPE,
+    "LocationCountry": Dimension.COUNTRY,
+}
+
+
+def stats_fields(stats: Iterable[tuple[str, StatsResult]]) -> dict[Dimension, EnumStats | StringStats]:
+    """Registry-wide value counts for chartable fields, from any /stats/field/values results."""
+    found = {}
+    for _, result in stats:
+        if isinstance(result.data, FieldValuesResponse):
+            for f in result.data.root:
+                if f.piece in STATS_PIECES and isinstance(f, EnumStats | StringStats):
+                    found[STATS_PIECES[f.piece]] = f
+    return found
