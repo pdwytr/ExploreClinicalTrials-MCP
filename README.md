@@ -400,6 +400,33 @@ run the unit tests and the evals, and open a pull request with the documentation
 report. A contract test would fail the run, and flag it for a person, whenever a field, enum value
 or parameter the code depends on disappears.
 
+### Caching large fetches by registry data version
+
+Most of a query's time goes into fetching trials, not into the model. In the full eval run the
+median question took 8 seconds and the slowest 33, and a broad question moves megabytes (the heart
+failure scatter fetched 7,406 trials, 9 MB of records). Popular questions repeat the same searches,
+and the registry changes only once a day, so the same fetch is often repeated against identical
+data.
+
+The fetched trials would be cached, keyed by two things:
+
+- **the compiled search**: the exact API parameters after resolution and the user's fields, in a
+  canonical order, so two differently worded questions that compile to the same search share an
+  entry;
+- **the registry's data version**: the refresh timestamp from `GET /version`, which the pipeline
+  already reads before and after every fetch.
+
+The cache is indexed by data version. When the registry refreshes, every entry from the previous
+version becomes invalid at once, which can never serve stale data and needs no per-entry expiry
+rule. Name resolutions (the sampled MeSH terms) and the registry's country list would be cached the
+same way.
+
+Only the deterministic part is cached: the agent still interprets each question, so a cached fetch
+cannot hide a change in interpretation. The cost is storage for the largest searches, and a first
+query after each daily refresh that is no faster than today. A later step would reuse a broad
+cached search for narrower questions by filtering the cached trials locally, but only for filters
+code can apply exactly (phase, status, years), so counts stay identical to the API's.
+
 ### Leaner skills, measured
 
 The skills were written rule by rule as failures appeared. The traces already record which
