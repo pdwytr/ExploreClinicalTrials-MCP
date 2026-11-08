@@ -269,3 +269,13 @@ def test_the_chart_must_show_the_stated_breakdown():
     result = decide(model)
     assert "asks for a breakdown by country, but the chart shows ['phase']" in seen_text(seen["messages"])
     assert result.chart.x.value == "phase"
+
+
+def test_a_network_breakdown_names_both_node_kinds():
+    from cheiron.agents.query_agent import breakdown_problem
+    from cheiron.workflow import ChartPlan, SearchPlan
+
+    plan = SearchPlan.model_validate({**PLAN, "breakdown": "lead_sponsor x intervention"})
+    network = ChartPlan(intent="relationship", chart_type="network_graph", title="t", x="lead_sponsor", series="intervention")
+    assert breakdown_problem(plan, network) is None
+    assert "not a chartable field" in breakdown_problem(SearchPlan.model_validate({**PLAN, "breakdown": "site x sponsor"}), network)

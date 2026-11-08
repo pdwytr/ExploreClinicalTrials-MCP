@@ -53,7 +53,8 @@ has the most trials?"): use `stats/field/values` with the field (`InterventionNa
 `LeadSponsorName`, `Condition`, `LocationCountry`, `Phase`, `OverallStatus`, `LeadSponsorClass`,
 `InterventionType`). A `studies` search over the whole registry would fetch hundreds of
 thousands of trials. Stats steps **cannot filter** (with user fields they are rejected) and give
-only the top 250 values of text fields; dates and numbers need `studies`.
+only the top 250 values of text fields, with exact counts: that is the full answer to "which ...
+has the most" and "top N" questions. Dates and numbers need `studies`.
 
 ## Slots of a `studies` step
 
@@ -107,7 +108,9 @@ only the top 250 values of text fields; dates and numbers need `studies`.
 Set `breakdown` to what the question asks to break the answer down by: one of `phase`,
 `start_year`, `completion_year`, `overall_status`, `lead_sponsor`, `sponsor_class`, `condition`,
 `intervention`, `intervention_type`, `country`, `enrollment`, `group` (the compared sides).
-If it asks for a breakdown the data cannot chart (US state, city, site, investigator, trial
+A relationship question (a network) names **both node kinds** joined by ` x `:
+`"lead_sponsor x intervention"` (which sponsors test which drugs), `"condition x intervention"`,
+`"intervention x intervention"` (drugs used together). These are supported. If it asks for a breakdown the data cannot chart (US state, city, site, investigator, trial
 duration, randomisation), write `"unsupported: <what>"`: you will then answer Unanswerable,
 never chart the nearest field instead. Leave it out when the question asks for no breakdown.
 The chart you choose later must show this breakdown.
@@ -121,6 +124,10 @@ trials", "the drugs most often tested alongside a named drug"):
 2. fetch again with that value (a sponsor goes in `sponsors`: lead sponsor), and say in the
    rationale what you found ("<sponsor> leads glioblastoma with <N> trials", the profile's count);
 3. the chart is built from the latest successful fetch, so that fetch must hold everything shown.
+
+**Several found values** ("the 5 sponsors with the most melanoma trials, by phase"): put them all
+in **one** step's slot (`sponsors: [the five names]`) and chart by that field
+(`lead_sponsor` as the series); separate steps are for up to 4 named sides.
 
 **Ties:** if the profile lists `tied_for_top` for the value you need, never pick one of them.
 Fetch every tied value as its own step (up to 4) and say there is a tie. **Few trials:** if a fetch

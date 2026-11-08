@@ -1,6 +1,6 @@
 # Design: plan by intent, compile in code
 
-Status: implemented on branch `feat/search-intent`. Replaces the free-text `/studies` step.
+Status: implemented. Replaces the free-text `/studies` step.
 
 ## Problem
 
@@ -123,7 +123,16 @@ Counting, citations, chart validation and the builder: the model still never wri
 - **A question about a brand only ("trials that name Ozempic") is widened to the molecule.**
   Rare; meta states the expansion.
 
-## Evals
+## Results
 
-`expect.intent` checks the compiled slots directly (e.g. `{"drugs": ["semaglutide"]}` must be
-among the searched terms), alongside `recall` and `labels`.
+Live, all 72 eval cases (brief, structured, users, refusals, multistep, grilled): **70 pass**,
+against 55 before this change under the same checks. Fixed by it: brand names (r07, g02), a
+sponsor alias (g01, via the skill's registered-name rule), conflicting fields (r22, g09),
+unsupported breakdowns refused (r05, g05), regions (u2, g07), "completed" (u7, g03), recall of
+condition spellings (u6), placebo nodes (b9, r10, r11, g10). Still failing: share questions
+(x2, g08), which need percent output.
+
+Not done yet: an `expect.intent` eval check on the compiled slots (`meta.filters_applied` now
+carries `intent` and `searched_as`, so it is a small addition); sponsor aliases resolved in code
+(the registry has no canonical sponsor names: "MSD" matches six small MSD entities, not Merck
+Sharp & Dohme LLC, so this needs an alias table rather than a registry lookup).

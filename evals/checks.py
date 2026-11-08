@@ -153,13 +153,15 @@ def as_list(value) -> list:
     return value if isinstance(value, list) else [value]
 
 
-def chart_labels(viz: dict) -> list[str]:
-    """The categories a reader sees: x values (and a non-group series) for charts, node labels for networks."""
+def chart_labels(viz: dict, only_field: str | None = None) -> list[str]:
+    """The categories a reader sees: x values (and a non-group series) for charts, node labels for
+    networks. `only_field` keeps one field's labels (network nodes by their group)."""
     if viz.get("type") == "network_graph":
-        return [str(n.get("label")) for n in (viz.get("data") or {}).get("nodes", [])]
+        nodes = (viz.get("data") or {}).get("nodes", [])
+        return [str(n.get("label")) for n in nodes if not only_field or n.get("group") == only_field]
     enc = viz.get("encoding") or {}
     fields = [enc.get("x", {}).get("field"), (enc.get("color") or {}).get("field")]
-    fields = [f for f in fields if f and f != "group"]
+    fields = [f for f in fields if f and f != "group" and (not only_field or f == only_field)]
     return sorted({str(r[f]) for r in viz.get("data") or [] for f in fields if r.get(f) is not None})
 
 
@@ -288,7 +290,8 @@ def check_labels(case, status) -> list[str]:
     labels = chart_labels(viz)
     if expect.get("labels_within"):
         allowed = {a.lower() for v in expect["labels_within"] for a in (REGIONS.get(v) or {v})}
-        outside = [label for label in labels if label.lower() not in allowed]
+        regional = any(v in REGIONS for v in expect["labels_within"])  # a region constrains countries only
+        outside = [label for label in (chart_labels(viz, "country") if regional else labels) if label.lower() not in allowed]
         if outside:
             problems.append(f"{len(outside)} charted label(s) outside what was asked: {outside[:6]}")
     for text in expect.get("labels_exclude") or []:

@@ -37,7 +37,7 @@ evals/
   - `data_excludes`: text that must not appear in any charted row (labels or counts).
   - `labels_within` / `labels_exclude`: the charted categories (x values, a non-group series,
     network node labels) must all be in a list, or contain none of a list. Named sets such as
-    `"$EUROPE"` are defined in `checks.py` (`REGIONS`).
+    `"$EUROPE"` are defined in `checks.py` (`REGIONS`) and constrain only the country labels.
   - `recall`: reference searches, written by hand as plain API parameters. Each is counted live at
     grading time (so it never goes stale), and the charted trials must contain at least 80% of
     what it finds (`"min"` overrides). `"match"` ties an entry to the compared side(s) whose label

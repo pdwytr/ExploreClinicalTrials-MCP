@@ -239,9 +239,14 @@ def breakdown_problem(plan: SearchPlan, chart: ChartPlan) -> str | None:
             f"Answer Unanswerable and say that {what} is not available, instead of charting another field."
         )
     shown = {d.value for d in (chart.x, chart.series) if d is not None}
-    if asked not in {d.value for d in Dimension}:
-        return f"breakdown {asked!r} is not a chartable field; use one of {[d.value for d in Dimension]} or 'unsupported: <what>'."
-    if asked not in shown:
+    parts = {p.strip() for p in re.split(r"\s+x\s+", asked)}  # a network names both node kinds
+    unknown = sorted(parts - {d.value for d in Dimension})
+    if unknown:
+        return (
+            f"breakdown {asked!r}: {unknown} is not a chartable field; use {[d.value for d in Dimension]}, "
+            "'<field> x <field>' for a network, or 'unsupported: <what>'."
+        )
+    if not parts <= shown:
         return (
             f"The plan says the question asks for a breakdown by {asked}, but the chart shows {sorted(shown)}. "
             f"Chart {asked}, or fetch again with a corrected breakdown if the plan was wrong."
