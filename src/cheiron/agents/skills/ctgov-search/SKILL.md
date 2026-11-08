@@ -107,12 +107,12 @@ has the most" and "top N" questions. Dates and numbers need `studies`.
 
 Set `breakdown` to what the question asks to break the answer down by: one of `phase`,
 `start_year`, `completion_year`, `overall_status`, `lead_sponsor`, `sponsor_class`, `condition`,
-`intervention`, `intervention_type`, `country`, `enrollment`, `study_type`, `allocation`, `masking`,
-`primary_purpose`, `group` (the compared sides).
+`intervention`, `intervention_type`, `country`, `enrollment`, `duration_months`, `study_type`, `allocation`,
+`masking`, `primary_purpose`, `group` (the compared sides). Two numbers plotted against each other
+("enrollment against duration") are written like a network: `"enrollment x duration_months"`.
 A relationship question (a network) names **both node kinds** joined by ` x `:
 `"lead_sponsor x intervention"` (which sponsors test which drugs), `"condition x intervention"`,
-`"intervention x intervention"` (drugs used together). These are supported. If it asks for a breakdown the data cannot chart (US state, city, site, investigator, trial
-duration), write `"unsupported: <what>"`: you will then answer Unanswerable,
+`"intervention x intervention"` (drugs used together). These are supported. If it asks for a breakdown the data cannot chart (US state, city, site, investigator), write `"unsupported: <what>"`: you will then answer Unanswerable,
 never chart the nearest field instead. Leave it out when the question asks for no breakdown.
 The chart you choose later must show this breakdown.
 

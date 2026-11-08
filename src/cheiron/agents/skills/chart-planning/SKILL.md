@@ -46,6 +46,7 @@ back with the reason, so fix the plan and answer again.
 | Parts of a whole | "what part of each status is industry-run" | `part_to_whole` | `stacked_bar_chart`, `x` + single-valued `series` |
 | A share or percentage | "what percentage are …", "what share of each …" | `part_to_whole` | the same chart with `measure: "share"` (see Gotchas) |
 | Where trials run | "by country" | `spatial` | `bar_chart`, `x: country` |
+| How two numbers relate | "do bigger trials take longer?" | `correlation` | `scatter_plot`, `x: enrollment`, `y: duration_months` |
 | Links between things | "sponsors and their drugs", "drugs used together" | `relationship` | `network_graph`: read `references/networks.md` |
 
 Profile has fields marked `from_registry_stats`: read `references/registry-stats.md` first.
@@ -53,7 +54,8 @@ Profile has fields marked `from_registry_stats`: read `references/registry-stats
 ## Fields you can chart
 
 `phase`, `start_year`, `completion_year`, `overall_status`, `lead_sponsor`, `sponsor_class`, `condition`,
-`intervention`, `intervention_type`, `country`, `enrollment` (numeric), `study_type`, `allocation`
+`intervention`, `intervention_type`, `country`, `enrollment` (numeric), `duration_months` (numeric: start to
+actual primary completion, finished trials only), `study_type`, `allocation`
 (randomized or not), `masking` (blinding: none = open label, single ... quadruple), `primary_purpose`,
 and `group` (the comparison side: the label of each fetched step). Design fields are mostly empty for
 observational studies.
@@ -61,7 +63,7 @@ observational studies.
 ## Output
 
 A ChartPlan: `intent`, `chart_type`, `title` (at most 120 characters), `x`, and optionally `series`,
-`top_n` (1–50) and `measure` (`count`, the default, or `share`). For a comparison of two fetched sides by phase:
+`top_n` (1–50), `measure` (`count`, the default, or `share`) and, for a `scatter_plot` only, `y`. For a comparison of two fetched sides by phase:
 
 ```json
 {"intent": "magnitude", "chart_type": "grouped_bar_chart", "title": "Trial phases: durvalumab vs atezolizumab", "x": "phase", "series": "group"}
@@ -91,9 +93,10 @@ A ChartPlan: `intent`, `chart_type`, `title` (at most 120 characters), `x`, and 
   share of all charted trials; with a series = share within each x category ("in each phase, what
   share is industry-run": `x: phase`, `series: sponsor_class`); `series: group` = share within each
   compared side. Bars and time series only; not registry-wide statistics.
-- **Numbers:** `enrollment` is the only numeric field, so it is charted only as a `histogram`, and
-  `scatter_plot` is not available (it needs two numeric fields per trial). `x` and `series` must
-  differ except in a network.
+- **Numbers:** `enrollment` and `duration_months` are numeric. They are charted only as a
+  `histogram` (enrollment) or a `scatter_plot` (one on `x`, the other on `y`; an optional `series`
+  colors the points by a category). Duration exists only for finished trials: unfinished ones are
+  left out and code says how many. `x` and `series` must differ except in a network.
 
 ## References
 

@@ -19,6 +19,7 @@ Counting rules:
     edge weight = trials sharing both values
 """
 
+import hashlib
 from collections import defaultdict
 from collections.abc import Callable
 from datetime import date
@@ -212,6 +213,8 @@ def _build(
         return _network(pairs, plan)
     if plan.chart_type == "histogram":
         return _histogram(pairs, plan), []
+    if plan.chart_type == "scatter_plot":
+        return _scatter(pairs, plan)
 
     windows, year_notes = _year_windows(plan, bounds, as_of)
     future = set()
@@ -329,6 +332,65 @@ def _histogram(pairs: list[Pair], plan: ChartPlan) -> ChartVisualization:
         "y": Y,
     }
     return ChartVisualization(type="histogram", intent=plan.intent, title=plan.title, encoding=encoding, data=rows)
+
+
+SCATTER_MAX_POINTS = 2000
+_NUMBER: dict[Dimension, Callable[[Trial], float | None]] = {
+    Dimension.ENROLLMENT: lambda t: t.enrollment,
+    Dimension.DURATION: lambda t: t.duration_months,
+}
+_AXIS_TITLES = {Dimension.ENROLLMENT: "Enrollment (participants)", Dimension.DURATION: "Duration (months, start to primary completion)"}
+
+
+def _number_citations(dim: Dimension, t: Trial) -> list[Citation]:
+    """The exact values a point's coordinate comes from: enrollment, or both dates of a duration."""
+    if dim is Dimension.ENROLLMENT:
+        return [Citation(nct_id=t.nct_id, excerpt=str(t.enrollment), field=FIELD_PATHS[dim], title=t.title)]
+    start = t.start_date_text or t.start_date.isoformat()
+    end = t.primary_completion_date_text or t.primary_completion_date.isoformat()
+    return [
+        Citation(nct_id=t.nct_id, excerpt=start, field=FIELD_PATHS[Dimension.START_YEAR], title=t.title),
+        Citation(nct_id=t.nct_id, excerpt=end, field="protocolSection.statusModule.primaryCompletionDateStruct.date", title=t.title),
+    ]
+
+
+def _scatter(pairs: list[Pair], plan: ChartPlan) -> tuple[ChartVisualization, list[str]]:
+    """One point per trial with both numbers. Large sets are thinned to an even, deterministic sample
+    (by a hash of the NCT ID, so neither old nor new trials are favoured)."""
+    assert plan.y is not None
+    read_x, read_y = _NUMBER[plan.x], _NUMBER[plan.y]
+    read_s = _reader(plan.series, pairs) if plan.series else None
+    points, skipped = [], set()
+    for group, t in pairs:
+        x, y = read_x(t), read_y(t)
+        if x is None or y is None:
+            skipped.add(t.nct_id)
+            continue
+        for s in sorted(read_s(group, t)) if read_s else [None]:
+            points.append((t, x, y, s))
+    warnings = []
+    if skipped:
+        n = len(skipped)
+        what = "trial without both values is" if n == 1 else "trials without both values are"
+        warnings.append(f"{n} {what} left out (duration needs a start date and an actual primary completion).")
+    if len(points) > SCATTER_MAX_POINTS:
+        warnings.append(f"Showing an even sample of {SCATTER_MAX_POINTS} of {len(points)} points.")
+        points = sorted(points, key=lambda p: hashlib.sha256(p[0].nct_id.encode()).hexdigest())[:SCATTER_MAX_POINTS]
+    rows = []
+    for t, x, y, s in sorted(points, key=lambda p: (p[1], p[2], p[0].nct_id)):
+        row = {plan.x.value: x, plan.y.value: y, "nct_ids": [t.nct_id]}
+        if plan.series:
+            row[plan.series.value] = s
+        row["citations"] = _number_citations(plan.x, t) + _number_citations(plan.y, t)
+        rows.append(row)
+    encoding = {
+        "x": {"field": plan.x.value, "type": "quantitative", "title": _AXIS_TITLES[plan.x]},
+        "y": {"field": plan.y.value, "type": "quantitative", "title": _AXIS_TITLES[plan.y]},
+    }
+    if plan.series:
+        encoding["color"] = _channel(plan.series)
+    viz = ChartVisualization(type="scatter_plot", intent=plan.intent, title=plan.title, encoding=encoding, data=rows)
+    return viz, warnings
 
 
 def _network(pairs: list[Pair], plan: ChartPlan) -> tuple[NetworkVisualization, list[str]]:

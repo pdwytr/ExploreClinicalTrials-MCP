@@ -231,7 +231,7 @@ def test_mostly_missing_dimension_is_warned_in_meta():
 
 
 def test_chart_plan_structural_rules():
-    with pytest.raises(ValueError, match="scatter_plot needs two numeric fields"):
+    with pytest.raises(ValueError, match="scatter_plot needs two different numeric fields"):
         ChartPlan(intent="correlation", chart_type="scatter_plot", title="t", x=Dimension.ENROLLMENT)
     with pytest.raises(ValueError, match="needs a series"):
         ChartPlan(intent="relationship", chart_type="network_graph", title="t", x=Dimension.SPONSOR)

@@ -236,7 +236,7 @@ def check_chart_plan(
 ) -> list[str]:
     """Reject plans the data cannot support; return warnings for weak ones.
     `bounds` are the year ranges the searches were filtered on, per date field."""
-    used = [d for d in (chart.x, chart.series) if d is not None]
+    used = [d for d in (chart.x, chart.series, chart.y) if d is not None]
     if Dimension.GROUP in used and not search.is_comparison:
         raise UnsupportedQuery("The chart groups by comparison side, but there is only one search.")
     for dim in used:
@@ -324,6 +324,10 @@ def _units(visualization) -> dict[str, str]:
     """What each number in the data counts, by the key it appears under."""
     if visualization.type == "network_graph":
         return {"size": "trials with this value", "weight": "trials that have both values"}
+    if visualization.type == "scatter_plot":  # one point per trial
+        known = {"enrollment": "participants", "duration_months": "months from start to actual primary completion"}
+        enc = visualization.encoding
+        return {f: known[f] for f in (enc.x.field, enc.y.field) if f in known}
     units = {"trial_count": "trials"}
     if visualization.encoding.y.field == "percent":
         units |= {"percent": "percent of the trials in of_trials", "of_trials": "trials (the share's denominator)"}

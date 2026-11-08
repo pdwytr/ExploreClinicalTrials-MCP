@@ -38,7 +38,7 @@ class SearchPlan(BaseModel):
         description=(
             "What the question asks to break the answer down by: a chartable field "
             "(phase, start_year, completion_year, overall_status, lead_sponsor, sponsor_class, condition, "
-            "intervention, intervention_type, country, enrollment, study_type, allocation, masking, "
+            "intervention, intervention_type, country, enrollment, duration_months, study_type, allocation, masking, "
             "primary_purpose, group); for a network, both node kinds "
             "joined by ' x ' (e.g. 'lead_sponsor x intervention'; 'intervention x intervention' = used together); "
             "if it asks for anything else, 'unsupported: <what>' (e.g. 'unsupported: US state'). "
@@ -127,7 +127,11 @@ class Dimension(str, Enum):
     MASKING = "masking"  # blinding: none (open label), single ... quadruple
     PRIMARY_PURPOSE = "primary_purpose"
     ENROLLMENT = "enrollment"
+    DURATION = "duration_months"  # start -> actual primary completion, finished trials only
     GROUP = "group"  # the search label: the series in a comparison
+
+
+NUMERIC = {Dimension.ENROLLMENT, Dimension.DURATION}  # charted as numbers, not categories
 
 
 class NumericSummary(BaseModel):
@@ -204,6 +208,7 @@ class ChartPlan(BaseModel):
     title: str = Field(min_length=1, max_length=120)
     x: Dimension
     series: Dimension | None = None
+    y: "Dimension | None" = Field(default=None, description="scatter_plot only: the numeric field on the y axis.")
     top_n: int | None = Field(default=None, ge=1, le=50, description="Keep only the N largest categories.")
     measure: Literal["count", "share"] = Field(
         default="count",
@@ -221,11 +226,16 @@ class ChartPlan(BaseModel):
         if self.chart_type == "time_series" and self.x not in YEAR_DIMENSIONS:
             raise ValueError("time_series needs x = start_year or completion_year")
         if self.chart_type == "histogram" and self.x is not Dimension.ENROLLMENT:
-            raise ValueError("histogram needs x = enrollment (the only numeric field)")
+            raise ValueError("histogram needs x = enrollment")
         if self.chart_type == "scatter_plot":
-            raise ValueError("scatter_plot needs two numeric fields per trial; only enrollment is numeric")
-        if Dimension.ENROLLMENT in (self.x, self.series) and self.chart_type != "histogram":
-            raise ValueError("enrollment is numeric: chart it as a histogram")
+            if self.x not in NUMERIC or self.y not in NUMERIC or self.x == self.y:
+                raise ValueError("scatter_plot needs two different numeric fields: x and y from enrollment, duration_months")
+            if self.series in NUMERIC:
+                raise ValueError("a scatter_plot series colors points by a category, not a number")
+        elif self.y is not None:
+            raise ValueError("only a scatter_plot uses y")
+        elif {self.x, self.series} & NUMERIC and self.chart_type != "histogram":
+            raise ValueError("enrollment and duration_months are numeric: chart them as a histogram or scatter_plot")
         if self.measure == "share" and self.chart_type not in ("bar_chart", "grouped_bar_chart", "stacked_bar_chart", "time_series"):
             raise ValueError("a share (percent of trials) needs a bar chart or a time series")
         if self.series is not None and self.series == self.x and self.chart_type != "network_graph":

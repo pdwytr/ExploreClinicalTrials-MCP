@@ -321,3 +321,37 @@ def test_design_fields_chart_with_the_registrys_names_and_cite_their_field():
     masking, _ = build_visualization({"All": trials}, plan(intent="distribution", chart_type="bar_chart", x=Dimension.MASKING))
     assert masking.encoding.x.labels["NONE"] == "None (Open Label)"
     as_response(viz)
+
+
+# --- Scatter: enrollment against duration ----------------------------------------------------------
+
+
+def finished(n: int, enrollment: int, start: str, end: str, **fields) -> Trial:
+    return trial(n, enrollment=enrollment, start_date=start, primary_completion_date=end, primary_completion_date_type="ACTUAL", **fields)
+
+
+def test_duration_is_start_to_actual_primary_completion():
+    assert finished(1, 100, "2020-01", "2021-01").duration_months == 12.0
+    planned = trial(2, start_date="2020-01-01", primary_completion_date="2023-01-01", primary_completion_date_type="ESTIMATED")
+    assert planned.duration_months is None  # not finished: a plan, not a duration
+
+
+def test_scatter_plots_one_cited_point_per_trial():
+    # r13: "Do bigger heart failure trials take longer? Plot enrollment against duration."
+    trials = [finished(1, 100, "2020-01", "2021-01"), finished(2, 900, "2018-03", "2022-03"), trial(3, enrollment=50)]
+    viz, warnings = build_visualization(
+        {"All": trials}, plan(intent="correlation", chart_type="scatter_plot", x=Dimension.ENROLLMENT, y=Dimension.DURATION)
+    )
+    assert [(r.enrollment, r.duration_months, r.nct_ids) for r in viz.data] == [(100, 12.0, ["NCT00000001"]), (900, 48.0, ["NCT00000002"])]
+    assert {c.excerpt for c in viz.data[0].citations} == {"100", "2020-01", "2021-01"}  # both values, exactly as written
+    assert "1 trial without both values is left out" in warnings[0]
+    assert as_response(viz).vega_lite["mark"] == "point"
+
+
+def test_scatter_needs_two_numeric_axes_and_numbers_stay_out_of_other_charts():
+    with pytest.raises(ValidationError, match="scatter_plot needs"):
+        plan(intent="correlation", chart_type="scatter_plot", x=Dimension.ENROLLMENT, y=Dimension.PHASE)
+    with pytest.raises(ValidationError, match="only a scatter_plot uses y"):
+        plan(intent="distribution", chart_type="bar_chart", x=Dimension.PHASE, y=Dimension.DURATION)
+    with pytest.raises(ValidationError, match="numeric"):
+        plan(intent="distribution", chart_type="bar_chart", x=Dimension.DURATION)

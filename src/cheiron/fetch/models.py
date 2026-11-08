@@ -306,6 +306,15 @@ class Trial(BaseModel):
         return self.start_date.year if self.start_date else None
 
     @property
+    def duration_months(self) -> float | None:
+        """Months from start to the ACTUAL primary completion (finished trials only; an estimated
+        end date is a plan, not a duration)."""
+        if not (self.start_date and self.primary_completion_date and self.primary_completion_date_type == "ACTUAL"):
+            return None
+        days = (self.primary_completion_date - self.start_date).days
+        return round(days / 30.4375, 1) if days >= 0 else None
+
+    @property
     def completion_year(self) -> int | None:
         return self.completion_date.year if self.completion_date else None
 

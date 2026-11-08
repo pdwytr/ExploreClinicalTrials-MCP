@@ -238,7 +238,7 @@ def breakdown_problem(plan: SearchPlan, chart: ChartPlan) -> str | None:
             f"The plan says the question asks for a breakdown by {what}, which registry data here cannot chart. "
             f"Answer Unanswerable and say that {what} is not available, instead of charting another field."
         )
-    shown = {d.value for d in (chart.x, chart.series) if d is not None}
+    shown = {d.value for d in (chart.x, chart.series, chart.y) if d is not None}
     parts = {p.strip() for p in re.split(r"\s+x\s+", asked)}  # a network names both node kinds
     unknown = sorted(parts - {d.value for d in Dimension})
     if unknown:

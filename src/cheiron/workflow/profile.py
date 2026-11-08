@@ -104,9 +104,9 @@ def _profile_values(trials_by_group: dict[str, list[Trial]], read: Callable[[Tri
     )
 
 
-def _profile_enrollment(trials_by_group: dict[str, list[Trial]]) -> FieldProfile:
-    values = [t.enrollment for trials in trials_by_group.values() for t in trials if t.enrollment is not None]
-    missing_by_group = {g: sum(t.enrollment is None for t in ts) for g, ts in trials_by_group.items()}
+def _profile_numeric(trials_by_group: dict[str, list[Trial]], read: Callable[[Trial], float | None]) -> FieldProfile:
+    values = [v for trials in trials_by_group.values() for t in trials if (v := read(t)) is not None]
+    missing_by_group = {g: sum(read(t) is None for t in ts) for g, ts in trials_by_group.items()}
     return FieldProfile(
         distinct=len(set(values)),
         missing=sum(missing_by_group.values()),
@@ -169,7 +169,8 @@ def build_profile(
         everything = [t for trials in trials_by_group.values() for t in trials]
         for dim, read in FIELD_VALUES.items():  # the agent sees the same merged values the chart uses
             fields[dim] = _profile_values(trials_by_group, merged_reader(read, everything), dim in _MULTI_VALUED)
-        fields[Dimension.ENROLLMENT] = _profile_enrollment(trials_by_group)
+        fields[Dimension.ENROLLMENT] = _profile_numeric(trials_by_group, lambda t: t.enrollment)
+        fields[Dimension.DURATION] = _profile_numeric(trials_by_group, lambda t: t.duration_months)
     else:  # registry-wide question: chartable fields come from /stats/field/values counts
         for dim, f in stats_fields(stats).items():
             fields[dim] = FieldProfile(
