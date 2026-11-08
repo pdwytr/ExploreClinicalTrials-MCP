@@ -1,0 +1,12 @@
+[
+  {"name": "1-time-trend", "class": "Time trend (the brief's own example request)",
+   "request": {"query": "How has the number of trials for this drug changed over time?", "drug_name": "Pembrolizumab"}},
+  {"name": "2-comparison", "class": "Comparison of two drugs",
+   "request": {"query": "Compare phases for trials involving nivolumab vs pembrolizumab."}},
+  {"name": "3-geography", "class": "Geographic pattern",
+   "request": {"query": "Which countries have the most recruiting trials for multiple sclerosis?"}},
+  {"name": "4-network", "class": "Relationships: sponsor-drug network",
+   "request": {"query": "Show a network of sponsors and drugs for Hodgkin lymphoma trials."}},
+  {"name": "5-scatter", "class": "Two numbers per trial: enrollment against duration",
+   "request": {"query": "Do bigger heart failure trials take longer? Plot enrollment against duration."}}
+]

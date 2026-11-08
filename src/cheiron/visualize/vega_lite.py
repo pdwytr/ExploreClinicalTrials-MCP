@@ -56,8 +56,13 @@ def to_vega_lite(viz: ChartVisualization) -> dict[str, Any]:
         "$schema": SCHEMA,
         "title": viz.title,
         "width": "container",
-        # citations ride along for tooltips; the complete nct_ids stay in visualization.data only
-        "data": {"values": [row.model_dump(mode="json", exclude={"nct_ids"}) for row in viz.data]},
+        # values only, plus _row (the index into visualization.data, where each row's citations and
+        # nct_ids are): sending the sources twice doubled responses (a 2,000-point scatter: 3.8 MB)
+        "data": {
+            "values": [
+                row.model_dump(mode="json", exclude={"nct_ids", "citations"}) | {"_row": i} for i, row in enumerate(viz.data)
+            ]
+        },
         "mark": MARKS[viz.type],
         "encoding": encoding,
     }

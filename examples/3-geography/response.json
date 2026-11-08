@@ -1,0 +1,1692 @@
+{
+  "visualization": {
+    "type": "bar_chart",
+    "intent": "ranking",
+    "title": "Countries with the most recruiting multiple sclerosis trials",
+    "encoding": {
+      "x": {
+        "field": "country",
+        "type": "nominal",
+        "title": "Country",
+        "sort": "-y"
+      },
+      "y": {
+        "field": "trial_count",
+        "type": "quantitative",
+        "title": "Trials"
+      }
+    },
+    "data": [
+      {
+        "citations": [
+          {
+            "nct_id": "NCT00001248",
+            "excerpt": "United States",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Magnetic Resonance Imaging (MRI) to Evaluate Activity of Multiple Sclerosis (MS)"
+          },
+          {
+            "nct_id": "NCT00794352",
+            "excerpt": "United States",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Comprehensive Multimodal Analysis of Neuroimmunological Diseases of the Central Nervous System"
+          },
+          {
+            "nct_id": "NCT01018537",
+            "excerpt": "United States",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "NARCOMS Registry: A Multiple Sclerosis Registry"
+          },
+          {
+            "nct_id": "NCT01353547",
+            "excerpt": "United States",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Genes and Environment in Multiple Sclerosis"
+          },
+          {
+            "nct_id": "NCT01703429",
+            "excerpt": "United States",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Complementary and Alternative Care in Multiple Sclerosis"
+          }
+        ],
+        "nct_ids": [
+          "NCT00001248",
+          "NCT00794352",
+          "NCT01018537",
+          "NCT01353547",
+          "NCT01703429",
+          "NCT01730131",
+          "NCT02486562",
+          "NCT02521311",
+          "NCT02649985",
+          "NCT02659956",
+          "NCT02784210",
+          "NCT02795052",
+          "NCT02994121",
+          "NCT03109288",
+          "NCT03135327",
+          "NCT03207464",
+          "NCT03233646",
+          "NCT03698149",
+          "NCT03759522",
+          "NCT03816345",
+          "NCT04047628",
+          "NCT04114994",
+          "NCT04390009",
+          "NCT04458688",
+          "NCT04603196",
+          "NCT04634994",
+          "NCT04650321",
+          "NCT04699747",
+          "NCT04806620",
+          "NCT04855825",
+          "NCT04933552",
+          "NCT05003388",
+          "NCT05051618",
+          "NCT05124600",
+          "NCT05170126",
+          "NCT05183152",
+          "NCT05204459",
+          "NCT05269628",
+          "NCT05359653",
+          "NCT05395624",
+          "NCT05433103",
+          "NCT05500963",
+          "NCT05539729",
+          "NCT05634967",
+          "NCT05644522",
+          "NCT05658497",
+          "NCT05735691",
+          "NCT05787795",
+          "NCT05849467",
+          "NCT05877963",
+          "NCT05958381",
+          "NCT05964829",
+          "NCT05982925",
+          "NCT06072703",
+          "NCT06094855",
+          "NCT06136728",
+          "NCT06138132",
+          "NCT06170970",
+          "NCT06197685",
+          "NCT06203106",
+          "NCT06276634",
+          "NCT06329453",
+          "NCT06341023",
+          "NCT06390930",
+          "NCT06394310",
+          "NCT06408259",
+          "NCT06410261",
+          "NCT06433752",
+          "NCT06433765",
+          "NCT06434571",
+          "NCT06450977",
+          "NCT06453694",
+          "NCT06463743",
+          "NCT06495138",
+          "NCT06505421",
+          "NCT06529406",
+          "NCT06554340",
+          "NCT06591429",
+          "NCT06608797",
+          "NCT06629428",
+          "NCT06680037",
+          "NCT06681623",
+          "NCT06735248",
+          "NCT06782490",
+          "NCT06788886",
+          "NCT06796504",
+          "NCT06809192",
+          "NCT06846281",
+          "NCT06860932",
+          "NCT06864936",
+          "NCT06890923",
+          "NCT06901687",
+          "NCT06919900",
+          "NCT06940323",
+          "NCT06951919",
+          "NCT06981013",
+          "NCT06992115",
+          "NCT06999434",
+          "NCT07002034",
+          "NCT07011914",
+          "NCT07012135",
+          "NCT07067463",
+          "NCT07087106",
+          "NCT07115017",
+          "NCT07139743",
+          "NCT07167680",
+          "NCT07207148",
+          "NCT07220252",
+          "NCT07222618",
+          "NCT07224373",
+          "NCT07225361",
+          "NCT07225504",
+          "NCT07225868",
+          "NCT07299019",
+          "NCT07304154",
+          "NCT07325292",
+          "NCT07355387",
+          "NCT07376772",
+          "NCT07389590",
+          "NCT07392879",
+          "NCT07403188",
+          "NCT07415824",
+          "NCT07424027",
+          "NCT07475377",
+          "NCT07477639",
+          "NCT07497399",
+          "NCT07500727",
+          "NCT07504120",
+          "NCT07510607",
+          "NCT07573241",
+          "NCT07606742",
+          "NCT07609719",
+          "NCT07614321",
+          "NCT07615725",
+          "NCT07623668",
+          "NCT07660601",
+          "NCT07710105",
+          "NCT07732907",
+          "NCT07738978",
+          "NCT07758270",
+          "NCT07759115",
+          "NCT07768761",
+          "NCT07779460",
+          "NCT07840326",
+          "NCT07878923"
+        ],
+        "country": "United States",
+        "trial_count": 145
+      },
+      {
+        "citations": [
+          {
+            "nct_id": "NCT02883335",
+            "excerpt": "France",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Lorraine Registry of Multiple Sclerosis"
+          },
+          {
+            "nct_id": "NCT02912897",
+            "excerpt": "France",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Trial to Assess the Safety and Feasibility of Adoptive Cell Therapy with Autologous EBV-specific Cytotoxic T Lymphocytes (CTL) in Patients with a First Clinical Episode Highly Suggestive of Multiple Sclerosis"
+          },
+          {
+            "nct_id": "NCT03600779",
+            "excerpt": "France",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Application of ihMT MRI in Multiple Sclerosis"
+          },
+          {
+            "nct_id": "NCT03900221",
+            "excerpt": "France",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "French Registry for Monitoring Pregnancies for Multiple Sclerosis"
+          },
+          {
+            "nct_id": "NCT03910738",
+            "excerpt": "France",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "TOTEM RRMS : TestOsterone TreatmEnt on Neuroprotection and Myelin Repair in Relapsing Remitting Multiple Sclerosis"
+          }
+        ],
+        "nct_ids": [
+          "NCT02883335",
+          "NCT02912897",
+          "NCT03600779",
+          "NCT03900221",
+          "NCT03910738",
+          "NCT03974997",
+          "NCT04334031",
+          "NCT04573673",
+          "NCT04694534",
+          "NCT04798651",
+          "NCT04873492",
+          "NCT04906928",
+          "NCT05227092",
+          "NCT05258396",
+          "NCT05388331",
+          "NCT05482906",
+          "NCT05491031",
+          "NCT05633875",
+          "NCT05754593",
+          "NCT05758831",
+          "NCT05772637",
+          "NCT05776511",
+          "NCT05962177",
+          "NCT06161376",
+          "NCT06280742",
+          "NCT06426316",
+          "NCT06455332",
+          "NCT06589999",
+          "NCT06592703",
+          "NCT06675955",
+          "NCT06846281",
+          "NCT06920524",
+          "NCT07064291",
+          "NCT07108088",
+          "NCT07108920",
+          "NCT07135752",
+          "NCT07189325",
+          "NCT07202494",
+          "NCT07225504",
+          "NCT07252895",
+          "NCT07282574",
+          "NCT07289724",
+          "NCT07292480",
+          "NCT07299019",
+          "NCT07313462",
+          "NCT07388992",
+          "NCT07492667",
+          "NCT07625800"
+        ],
+        "country": "France",
+        "trial_count": 48
+      },
+      {
+        "citations": [
+          {
+            "nct_id": "NCT03217396",
+            "excerpt": "Italy",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Biomarkers of Synaptic Damage in Multiple Sclerosis"
+          },
+          {
+            "nct_id": "NCT03888924",
+            "excerpt": "Italy",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Bacille Calmette-Guérin (BCG) Vaccine In Radiologically Isolated Syndrome (RIS)"
+          },
+          {
+            "nct_id": "NCT04876339",
+            "excerpt": "Italy",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Sonification Techniques for Gait Training"
+          },
+          {
+            "nct_id": "NCT05493514",
+            "excerpt": "Italy",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Clinical and Instrumental Treatment's Predictors in Subjects With Neurological Diseases Using G-EO Robotic System"
+          },
+          {
+            "nct_id": "NCT05713890",
+            "excerpt": "Italy",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Home-based Action Observation Treatment With Virtual-reality for Arm Rehabilitation in People With Multiple Sclerosis"
+          }
+        ],
+        "nct_ids": [
+          "NCT03217396",
+          "NCT03888924",
+          "NCT04876339",
+          "NCT05493514",
+          "NCT05713890",
+          "NCT05748015",
+          "NCT05934188",
+          "NCT05983809",
+          "NCT06112639",
+          "NCT06164483",
+          "NCT06267781",
+          "NCT06343558",
+          "NCT06408259",
+          "NCT06685744",
+          "NCT06715436",
+          "NCT06718920",
+          "NCT06805318",
+          "NCT06820125",
+          "NCT06826638",
+          "NCT06846281",
+          "NCT06865274",
+          "NCT06964581",
+          "NCT07058870",
+          "NCT07058896",
+          "NCT07066137",
+          "NCT07067463",
+          "NCT07096700",
+          "NCT07114809",
+          "NCT07225504",
+          "NCT07282574",
+          "NCT07299019",
+          "NCT07325292",
+          "NCT07384143",
+          "NCT07505355",
+          "NCT07635693",
+          "NCT07720765"
+        ],
+        "country": "Italy",
+        "trial_count": 36
+      },
+      {
+        "citations": [
+          {
+            "nct_id": "NCT06408259",
+            "excerpt": "Turkey (Türkiye)",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Study to Evaluate the Effectiveness and Safety of Ozanimod Compared to Fingolimod in Children and Adolescents With Relapsing Remitting Multiple Sclerosis"
+          },
+          {
+            "nct_id": "NCT06546033",
+            "excerpt": "Turkey (Türkiye)",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Intermittent Fasting and Mediterranean Diet in Patient With Multiple Sclerosis"
+          },
+          {
+            "nct_id": "NCT06676618",
+            "excerpt": "Turkey (Türkiye)",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Effect of Multimodal Exercise Training in Patients With Multiple Sclerosis"
+          },
+          {
+            "nct_id": "NCT06777134",
+            "excerpt": "Turkey (Türkiye)",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Relationship Between Pelvic Floor Dysfunctions and Lower Limb Strength and Activation in MS Patients"
+          },
+          {
+            "nct_id": "NCT06849882",
+            "excerpt": "Turkey (Türkiye)",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Dubousset Functional Test: an Investigation of Its Validity and Reliability in Individuals with Multiple Sclerosis"
+          }
+        ],
+        "nct_ids": [
+          "NCT06408259",
+          "NCT06546033",
+          "NCT06676618",
+          "NCT06777134",
+          "NCT06849882",
+          "NCT06875908",
+          "NCT06949696",
+          "NCT07083856",
+          "NCT07116070",
+          "NCT07137624",
+          "NCT07151534",
+          "NCT07193823",
+          "NCT07230015",
+          "NCT07236684",
+          "NCT07282574",
+          "NCT07399262",
+          "NCT07451600",
+          "NCT07489794",
+          "NCT07507084",
+          "NCT07524231",
+          "NCT07536503",
+          "NCT07544303",
+          "NCT07549048",
+          "NCT07571304",
+          "NCT07648277",
+          "NCT07736482",
+          "NCT07766213",
+          "NCT07771868",
+          "NCT07788859",
+          "NCT07815990",
+          "NCT07893925"
+        ],
+        "country": "Turkey (Türkiye)",
+        "trial_count": 31
+      },
+      {
+        "citations": [
+          {
+            "nct_id": "NCT05010902",
+            "excerpt": "Germany",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Pregnancy Cohort in Multiple Sclerosis (MS)"
+          },
+          {
+            "nct_id": "NCT05170126",
+            "excerpt": "Germany",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "A Study on the Safety of Ozanimod Exposure in Pregnant Women and Their Offspring"
+          },
+          {
+            "nct_id": "NCT05344469",
+            "excerpt": "Germany",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "A NIS Evaluating Various Injectable and Oral Treatments in Patients With Relapsing Multiple Sclerosis"
+          },
+          {
+            "nct_id": "NCT05658497",
+            "excerpt": "Germany",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Pregnancy Exposure Registry for Vumerity (Diroximel Fumarate)"
+          },
+          {
+            "nct_id": "NCT06280755",
+            "excerpt": "Germany",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Clinical Impact Through AI-assisted MS Care - A Retrospective Multi-center Observational Study."
+          }
+        ],
+        "nct_ids": [
+          "NCT05010902",
+          "NCT05170126",
+          "NCT05344469",
+          "NCT05658497",
+          "NCT06280755",
+          "NCT06389968",
+          "NCT06461481",
+          "NCT06501950",
+          "NCT06586177",
+          "NCT06675955",
+          "NCT06780150",
+          "NCT06782490",
+          "NCT06846281",
+          "NCT06937723",
+          "NCT07067463",
+          "NCT07178431",
+          "NCT07183683",
+          "NCT07224373",
+          "NCT07225504",
+          "NCT07282574",
+          "NCT07299019",
+          "NCT07426991",
+          "NCT07438964"
+        ],
+        "country": "Germany",
+        "trial_count": 23
+      },
+      {
+        "citations": [
+          {
+            "nct_id": "NCT02142946",
+            "excerpt": "Switzerland",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Quantified Balance Measures During Stance and Gait: Multiple Sclerosis Patients. A Longitudinal Clinical Study"
+          },
+          {
+            "nct_id": "NCT02433028",
+            "excerpt": "Switzerland",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Swiss Multiple Sclerosis Cohort-Study"
+          },
+          {
+            "nct_id": "NCT02980640",
+            "excerpt": "Switzerland",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Swiss Multiple Sclerosis Registry"
+          },
+          {
+            "nct_id": "NCT04819737",
+            "excerpt": "Switzerland",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Spinal Cord Lesion Detection in Multiple Sclerosis Using Novel MRI Sequences"
+          },
+          {
+            "nct_id": "NCT05017142",
+            "excerpt": "Switzerland",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Swiss Pediatric Inflammatory Brain Disease Registry (Swiss-Ped-IBrainD)"
+          }
+        ],
+        "nct_ids": [
+          "NCT02142946",
+          "NCT02433028",
+          "NCT02980640",
+          "NCT04819737",
+          "NCT05017142",
+          "NCT05177523",
+          "NCT05357781",
+          "NCT05658497",
+          "NCT06062693",
+          "NCT06156683",
+          "NCT06221631",
+          "NCT06369766",
+          "NCT06526364",
+          "NCT06780150",
+          "NCT06846281",
+          "NCT07086950",
+          "NCT07225504",
+          "NCT07225868",
+          "NCT07256704",
+          "NCT07783074",
+          "NCT07805850",
+          "NCT07852156"
+        ],
+        "country": "Switzerland",
+        "trial_count": 22
+      },
+      {
+        "citations": [
+          {
+            "nct_id": "NCT04106830",
+            "excerpt": "China",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Clinical and Imaging Cohort of Neuroinflammation Diseases in China (CLUE)"
+          },
+          {
+            "nct_id": "NCT04561557",
+            "excerpt": "China",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Safety and Efficacy of CT103A Cells for Relapsed/Refractory Antibody-associated Inflammatory Diseases of the Nervous System"
+          },
+          {
+            "nct_id": "NCT06249438",
+            "excerpt": "China",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "A Study of C-CAR168 in the Treatment of Autoimmune Diseases Refractory to Standard Therapy"
+          },
+          {
+            "nct_id": "NCT06474520",
+            "excerpt": "China",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Efficacy and Safety of Calculus Bovis Sativus (CBS) for Idiopathic Inflammatory Demyelinating Disease (CBSinIIDD)"
+          },
+          {
+            "nct_id": "NCT06502015",
+            "excerpt": "China",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Biomarkers in Autoimmune Disease of Nervous System"
+          }
+        ],
+        "nct_ids": [
+          "NCT04106830",
+          "NCT04561557",
+          "NCT06249438",
+          "NCT06474520",
+          "NCT06502015",
+          "NCT06541626",
+          "NCT06939166",
+          "NCT06968039",
+          "NCT07087873",
+          "NCT07225504",
+          "NCT07303790",
+          "NCT07325292",
+          "NCT07337785",
+          "NCT07353216",
+          "NCT07526493",
+          "NCT07587125",
+          "NCT07653984",
+          "NCT07776743",
+          "NCT07827716"
+        ],
+        "country": "China",
+        "trial_count": 19
+      },
+      {
+        "citations": [
+          {
+            "nct_id": "NCT03783416",
+            "excerpt": "United Kingdom",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "SIZOMUS Safety of Ixazomib Targeting Plasma Cells in Multiple Sclerosis"
+          },
+          {
+            "nct_id": "NCT05123443",
+            "excerpt": "United Kingdom",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Longitudinal Assessment of Iron Rims in MS Lesions"
+          },
+          {
+            "nct_id": "NCT05418010",
+            "excerpt": "United Kingdom",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Natalizumab for the Treatment of People With Inflammatory Demyelination Suggestive of Multiple Sclerosis, or Definite Multiple Sclerosis, at First Presentation (AttackMS)"
+          },
+          {
+            "nct_id": "NCT05658497",
+            "excerpt": "United Kingdom",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Pregnancy Exposure Registry for Vumerity (Diroximel Fumarate)"
+          },
+          {
+            "nct_id": "NCT06195800",
+            "excerpt": "United Kingdom",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Identifying Immune Biomarkers of Disease and Disease Control in Autoimmune Neurological Disease Using Autologous Haematopoietic Stem Cell Transplantation"
+          }
+        ],
+        "nct_ids": [
+          "NCT03783416",
+          "NCT05123443",
+          "NCT05418010",
+          "NCT05658497",
+          "NCT06195800",
+          "NCT06433752",
+          "NCT06450418",
+          "NCT06728956",
+          "NCT06735248",
+          "NCT06846281",
+          "NCT07111637",
+          "NCT07139743",
+          "NCT07224373",
+          "NCT07225504",
+          "NCT07282574",
+          "NCT07303582",
+          "NCT07452562",
+          "NCT07689682",
+          "NCT07899502"
+        ],
+        "country": "United Kingdom",
+        "trial_count": 19
+      },
+      {
+        "citations": [
+          {
+            "nct_id": "NCT05658497",
+            "excerpt": "Spain",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Pregnancy Exposure Registry for Vumerity (Diroximel Fumarate)"
+          },
+          {
+            "nct_id": "NCT06408259",
+            "excerpt": "Spain",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Study to Evaluate the Effectiveness and Safety of Ozanimod Compared to Fingolimod in Children and Adolescents With Relapsing Remitting Multiple Sclerosis"
+          },
+          {
+            "nct_id": "NCT06735053",
+            "excerpt": "Spain",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Impact of Virtual Reality Physiotherapy on Multiple Sclerosis Patients"
+          },
+          {
+            "nct_id": "NCT06795230",
+            "excerpt": "Spain",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Blood Flow Restriction for Upper Limb Rehabilitation in People With Multiple Sclerosis. A Randomized Controlled Trial (BFRT-EM)"
+          },
+          {
+            "nct_id": "NCT06846281",
+            "excerpt": "Spain",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Efficacy and Safety of Remibrutinib After Switching From Ocrelizumab in Participants Living With Relapsing Multiple Sclerosis."
+          }
+        ],
+        "nct_ids": [
+          "NCT05658497",
+          "NCT06408259",
+          "NCT06735053",
+          "NCT06795230",
+          "NCT06846281",
+          "NCT06968676",
+          "NCT06986278",
+          "NCT07067463",
+          "NCT07139743",
+          "NCT07161258",
+          "NCT07168772",
+          "NCT07225504",
+          "NCT07282574",
+          "NCT07299019",
+          "NCT07310862",
+          "NCT07325292",
+          "NCT07505355",
+          "NCT07738120"
+        ],
+        "country": "Spain",
+        "trial_count": 18
+      },
+      {
+        "citations": [
+          {
+            "nct_id": "NCT03816345",
+            "excerpt": "Canada",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Testing an Immunotherapy Anti-cancer Drug, Nivolumab, for Advanced Cancers in Patients With Autoimmune Disorders, AIM-NIVO"
+          },
+          {
+            "nct_id": "NCT04121468",
+            "excerpt": "Canada",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "A Phase I Double Blind Study of Metformin Acting on Endogenous Neural Progenitor Cells in Children and Young Adults With Multiple Sclerosis"
+          },
+          {
+            "nct_id": "NCT05061953",
+            "excerpt": "Canada",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Development of a Novel Functional Eye-Tracking Software Application for Multiple Sclerosis"
+          },
+          {
+            "nct_id": "NCT05092191",
+            "excerpt": "Canada",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Cannabis as a Complementary Treatment in Multiple Sclerosis"
+          },
+          {
+            "nct_id": "NCT05347875",
+            "excerpt": "Canada",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Implementation of an App-based Walking Aid Skills Training Program"
+          }
+        ],
+        "nct_ids": [
+          "NCT03816345",
+          "NCT04121468",
+          "NCT05061953",
+          "NCT05092191",
+          "NCT05347875",
+          "NCT05451251",
+          "NCT06261489",
+          "NCT06461741",
+          "NCT06733922",
+          "NCT06782490",
+          "NCT06846281",
+          "NCT07159789",
+          "NCT07174973",
+          "NCT07224373",
+          "NCT07225504",
+          "NCT07304154"
+        ],
+        "country": "Canada",
+        "trial_count": 16
+      },
+      {
+        "citations": [
+          {
+            "nct_id": "NCT05620940",
+            "excerpt": "Australia",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "A Clinical Trial to Assess Pharmacokinetic Profiles, Safety and Tolerability of IVL3004 and IVL4002 in Healthy Male Subjects."
+          },
+          {
+            "nct_id": "NCT05658497",
+            "excerpt": "Australia",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Pregnancy Exposure Registry for Vumerity (Diroximel Fumarate)"
+          },
+          {
+            "nct_id": "NCT06408259",
+            "excerpt": "Australia",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Study to Evaluate the Effectiveness and Safety of Ozanimod Compared to Fingolimod in Children and Adolescents With Relapsing Remitting Multiple Sclerosis"
+          },
+          {
+            "nct_id": "NCT06735248",
+            "excerpt": "Australia",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "A Study to Investigate Multiple Sclerosis Relapse Prevention With mRNA-1195 Compared With Placebo in Participants Aged 18 to ≤55 Years"
+          },
+          {
+            "nct_id": "NCT06782490",
+            "excerpt": "Australia",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "A Study to Evaluate the Efficacy, Safety and Tolerability of BMS-986368 in Participants With Multiple Sclerosis Spasticity"
+          }
+        ],
+        "nct_ids": [
+          "NCT05620940",
+          "NCT05658497",
+          "NCT06408259",
+          "NCT06735248",
+          "NCT06782490",
+          "NCT06846281",
+          "NCT07067463",
+          "NCT07085507",
+          "NCT07224373",
+          "NCT07225504",
+          "NCT07282574",
+          "NCT07299019",
+          "NCT07304154",
+          "NCT07826689"
+        ],
+        "country": "Australia",
+        "trial_count": 14
+      },
+      {
+        "citations": [
+          {
+            "nct_id": "NCT05877963",
+            "excerpt": "Poland",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Study to Evaluate Safety, Efficacy and Pharmacokinetics (PK) of a Modified Regimen of Ublituximab"
+          },
+          {
+            "nct_id": "NCT05906992",
+            "excerpt": "Poland",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "A Study to Compare Efficacy, Pharmacokinetics, Pharmacodynamics and Safety of CT-P53 and Ocrevus in Patients With Relapsing-remitting Multiple Sclerosis"
+          },
+          {
+            "nct_id": "NCT05961644",
+            "excerpt": "Poland",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Cladribine vs Placebo for Non-active Progressive Multiple Sclerosis (CLASP-MS)."
+          },
+          {
+            "nct_id": "NCT06408259",
+            "excerpt": "Poland",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Study to Evaluate the Effectiveness and Safety of Ozanimod Compared to Fingolimod in Children and Adolescents With Relapsing Remitting Multiple Sclerosis"
+          },
+          {
+            "nct_id": "NCT06668649",
+            "excerpt": "Poland",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Polish Version Fatigue Severity Scale"
+          }
+        ],
+        "nct_ids": [
+          "NCT05877963",
+          "NCT05906992",
+          "NCT05961644",
+          "NCT06408259",
+          "NCT06668649",
+          "NCT06782490",
+          "NCT07067463",
+          "NCT07161258",
+          "NCT07220252",
+          "NCT07225504",
+          "NCT07282574",
+          "NCT07299019",
+          "NCT07503873"
+        ],
+        "country": "Poland",
+        "trial_count": 13
+      },
+      {
+        "citations": [
+          {
+            "nct_id": "NCT05380856",
+            "excerpt": "Denmark",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Sacral Neuromodulation for Neurogenic Lower Urinary Tract, Bowel and Sexual Dysfunction"
+          },
+          {
+            "nct_id": "NCT06374108",
+            "excerpt": "Denmark",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Resistance Training and Corticospinal Excitability in Multiple Sclerosis"
+          },
+          {
+            "nct_id": "NCT06569550",
+            "excerpt": "Denmark",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Fatigue Alleviation Through Neuromodulating Therapy in Multiple Sclerosis"
+          },
+          {
+            "nct_id": "NCT06782724",
+            "excerpt": "Denmark",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Psilocybin Therapy for Psychological Distress in Palliative Patients"
+          },
+          {
+            "nct_id": "NCT06846281",
+            "excerpt": "Denmark",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Efficacy and Safety of Remibrutinib After Switching From Ocrelizumab in Participants Living With Relapsing Multiple Sclerosis."
+          }
+        ],
+        "nct_ids": [
+          "NCT05380856",
+          "NCT06374108",
+          "NCT06569550",
+          "NCT06782724",
+          "NCT06846281",
+          "NCT06956326",
+          "NCT07202195",
+          "NCT07225504",
+          "NCT07304375",
+          "NCT07318129",
+          "NCT07342777"
+        ],
+        "country": "Denmark",
+        "trial_count": 11
+      },
+      {
+        "citations": [
+          {
+            "nct_id": "NCT05072691",
+            "excerpt": "Belgium",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Prognostic Value of Cerebrospinal Fluid Immunoglobulin Free Light Chains in Patients With Multiple Sclerosis"
+          },
+          {
+            "nct_id": "NCT05355389",
+            "excerpt": "Belgium",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Cognitive-motor Telerehabilitation in MS"
+          },
+          {
+            "nct_id": "NCT06846281",
+            "excerpt": "Belgium",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Efficacy and Safety of Remibrutinib After Switching From Ocrelizumab in Participants Living With Relapsing Multiple Sclerosis."
+          },
+          {
+            "nct_id": "NCT07033975",
+            "excerpt": "Belgium",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "A Specialized Diet for Multiple Sclerosis"
+          },
+          {
+            "nct_id": "NCT07202195",
+            "excerpt": "Belgium",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "At Home Use of Stimulation Suits for Managing MS Symptoms"
+          }
+        ],
+        "nct_ids": [
+          "NCT05072691",
+          "NCT05355389",
+          "NCT06846281",
+          "NCT07033975",
+          "NCT07202195",
+          "NCT07225504",
+          "NCT07299019",
+          "NCT07325292",
+          "NCT07505355",
+          "NCT07580820"
+        ],
+        "country": "Belgium",
+        "trial_count": 10
+      },
+      {
+        "citations": [
+          {
+            "nct_id": "NCT06218927",
+            "excerpt": "Czechia",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "The Effect of Autologous Hematopoietic Stem Cell Transplantation on the Lower Urinary Tract Function Related to QoL in MS Patients"
+          },
+          {
+            "nct_id": "NCT06280755",
+            "excerpt": "Czechia",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Clinical Impact Through AI-assisted MS Care - A Retrospective Multi-center Observational Study."
+          },
+          {
+            "nct_id": "NCT06782490",
+            "excerpt": "Czechia",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "A Study to Evaluate the Efficacy, Safety and Tolerability of BMS-986368 in Participants With Multiple Sclerosis Spasticity"
+          },
+          {
+            "nct_id": "NCT06782724",
+            "excerpt": "Czechia",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Psilocybin Therapy for Psychological Distress in Palliative Patients"
+          },
+          {
+            "nct_id": "NCT06846281",
+            "excerpt": "Czechia",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Efficacy and Safety of Remibrutinib After Switching From Ocrelizumab in Participants Living With Relapsing Multiple Sclerosis."
+          }
+        ],
+        "nct_ids": [
+          "NCT06218927",
+          "NCT06280755",
+          "NCT06782490",
+          "NCT06782724",
+          "NCT06846281",
+          "NCT07067463",
+          "NCT07225504",
+          "NCT07299019",
+          "NCT07360886",
+          "NCT07827586"
+        ],
+        "country": "Czechia",
+        "trial_count": 10
+      },
+      {
+        "citations": [
+          {
+            "nct_id": "NCT05834855",
+            "excerpt": "Netherlands",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Non-inferiority Study of Rituximab Compared to Ocrelizumab in Relapsing MS"
+          },
+          {
+            "nct_id": "NCT06016309",
+            "excerpt": "Netherlands",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "The MS-CEBA Study: Determining Cognitive, Energetic, Behavioural and Affective (CEBA) Profiles in Multiple Sclerosis"
+          },
+          {
+            "nct_id": "NCT06068582",
+            "excerpt": "Netherlands",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Don't be Late! Postponing Cognitive Decline and Preventing Early Unemployment in People With Multiple Sclerosis"
+          },
+          {
+            "nct_id": "NCT06567197",
+            "excerpt": "Netherlands",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Multiple Sclerosis Treatment With Autologous Hematopoietic Stem Cell Transplantation in the Netherlands"
+          },
+          {
+            "nct_id": "NCT06782724",
+            "excerpt": "Netherlands",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Psilocybin Therapy for Psychological Distress in Palliative Patients"
+          }
+        ],
+        "nct_ids": [
+          "NCT05834855",
+          "NCT06016309",
+          "NCT06068582",
+          "NCT06567197",
+          "NCT06782724",
+          "NCT06827834",
+          "NCT07067463",
+          "NCT07225504",
+          "NCT07225868"
+        ],
+        "country": "Netherlands",
+        "trial_count": 9
+      },
+      {
+        "citations": [
+          {
+            "nct_id": "NCT05809986",
+            "excerpt": "Portugal",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Ofatumumab in Portuguese Multiple Sclerosis Patients - an Observational Study"
+          },
+          {
+            "nct_id": "NCT06408259",
+            "excerpt": "Portugal",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Study to Evaluate the Effectiveness and Safety of Ozanimod Compared to Fingolimod in Children and Adolescents With Relapsing Remitting Multiple Sclerosis"
+          },
+          {
+            "nct_id": "NCT06592352",
+            "excerpt": "Portugal",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "MODAFIMS: A Trial to Evaluate Predictors of Response to MODAFinil in Patients With Multiple Sclerosis"
+          },
+          {
+            "nct_id": "NCT06723444",
+            "excerpt": "Portugal",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Improving Learning and Memory in Portuguese Patients With Multiple Sclerosis"
+          },
+          {
+            "nct_id": "NCT06782724",
+            "excerpt": "Portugal",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Psilocybin Therapy for Psychological Distress in Palliative Patients"
+          }
+        ],
+        "nct_ids": [
+          "NCT05809986",
+          "NCT06408259",
+          "NCT06592352",
+          "NCT06723444",
+          "NCT06782724",
+          "NCT06846281",
+          "NCT07161258",
+          "NCT07225504",
+          "NCT07282574"
+        ],
+        "country": "Portugal",
+        "trial_count": 9
+      },
+      {
+        "citations": [
+          {
+            "nct_id": "NCT04237675",
+            "excerpt": "Greece",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Postoperative Relapses in MS Patients"
+          },
+          {
+            "nct_id": "NCT05003388",
+            "excerpt": "Greece",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Safety of Cultured Allogeneic Adult Umbilical Cord or Placental Derived Mesenchymal Stem Cell Intravenous Infusion for MS"
+          },
+          {
+            "nct_id": "NCT06486779",
+            "excerpt": "Greece",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Kesimpta (Ofatumumab) in Greek Multiple Sclerosis Patients - an Observational Study"
+          },
+          {
+            "nct_id": "NCT06846281",
+            "excerpt": "Greece",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Efficacy and Safety of Remibrutinib After Switching From Ocrelizumab in Participants Living With Relapsing Multiple Sclerosis."
+          },
+          {
+            "nct_id": "NCT07225504",
+            "excerpt": "Greece",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "A Study to Evaluate the Efficacy and Safety of Remibrutinib in Secondary Progressive Multiple Sclerosis"
+          }
+        ],
+        "nct_ids": [
+          "NCT04237675",
+          "NCT05003388",
+          "NCT06486779",
+          "NCT06846281",
+          "NCT07225504",
+          "NCT07299019",
+          "NCT07630311"
+        ],
+        "country": "Greece",
+        "trial_count": 7
+      },
+      {
+        "citations": [
+          {
+            "nct_id": "NCT06408259",
+            "excerpt": "Puerto Rico",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Study to Evaluate the Effectiveness and Safety of Ozanimod Compared to Fingolimod in Children and Adolescents With Relapsing Remitting Multiple Sclerosis"
+          },
+          {
+            "nct_id": "NCT06433752",
+            "excerpt": "Puerto Rico",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "A Study Evaluating the Real World Experience of Participants Treated With BRIUMVI® (Ublituximab-xiiy) for Relapsing Multiple Sclerosis (RMS)"
+          },
+          {
+            "nct_id": "NCT06782490",
+            "excerpt": "Puerto Rico",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "A Study to Evaluate the Efficacy, Safety and Tolerability of BMS-986368 in Participants With Multiple Sclerosis Spasticity"
+          },
+          {
+            "nct_id": "NCT07067463",
+            "excerpt": "Puerto Rico",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "A Study of Orelabrutinib in Patients With Primary Progressive Multiple Sclerosis"
+          },
+          {
+            "nct_id": "NCT07299019",
+            "excerpt": "Puerto Rico",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "A Study of Orelabrutinib in Patients With Secondary Progressive Multiple Sclerosis"
+          }
+        ],
+        "nct_ids": [
+          "NCT06408259",
+          "NCT06433752",
+          "NCT06782490",
+          "NCT07067463",
+          "NCT07299019",
+          "NCT07609719"
+        ],
+        "country": "Puerto Rico",
+        "trial_count": 6
+      },
+      {
+        "citations": [
+          {
+            "nct_id": "NCT05819008",
+            "excerpt": "Sweden",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Remote Neuropsychological Assessment of Patients With Neurological Disorders and Injuries"
+          },
+          {
+            "nct_id": "NCT05901259",
+            "excerpt": "Sweden",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "The EXOPULSE Study - a Database for Routine Follow-up of Clinical Outcomes"
+          },
+          {
+            "nct_id": "NCT06312046",
+            "excerpt": "Sweden",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Motor-cognitive Performance in People With Multiple Sclerosis"
+          },
+          {
+            "nct_id": "NCT07225504",
+            "excerpt": "Sweden",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "A Study to Evaluate the Efficacy and Safety of Remibrutinib in Secondary Progressive Multiple Sclerosis"
+          },
+          {
+            "nct_id": "NCT07380295",
+            "excerpt": "Sweden",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Improving Workforce Participation and Well-Being in Individuals With Multiple Sclerosis - A Feasability Study"
+          }
+        ],
+        "nct_ids": [
+          "NCT05819008",
+          "NCT05901259",
+          "NCT06312046",
+          "NCT07225504",
+          "NCT07380295",
+          "NCT07517185"
+        ],
+        "country": "Sweden",
+        "trial_count": 6
+      },
+      {
+        "citations": [
+          {
+            "nct_id": "NCT06846281",
+            "excerpt": "Brazil",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Efficacy and Safety of Remibrutinib After Switching From Ocrelizumab in Participants Living With Relapsing Multiple Sclerosis."
+          },
+          {
+            "nct_id": "NCT07161258",
+            "excerpt": "Brazil",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "A Pharmacokinetics (PK), Pharmacodynamics (PD), Safety and Tolerability Study of Fenebrutinib in Children and Adolescents With Relapsing Multiple Sclerosis (RMS)"
+          },
+          {
+            "nct_id": "NCT07225504",
+            "excerpt": "Brazil",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "A Study to Evaluate the Efficacy and Safety of Remibrutinib in Secondary Progressive Multiple Sclerosis"
+          },
+          {
+            "nct_id": "NCT07282574",
+            "excerpt": "Brazil",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "A Study to Evaluate the Safety, Pharmacokinetics, Pharmacodynamics, and Efficacy of RO7268489 as Add-on Therapy to Ocrelizumab, in Participants With Progressive Forms of Multiple Sclerosis (MS)"
+          },
+          {
+            "nct_id": "NCT07325292",
+            "excerpt": "Brazil",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Non-inferiority Study of Frexalimab Subcutaneous Administration Compared to Intravenous Administration in Adult Participants With Multiple Sclerosis"
+          }
+        ],
+        "nct_ids": [
+          "NCT06846281",
+          "NCT07161258",
+          "NCT07225504",
+          "NCT07282574",
+          "NCT07325292"
+        ],
+        "country": "Brazil",
+        "trial_count": 5
+      },
+      {
+        "citations": [
+          {
+            "nct_id": "NCT06675955",
+            "excerpt": "Ukraine",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "An Extension Study to Assess Impact of Multiple Sclerosis (MS) on Physical Function and Provide Continued Ocrelizumab Treatment"
+          },
+          {
+            "nct_id": "NCT07067463",
+            "excerpt": "Ukraine",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "A Study of Orelabrutinib in Patients With Primary Progressive Multiple Sclerosis"
+          },
+          {
+            "nct_id": "NCT07161258",
+            "excerpt": "Ukraine",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "A Pharmacokinetics (PK), Pharmacodynamics (PD), Safety and Tolerability Study of Fenebrutinib in Children and Adolescents With Relapsing Multiple Sclerosis (RMS)"
+          },
+          {
+            "nct_id": "NCT07299019",
+            "excerpt": "Ukraine",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "A Study of Orelabrutinib in Patients With Secondary Progressive Multiple Sclerosis"
+          },
+          {
+            "nct_id": "NCT07503873",
+            "excerpt": "Ukraine",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "A Study to Evaluate Pharmacokinetics (PK) and Safety of Subcutaneous (SC) Ublituximab Administered at Various Injection Sites and Relative Bioavailability Via Autoinjector (AI) Versus Syringe Subcutaneously in Participants With Multiple Sclerosis (MS)"
+          }
+        ],
+        "nct_ids": [
+          "NCT06675955",
+          "NCT07067463",
+          "NCT07161258",
+          "NCT07299019",
+          "NCT07503873"
+        ],
+        "country": "Ukraine",
+        "trial_count": 5
+      },
+      {
+        "citations": [
+          {
+            "nct_id": "NCT06675955",
+            "excerpt": "Bulgaria",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "An Extension Study to Assess Impact of Multiple Sclerosis (MS) on Physical Function and Provide Continued Ocrelizumab Treatment"
+          },
+          {
+            "nct_id": "NCT07067463",
+            "excerpt": "Bulgaria",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "A Study of Orelabrutinib in Patients With Primary Progressive Multiple Sclerosis"
+          },
+          {
+            "nct_id": "NCT07225504",
+            "excerpt": "Bulgaria",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "A Study to Evaluate the Efficacy and Safety of Remibrutinib in Secondary Progressive Multiple Sclerosis"
+          },
+          {
+            "nct_id": "NCT07299019",
+            "excerpt": "Bulgaria",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "A Study of Orelabrutinib in Patients With Secondary Progressive Multiple Sclerosis"
+          }
+        ],
+        "nct_ids": [
+          "NCT06675955",
+          "NCT07067463",
+          "NCT07225504",
+          "NCT07299019"
+        ],
+        "country": "Bulgaria",
+        "trial_count": 4
+      },
+      {
+        "citations": [
+          {
+            "nct_id": "NCT04604041",
+            "excerpt": "Croatia",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Investigation of Subclinical Markers of Multiple Sclerosis"
+          },
+          {
+            "nct_id": "NCT07067463",
+            "excerpt": "Croatia",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "A Study of Orelabrutinib in Patients With Primary Progressive Multiple Sclerosis"
+          },
+          {
+            "nct_id": "NCT07225504",
+            "excerpt": "Croatia",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "A Study to Evaluate the Efficacy and Safety of Remibrutinib in Secondary Progressive Multiple Sclerosis"
+          },
+          {
+            "nct_id": "NCT07299019",
+            "excerpt": "Croatia",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "A Study of Orelabrutinib in Patients With Secondary Progressive Multiple Sclerosis"
+          }
+        ],
+        "nct_ids": [
+          "NCT04604041",
+          "NCT07067463",
+          "NCT07225504",
+          "NCT07299019"
+        ],
+        "country": "Croatia",
+        "trial_count": 4
+      },
+      {
+        "citations": [
+          {
+            "nct_id": "NCT07225504",
+            "excerpt": "Hungary",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "A Study to Evaluate the Efficacy and Safety of Remibrutinib in Secondary Progressive Multiple Sclerosis"
+          },
+          {
+            "nct_id": "NCT07282574",
+            "excerpt": "Hungary",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "A Study to Evaluate the Safety, Pharmacokinetics, Pharmacodynamics, and Efficacy of RO7268489 as Add-on Therapy to Ocrelizumab, in Participants With Progressive Forms of Multiple Sclerosis (MS)"
+          },
+          {
+            "nct_id": "NCT07299019",
+            "excerpt": "Hungary",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "A Study of Orelabrutinib in Patients With Secondary Progressive Multiple Sclerosis"
+          },
+          {
+            "nct_id": "NCT07333222",
+            "excerpt": "Hungary",
+            "field": "protocolSection.contactsLocationsModule.locations.country",
+            "title": "Functional and Quality of Life Effects of the Mollii Neuromodulatory Suit in Patients With Stroke and Multiple Sclerosis"
+          }
+        ],
+        "nct_ids": [
+          "NCT07225504",
+          "NCT07282574",
+          "NCT07299019",
+          "NCT07333222"
+        ],
+        "country": "Hungary",
+        "trial_count": 4
+      }
+    ]
+  },
+  "meta": {
+    "source": "clinicaltrials.gov",
+    "interpretation": "Multiple sclerosis: all study types for multiple sclerosis; status RECRUITING.",
+    "request_filters": {},
+    "filters_applied": {
+      "steps": [
+        {
+          "label": "Multiple sclerosis",
+          "endpoint": "studies",
+          "params": {
+            "query.cond": "\"multiple sclerosis\"",
+            "filter.overallStatus": "RECRUITING"
+          },
+          "intent": {
+            "conditions": [
+              "multiple sclerosis"
+            ],
+            "statuses": [
+              "RECRUITING"
+            ]
+          }
+        }
+      ]
+    },
+    "assumptions": [
+      "Counts are distinct trials.",
+      "A trial can have several values of country, so counts can sum to more than the trials."
+    ],
+    "warnings": [
+      "Showing the top 25 values of country; 31 smaller categories are left out."
+    ],
+    "total_trials_matched": 382,
+    "trials_analyzed": 382,
+    "units": {
+      "trial_count": "trials"
+    },
+    "data_as_of": "2026-11-06T10:00:05",
+    "api_version": "2.0.5",
+    "chain": [
+      {
+        "fetch": 1,
+        "rationale": "Recruiting trials for multiple sclerosis, to identify which countries have the most trial sites.",
+        "searches": [
+          {
+            "label": "Multiple sclerosis",
+            "endpoint": "studies",
+            "params": {
+              "query.cond": "\"multiple sclerosis\"",
+              "filter.overallStatus": "RECRUITING"
+            },
+            "intent": {
+              "conditions": [
+                "multiple sclerosis"
+              ],
+              "statuses": [
+                "RECRUITING"
+              ]
+            }
+          }
+        ],
+        "status": "ok",
+        "total_trials_matched": 382,
+        "error": null,
+        "charted": true,
+        "output_dir": "fetch-1"
+      }
+    ],
+    "metrics": {
+      "seconds_total": 5.62,
+      "seconds_fetching": 0.61,
+      "seconds_building": 0.0,
+      "model_turns": 4,
+      "input_tokens": 28316,
+      "output_tokens": 148,
+      "tool_calls": {
+        "fetch_data": 1,
+        "describe_data": 1,
+        "load_skill": 1,
+        "final_result_ChartPlan": 1
+      },
+      "sent_back": 0,
+      "fetches": 1,
+      "failed_fetches": 0
+    },
+    "generated_at": "2026-11-08T05:13:09.348812Z"
+  },
+  "vega_lite": {
+    "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+    "title": "Countries with the most recruiting multiple sclerosis trials",
+    "width": "container",
+    "data": {
+      "values": [
+        {
+          "country": "United States",
+          "trial_count": 145,
+          "_row": 0
+        },
+        {
+          "country": "France",
+          "trial_count": 48,
+          "_row": 1
+        },
+        {
+          "country": "Italy",
+          "trial_count": 36,
+          "_row": 2
+        },
+        {
+          "country": "Turkey (Türkiye)",
+          "trial_count": 31,
+          "_row": 3
+        },
+        {
+          "country": "Germany",
+          "trial_count": 23,
+          "_row": 4
+        },
+        {
+          "country": "Switzerland",
+          "trial_count": 22,
+          "_row": 5
+        },
+        {
+          "country": "China",
+          "trial_count": 19,
+          "_row": 6
+        },
+        {
+          "country": "United Kingdom",
+          "trial_count": 19,
+          "_row": 7
+        },
+        {
+          "country": "Spain",
+          "trial_count": 18,
+          "_row": 8
+        },
+        {
+          "country": "Canada",
+          "trial_count": 16,
+          "_row": 9
+        },
+        {
+          "country": "Australia",
+          "trial_count": 14,
+          "_row": 10
+        },
+        {
+          "country": "Poland",
+          "trial_count": 13,
+          "_row": 11
+        },
+        {
+          "country": "Denmark",
+          "trial_count": 11,
+          "_row": 12
+        },
+        {
+          "country": "Belgium",
+          "trial_count": 10,
+          "_row": 13
+        },
+        {
+          "country": "Czechia",
+          "trial_count": 10,
+          "_row": 14
+        },
+        {
+          "country": "Netherlands",
+          "trial_count": 9,
+          "_row": 15
+        },
+        {
+          "country": "Portugal",
+          "trial_count": 9,
+          "_row": 16
+        },
+        {
+          "country": "Greece",
+          "trial_count": 7,
+          "_row": 17
+        },
+        {
+          "country": "Puerto Rico",
+          "trial_count": 6,
+          "_row": 18
+        },
+        {
+          "country": "Sweden",
+          "trial_count": 6,
+          "_row": 19
+        },
+        {
+          "country": "Brazil",
+          "trial_count": 5,
+          "_row": 20
+        },
+        {
+          "country": "Ukraine",
+          "trial_count": 5,
+          "_row": 21
+        },
+        {
+          "country": "Bulgaria",
+          "trial_count": 4,
+          "_row": 22
+        },
+        {
+          "country": "Croatia",
+          "trial_count": 4,
+          "_row": 23
+        },
+        {
+          "country": "Hungary",
+          "trial_count": 4,
+          "_row": 24
+        }
+      ]
+    },
+    "mark": "bar",
+    "encoding": {
+      "x": {
+        "field": "country",
+        "type": "nominal",
+        "title": "Country",
+        "sort": "-y"
+      },
+      "y": {
+        "field": "trial_count",
+        "type": "quantitative",
+        "title": "Trials"
+      },
+      "tooltip": [
+        {
+          "field": "country",
+          "type": "nominal"
+        },
+        {
+          "field": "trial_count",
+          "type": "quantitative"
+        }
+      ]
+    }
+  }
+}

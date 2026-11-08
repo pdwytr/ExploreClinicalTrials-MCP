@@ -10,7 +10,7 @@ Code rejects a plan that breaks a rule below and sends back the reason.
 | `time_series` | Trials per year | `x: start_year` or `completion_year`, the same date the search period used; at least 2 years with data; optional `series` |
 | `histogram` | Spread of enrollment | `x: enrollment`, no `series`. Code bins it into ordered ranges ("0–49" … "10,000+") |
 | `network_graph` | Values that share trials | `x` and `series` = the node kinds, may be the same field (see `networks.md`) |
-| `scatter_plot` | One point per trial: how two numbers relate | `x` and `y` = `enrollment` and `duration_months` (either way round); optional category `series` colors the points; more than 2,000 points are thinned to an even sample |
+| `scatter_plot` | One point per trial: how two numbers relate | `x` and `y` = `enrollment` and `duration_months` (either way round); optional category `series` colors the points; more than 1,000 points are thinned to an even sample |
 
 ## Rules for every plan
 

@@ -259,7 +259,8 @@ async function render(result) {
     const view = await vegaEmbed("#chart", result.vega_lite, { actions: { export: true, source: false, compiled: false, editor: true } });
     view.view.addEventListener("click", (_event, item) => {
       const datum = item && item.datum;
-      if (datum && datum.citations) showCitations(labelFor(datum, result.visualization.encoding), datum.citations, datum.trial_count ?? 1);
+      const row = datum && datum._row != null ? result.visualization.data[datum._row] : null;  // sources live there
+      if (row) showCitations(labelFor(datum, result.visualization.encoding), row.citations || [], datum.trial_count ?? 1);
     });
   }
 }
@@ -284,7 +285,9 @@ function showCitations(title, citations, total) {
   const byTrial = new Map();
   for (const c of citations) {
     if (!byTrial.has(c.nct_id)) byTrial.set(c.nct_id, { title: c.title, quotes: [] });
-    byTrial.get(c.nct_id).quotes.push(c);
+    const t = byTrial.get(c.nct_id);
+    t.title = t.title || c.title;
+    t.quotes.push(c);
   }
   const shown = byTrial.size;
   const all = Math.max(total || 0, shown);

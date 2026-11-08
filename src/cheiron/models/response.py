@@ -64,7 +64,8 @@ class Citation(BaseModel):
     )
     title: str | None = Field(
         default=None,
-        description="The trial's brief title, exactly as in the API (protocolSection.identificationModule.briefTitle).",
+        description="The trial's brief title, exactly as in the API (protocolSection.identificationModule.briefTitle). "
+        "Given once per trial within a data point: later citations of the same trial leave it out.",
     )
 
 

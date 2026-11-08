@@ -53,7 +53,7 @@ def test_generated_spec_is_valid_vega_lite(chart_type):
     )
     spec = resp.vega_lite
     alt.Chart.from_dict(spec, validate=True)  # raises if the spec breaks the Vega-Lite schema
-    assert spec["data"]["values"][0] == resp.visualization.data[0].model_dump(mode="json", exclude={"nct_ids"})
+    assert spec["data"]["values"][0] == resp.visualization.data[0].model_dump(mode="json", exclude={"nct_ids", "citations"}) | {"_row": 0}
 
 
 def test_response_json_includes_vega_lite():

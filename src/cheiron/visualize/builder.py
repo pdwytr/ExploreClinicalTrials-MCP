@@ -334,7 +334,7 @@ def _histogram(pairs: list[Pair], plan: ChartPlan) -> ChartVisualization:
     return ChartVisualization(type="histogram", intent=plan.intent, title=plan.title, encoding=encoding, data=rows)
 
 
-SCATTER_MAX_POINTS = 2000
+SCATTER_MAX_POINTS = 1000  # enough to show the pattern; each point carries 3 cited values
 _NUMBER: dict[Dimension, Callable[[Trial], float | None]] = {
     Dimension.ENROLLMENT: lambda t: t.enrollment,
     Dimension.DURATION: lambda t: t.duration_months,
@@ -386,7 +386,8 @@ def _scatter(pairs: list[Pair], plan: ChartPlan) -> tuple[ChartVisualization, li
         row = {plan.x.value: x, plan.y.value: y, "nct_ids": [t.nct_id]}
         if plan.series:
             row[plan.series.value] = s
-        row["citations"] = _number_citations(plan.x, t) + _number_citations(plan.y, t)
+        cited = _number_citations(plan.x, t) + _number_citations(plan.y, t)
+        row["citations"] = [c if i == 0 else c.model_copy(update={"title": None}) for i, c in enumerate(cited)]  # title once
         rows.append(row)
     def axis(dim: Dimension) -> dict:
         # enrollment spans 1 to tens of millions (registries): on a linear axis every trial is a dot at 0
