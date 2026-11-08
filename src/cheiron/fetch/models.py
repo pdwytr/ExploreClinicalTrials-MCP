@@ -52,6 +52,12 @@ DEFAULT_FIELDS = [
     "InterventionType",
     "LocationCountry",
     "EnrollmentCount",
+    "StudyType",
+    "DesignAllocation",
+    "DesignMasking",
+    "DesignPrimaryPurpose",
+    "PrimaryCompletionDate",
+    "PrimaryCompletionDateType",
     "ConditionMeshTerm",  # the registry's standard (MeSH) names, used to resolve brands and spellings
     "InterventionMeshTerm",
 ]
@@ -165,6 +171,7 @@ class IdentificationModule(_Raw):
 class StatusModule(_Raw):
     overall_status: str | None = None
     start_date_struct: DateStruct | None = None
+    primary_completion_date_struct: DateStruct | None = None
     completion_date_struct: DateStruct | None = None
 
 
@@ -185,8 +192,20 @@ class EnrollmentInfo(_Raw):
     count: int | None = None
 
 
+class MaskingInfo(_Raw):
+    masking: str | None = None  # NONE, SINGLE, DOUBLE, TRIPLE, QUADRUPLE
+
+
+class DesignInfo(_Raw):
+    allocation: str | None = None  # RANDOMIZED, NON_RANDOMIZED, NA
+    primary_purpose: str | None = None  # TREATMENT, PREVENTION, ...
+    masking_info: MaskingInfo | None = None
+
+
 class DesignModule(_Raw):
+    study_type: str | None = None  # INTERVENTIONAL, OBSERVATIONAL, EXPANDED_ACCESS
     phases: list[str] = Field(default_factory=list)  # kept as strings: unknown values must not crash parsing
+    design_info: DesignInfo | None = None
     enrollment_info: EnrollmentInfo | None = None
 
 
@@ -262,9 +281,16 @@ class Trial(BaseModel):
     start_date: date | None = None
     start_date_text: str | None = None  # the registry's own text ("2018-03"), quoted by citations
     start_date_type: str | None = None  # ACTUAL or ESTIMATED
+    primary_completion_date: date | None = None  # last participant's primary-outcome data: ends a trial's duration
+    primary_completion_date_text: str | None = None
+    primary_completion_date_type: str | None = None
     completion_date: date | None = None
     completion_date_text: str | None = None
     completion_date_type: str | None = None
+    study_type: str | None = None
+    allocation: str | None = None
+    masking: str | None = None
+    primary_purpose: str | None = None
     phases: list[str] = Field(default_factory=list)
     lead_sponsor: str | None = None
     sponsor_class: str | None = None
@@ -288,12 +314,12 @@ class Trial(BaseModel):
     def keep_date_text(cls, data):
         """Remember each date exactly as the registry wrote it before it is parsed (and maybe padded)."""
         if isinstance(data, dict):
-            for name in ("start_date", "completion_date"):
+            for name in ("start_date", "primary_completion_date", "completion_date"):
                 if isinstance(data.get(name), str) and not data.get(f"{name}_text"):
                     data = {**data, f"{name}_text": data[name]}
         return data
 
-    @field_validator("start_date", "completion_date", mode="before")
+    @field_validator("start_date", "primary_completion_date", "completion_date", mode="before")
     @classmethod
     def parse_partial_date(cls, value):
         """The API mixes full dates with year-month ("2021-11"); the latter becomes the 1st of the month."""
@@ -320,8 +346,14 @@ class Trial(BaseModel):
             overall_status=status.overall_status,
             start_date=status.start_date_struct.date if status.start_date_struct else None,
             start_date_type=status.start_date_struct.type if status.start_date_struct else None,
+            primary_completion_date=status.primary_completion_date_struct.date if status.primary_completion_date_struct else None,
+            primary_completion_date_type=status.primary_completion_date_struct.type if status.primary_completion_date_struct else None,
             completion_date=status.completion_date_struct.date if status.completion_date_struct else None,
             completion_date_type=status.completion_date_struct.type if status.completion_date_struct else None,
+            study_type=design.study_type,
+            allocation=design.design_info.allocation if design.design_info else None,
+            masking=design.design_info.masking_info.masking if design.design_info and design.design_info.masking_info else None,
+            primary_purpose=design.design_info.primary_purpose if design.design_info else None,
             phases=design.phases,
             lead_sponsor=sponsor.name,
             sponsor_class=sponsor.sponsor_class,

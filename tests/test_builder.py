@@ -308,3 +308,16 @@ def test_share_in_a_comparison_is_within_each_side():
 def test_share_needs_a_bar_or_trend_chart(chart_type, x):
     with pytest.raises(ValidationError, match="share"):
         plan(intent="distribution", chart_type=chart_type, x=x, series=x if chart_type == "network_graph" else None, measure="share")
+
+
+def test_design_fields_chart_with_the_registrys_names_and_cite_their_field():
+    # u11-style: "what share of depression trials are randomized?"
+    trials = [trial(1, allocation="RANDOMIZED", masking="QUADRUPLE"), trial(2, allocation="RANDOMIZED", masking="NONE"),
+              trial(3, allocation="NON_RANDOMIZED", masking="NONE"), trial(4)]  # fmt: skip
+    viz, _ = build_visualization({"All": trials}, plan(intent="part_to_whole", chart_type="bar_chart", x=Dimension.ALLOCATION, measure="share"))
+    assert {r.allocation: r.percent for r in viz.data} == {"RANDOMIZED": 66.7, "NON_RANDOMIZED": 33.3}  # of the 3 with a value
+    assert viz.encoding.x.labels == {"NON_RANDOMIZED": "Non-Randomized", "RANDOMIZED": "Randomized"}
+    assert viz.data[0].citations[0].field == "protocolSection.designModule.designInfo.allocation"
+    masking, _ = build_visualization({"All": trials}, plan(intent="distribution", chart_type="bar_chart", x=Dimension.MASKING))
+    assert masking.encoding.x.labels["NONE"] == "None (Open Label)"
+    as_response(viz)

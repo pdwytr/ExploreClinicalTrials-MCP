@@ -52,6 +52,10 @@ FIELD_VALUES: dict[Dimension, Callable[[Trial], list[str]]] = {
     Dimension.INTERVENTION: lambda t: [i.name for i in t.interventions if not NOT_AN_INTERVENTION.search(i.name)],
     Dimension.INTERVENTION_TYPE: lambda t: [i.type for i in t.interventions if i.type],
     Dimension.COUNTRY: lambda t: t.countries,
+    Dimension.STUDY_TYPE: lambda t: [t.study_type] if t.study_type else [],
+    Dimension.ALLOCATION: lambda t: [t.allocation] if t.allocation else [],
+    Dimension.MASKING: lambda t: [t.masking] if t.masking else [],
+    Dimension.PRIMARY_PURPOSE: lambda t: [t.primary_purpose] if t.primary_purpose else [],
 }
 
 

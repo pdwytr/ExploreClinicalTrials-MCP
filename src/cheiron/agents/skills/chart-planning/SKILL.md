@@ -53,8 +53,10 @@ Profile has fields marked `from_registry_stats`: read `references/registry-stats
 ## Fields you can chart
 
 `phase`, `start_year`, `completion_year`, `overall_status`, `lead_sponsor`, `sponsor_class`, `condition`,
-`intervention`, `intervention_type`, `country`, `enrollment` (numeric), and `group`
-(the comparison side: the label of each fetched step).
+`intervention`, `intervention_type`, `country`, `enrollment` (numeric), `study_type`, `allocation`
+(randomized or not), `masking` (blinding: none = open label, single ... quadruple), `primary_purpose`,
+and `group` (the comparison side: the label of each fetched step). Design fields are mostly empty for
+observational studies.
 
 ## Output
 

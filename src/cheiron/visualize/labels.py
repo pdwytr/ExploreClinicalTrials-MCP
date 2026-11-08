@@ -29,6 +29,10 @@ ENUM_FIELDS = {
     "overall_status": "Status",
     "sponsor_class": "AgencyClass",
     "intervention_type": "InterventionType",
+    "study_type": "StudyType",
+    "allocation": "DesignAllocation",
+    "masking": "DesignMasking",
+    "primary_purpose": "PrimaryPurpose",
 }
 
 

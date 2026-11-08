@@ -49,6 +49,10 @@ FIELD_PATHS = {
     Dimension.INTERVENTION_TYPE: "protocolSection.armsInterventionsModule.interventions.type",
     Dimension.COUNTRY: "protocolSection.contactsLocationsModule.locations.country",
     Dimension.ENROLLMENT: "protocolSection.designModule.enrollmentInfo.count",
+    Dimension.STUDY_TYPE: "protocolSection.designModule.studyType",
+    Dimension.ALLOCATION: "protocolSection.designModule.designInfo.allocation",
+    Dimension.MASKING: "protocolSection.designModule.designInfo.maskingInfo.masking",
+    Dimension.PRIMARY_PURPOSE: "protocolSection.designModule.designInfo.primaryPurpose",
 }
 
 Pair = tuple[str, Trial]  # (comparison side label, trial)

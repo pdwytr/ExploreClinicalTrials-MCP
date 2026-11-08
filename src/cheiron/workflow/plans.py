@@ -38,7 +38,8 @@ class SearchPlan(BaseModel):
         description=(
             "What the question asks to break the answer down by: a chartable field "
             "(phase, start_year, completion_year, overall_status, lead_sponsor, sponsor_class, condition, "
-            "intervention, intervention_type, country, enrollment, group); for a network, both node kinds "
+            "intervention, intervention_type, country, enrollment, study_type, allocation, masking, "
+            "primary_purpose, group); for a network, both node kinds "
             "joined by ' x ' (e.g. 'lead_sponsor x intervention'; 'intervention x intervention' = used together); "
             "if it asks for anything else, 'unsupported: <what>' (e.g. 'unsupported: US state'). "
             "None when it asks for no breakdown."
@@ -121,6 +122,10 @@ class Dimension(str, Enum):
     INTERVENTION = "intervention"
     INTERVENTION_TYPE = "intervention_type"
     COUNTRY = "country"
+    STUDY_TYPE = "study_type"
+    ALLOCATION = "allocation"  # randomized or not
+    MASKING = "masking"  # blinding: none (open label), single ... quadruple
+    PRIMARY_PURPOSE = "primary_purpose"
     ENROLLMENT = "enrollment"
     GROUP = "group"  # the search label: the series in a comparison
 
