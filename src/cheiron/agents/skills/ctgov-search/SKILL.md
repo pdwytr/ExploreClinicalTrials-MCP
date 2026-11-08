@@ -125,9 +125,9 @@ trials", "the drugs most often tested alongside a named drug"):
    rationale what you found ("<sponsor> leads glioblastoma with <N> trials", the profile's count);
 3. the chart is built from the latest successful fetch, so that fetch must hold everything shown.
 
-**Several found values** ("the 5 sponsors with the most melanoma trials, by phase"): put them all
-in **one** step's slot (`sponsors: [the five names]`) and chart by that field
-(`lead_sponsor` as the series); separate steps are for up to 4 named sides.
+**Several found values** (more than 4 sponsors, drugs or countries read from a profile): put them
+all in **one** step's slot (e.g. `sponsors: [six names]`) and chart by that field, e.g.
+`lead_sponsor` as the series; separate steps are for up to 4 named sides.
 
 **Ties:** if the profile lists `tied_for_top` for the value you need, never pick one of them.
 Fetch every tied value as its own step (up to 4) and say there is a tie. **Few trials:** if a fetch
