@@ -384,9 +384,33 @@ What is not done, roughly in the order I would do it:
    matches six small MSD entities, not Merck Sharp & Dohme LLC, so the name resolution that works
    for drugs does not work for sponsors. The skill tells the agent to write the registered name.
    Next: an alias table built from the registry's lead-sponsor names.
-3. **Network nodes are not normalised beyond spelling.** Names that differ by case or punctuation
-   are merged, and placebo is excluded, but "Metformin" and "Metformin Hydrochloride" are separate
-   nodes, and procedures can appear among drugs. Next: key nodes by their MeSH term.
+3. **Network nodes are keyed by the intervention name as the sponsor typed it.** This is a known
+   issue I did not get to in the time available. The counts are right for each name, but one drug
+   is split across several nodes and non-drugs take places that belong to drugs. Spot checks on
+   the live service:
+   - **One drug, many names.** Of the 326 multiple myeloma trials the registry returns for
+     daratumumab, 195 name it exactly "Daratumumab"; the rest write "Daratumumab SC",
+     "Darzalex", "Daratumumab and Hyaluronidase-fihj" and others. The node shows 195. Colorectal combinations split
+     fluorouracil from 5-fluorouracil and leucovorin from leucovorin calcium, as metformin
+     networks split metformin from metformin hydrochloride.
+   - **Non-drugs as drug nodes.** "Laboratory Biomarker Analysis", "Biospecimen Collection",
+     "Standard of Care" and "peripheral blood stem cell transplantation" rank among the top nodes
+     of oncology and HIV networks. The cause is the category, not the data: the brief's network
+     entity is *drugs*, but the node is the registry's *intervention*, which also covers
+     procedures, tests and behavioural arms. The registry types them correctly ("Laboratory
+     Biomarker Analysis" is `OTHER`, "Biospecimen Collection" `PROCEDURE`, daratumumab `DRUG` or
+     `BIOLOGICAL`); the network does not yet use the type.
+
+   Only case and punctuation differences are merged today, and placebo is excluded. The fix is to
+   key nodes by a standard vocabulary instead of free text. The registry already indexes each
+   trial's interventions under MeSH terms, the same vocabulary the name resolution relies on, so nodes would
+   group by MeSH term and fall back to the cleaned name where a trial has none. For drug
+   networks, a separate *drug* entity limited to the `DRUG` and `BIOLOGICAL` types would replace
+   the hand-kept list of non-interventions, while *intervention* stays available for questions
+   that mean every kind of arm. Two checks would come with it: how much of each network MeSH
+   actually covers, since newer drugs and combination products may be unmapped, and an eval
+   case that fails while one drug still appears as two nodes. RxNorm would be the next step if
+   MeSH coverage proves too thin for brand names and salts.
 4. **Evals run each case once, and the report is overwritten.** Next: three runs per case with a
    pass rate, a history of runs, a committed baseline, and a check of the agent's intent slots
    (`meta.filters_applied` already carries them).
