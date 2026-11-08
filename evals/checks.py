@@ -6,6 +6,8 @@ Checks that do not apply to a case return nothing.
 """
 
 import json
+import re
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -67,6 +69,32 @@ TAGS = {
 RECOUNT_FIELDS = {"phase": "Phase", "overall_status": "OverallStatus", "sponsor_class": "LeadSponsorClass"}
 SINGLE_VALUED = {"overall_status", "lead_sponsor", "sponsor_class", "start_year", "completion_year", "group"}
 LIVE_CITATION_SAMPLE = 6  # citations checked against the live registry per case
+RECALL_MIN = 0.8  # share of a reference search's trials the charted fetch must contain
+RECALL_MAX_PAGES = 20  # reference searches are fetched as NCT IDs, 1000 per page
+
+# Every key a case may put in "expect"; anything else is a typo and stops the run.
+EXPECT_KEYS = {
+    "outcome", "chart", "x", "meta_mentions", "filters_include", "filters_exclude", "data_excludes",
+    "refusal_mentions", "recall", "labels_within", "labels_exclude", "units_include",
+}  # fmt: skip
+
+# Named label sets for expect.labels_within, spelled as the registry spells countries.
+REGIONS = {
+    "$EUROPE": {
+        "albania", "andorra", "austria", "belarus", "belgium", "bosnia and herzegovina", "bulgaria", "croatia",
+        "cyprus", "czechia", "czech republic", "denmark", "estonia", "finland", "france", "georgia", "germany",
+        "greece", "hungary", "iceland", "ireland", "italy", "kosovo", "latvia", "liechtenstein", "lithuania",
+        "luxembourg", "malta", "moldova", "moldova, republic of", "monaco", "montenegro", "netherlands",
+        "north macedonia", "norway", "poland", "portugal", "romania", "russia", "russian federation",
+        "san marino", "serbia", "slovakia", "slovenia", "spain", "sweden", "switzerland", "turkey",
+        "turkey (türkiye)", "türkiye", "ukraine", "united kingdom",
+    },
+}  # fmt: skip
+
+# Dimensions the system cannot chart. A title naming one claims a breakdown the chart does not have
+# (e.g. "...by state" over a country chart). Checked on titles only: interpretations legitimately
+# mention filters such as "sites in India".
+MISSING_DIMENSIONS = re.compile(r"\b(states?|cit(?:y|ies)|sites?|facilit(?:y|ies)|investigators?|duration)\b")
 
 
 def check_case_definition(case: dict) -> list[str]:
@@ -76,19 +104,36 @@ def check_case_definition(case: dict) -> list[str]:
         problems.append("expect.outcome must be answered, refused or either")
     if not case.get("intent"):
         problems.append("missing intent")
-    if case.get("expect", {}).get("refusal_mentions") and case["expect"]["outcome"] != "refused":
+    expect = case.get("expect", {})
+    problems += [f"unknown expect key {k!r}" for k in expect if k not in EXPECT_KEYS]
+    if expect.get("refusal_mentions") and expect["outcome"] != "refused":
         problems.append("refusal_mentions needs expect.outcome = refused")
+    for ref in expect.get("recall") or []:
+        if not isinstance(ref, dict) or not isinstance(ref.get("search"), dict) or not ref["search"]:
+            problems.append("each expect.recall entry needs a non-empty 'search' of API parameters")
+    for name in ("labels_within", "labels_exclude"):
+        unknown = [v for v in expect.get(name) or [] if v.startswith("$") and v not in REGIONS]
+        problems += [f"unknown label set {v!r} in {name}" for v in unknown]
     return problems
 
 
 # --- helpers ---------------------------------------------------------------------------------
 
 
-def http_json(url: str, body: dict | None = None) -> dict:
+def http_json(url: str, body: dict | None = None, attempts: int = 6) -> dict:
+    """GET (or POST with a body) JSON. ClinicalTrials.gov rate-limits bursts (429): back off and retry,
+    so a busy regrade reports the answer's problems, not the registry's throttling."""
     data = json.dumps(body).encode() if body else None
-    req = urllib.request.Request(url, data=data, headers={"content-type": "application/json"})
-    with urllib.request.urlopen(req, timeout=120) as r:
-        return json.load(r)
+    for attempt in range(attempts):
+        req = urllib.request.Request(url, data=data, headers={"content-type": "application/json"})
+        try:
+            with urllib.request.urlopen(req, timeout=120) as r:
+                return json.load(r)
+        except urllib.error.HTTPError as exc:
+            if exc.code not in (429, 503) or attempt == attempts - 1:
+                raise
+            time.sleep(float(exc.headers.get("Retry-After") or 2**attempt))
+    raise AssertionError("unreachable")
 
 
 def rows(viz: dict) -> list[dict]:
@@ -99,6 +144,53 @@ def rows(viz: dict) -> list[dict]:
 
 def answered(status: dict) -> bool:
     return status.get("status") == "succeeded" and bool(rows((status.get("result") or {}).get("visualization") or {}))
+
+
+def as_list(value) -> list:
+    return value if isinstance(value, list) else [value]
+
+
+def chart_labels(viz: dict) -> list[str]:
+    """The categories a reader sees: x values (and a non-group series) for charts, node labels for networks."""
+    if viz.get("type") == "network_graph":
+        return [str(n.get("label")) for n in (viz.get("data") or {}).get("nodes", [])]
+    enc = viz.get("encoding") or {}
+    fields = [enc.get("x", {}).get("field"), (enc.get("color") or {}).get("field")]
+    fields = [f for f in fields if f and f != "group"]
+    return sorted({str(r[f]) for r in viz.get("data") or [] for f in fields if r.get(f) is not None})
+
+
+def charted_trials(status: dict) -> dict[str, set[str]]:
+    """NCT IDs per step label of the fetch the chart was built from (from the saved trial files)."""
+    fetched = charted_fetch(status)
+    if not fetched:
+        return {}
+    folder, steps = fetched
+    return {
+        s["label"]: {t["nct_id"] for t in json.loads((folder / s["trials_file"]).read_text())}
+        for s in steps
+        if s.get("trials_file")
+    }
+
+
+_reference_cache: dict[str, set[str]] = {}
+
+
+def reference_ids(search: dict) -> set[str]:
+    """Every NCT ID a reference search matches today (live), so the expectation never goes stale."""
+    key = json.dumps(search, sort_keys=True)
+    if key not in _reference_cache:
+        ids: set[str] = set()
+        token = None
+        for _ in range(RECALL_MAX_PAGES):
+            params = {**search, "fields": "NCTId", "pageSize": 1000} | ({"pageToken": token} if token else {})
+            page = http_json(f"{CTGOV}?{urllib.parse.urlencode(params)}")
+            ids |= {s["protocolSection"]["identificationModule"]["nctId"] for s in page.get("studies", [])}
+            token = page.get("nextPageToken")
+            if not token:
+                break
+        _reference_cache[key] = ids
+    return _reference_cache[key]
 
 
 def charted_fetch(status: dict) -> tuple[Path, list[dict]] | None:
@@ -158,17 +250,85 @@ def check_chart(case, status) -> list[str]:
 
 
 def check_expectations(case, status) -> list[str]:
-    """Case-specific text expectations: meta_mentions, filters_exclude, data_excludes."""
+    """Case-specific text expectations. filters_include / filters_exclude look only at the searches that
+    actually ran (meta.filters_applied), never at the model's own prose; meta_mentions looks at all of meta."""
     if not answered(status):
         return []
     expect, meta, problems = case["expect"], status["result"]["meta"], []
+    filters = json.dumps(meta.get("filters_applied"), ensure_ascii=False).lower()
     if expect.get("meta_mentions") and expect["meta_mentions"].lower() not in json.dumps(meta).lower():
         problems.append(f"meta never mentions {expect['meta_mentions']!r}")
-    if expect.get("filters_exclude") and expect["filters_exclude"].lower() in json.dumps(meta.get("filters_applied")).lower():
-        problems.append(f"{expect['filters_exclude']!r} leaked into the filters")
+    for text in as_list(expect.get("filters_include") or []):
+        if text.lower() not in filters:
+            problems.append(f"the executed searches never use {text!r}")
+    for text in as_list(expect.get("filters_exclude") or []):
+        if text.lower() in filters:
+            problems.append(f"{text!r} leaked into the filters")
     data = rows(status["result"]["visualization"])
-    if expect.get("data_excludes") and any(expect["data_excludes"] in json.dumps(r.get("trial_count", "")) for r in data):
-        problems.append(f"{expect['data_excludes']!r} appears as a count in the data")
+    shown = [json.dumps({k: v for k, v in r.items() if k != "citations"}, ensure_ascii=False) for r in data]
+    for text in as_list(expect.get("data_excludes") or []):
+        if any(text.lower() in row.lower() for row in shown):
+            problems.append(f"{text!r} appears in the charted data")
+    units = json.dumps(meta.get("units") or {}).lower()
+    if expect.get("units_include") and not any(u.lower() in units for u in as_list(expect["units_include"])):
+        problems.append(f"meta.units {meta.get('units')} has none of {expect['units_include']}")
+    return problems
+
+
+def check_labels(case, status) -> list[str]:
+    """The charted categories stay inside what was asked (labels_within, e.g. "$EUROPE") and avoid what
+    must not be shown (labels_exclude, e.g. "Placebo" as a drug), and the title claims no breakdown the
+    system cannot chart (state, city, site, investigator, duration)."""
+    if not answered(status):
+        return []
+    viz, expect, problems = status["result"]["visualization"], case["expect"], []
+    labels = chart_labels(viz)
+    if expect.get("labels_within"):
+        allowed = {a.lower() for v in expect["labels_within"] for a in (REGIONS.get(v) or {v})}
+        outside = [label for label in labels if label.lower() not in allowed]
+        if outside:
+            problems.append(f"{len(outside)} charted label(s) outside what was asked: {outside[:6]}")
+    for text in expect.get("labels_exclude") or []:
+        hits = [label for label in labels if text.lower() in label.lower()]
+        if hits:
+            problems.append(f"charted label(s) that must not appear: {hits[:4]}")
+    title = (viz.get("title") or "").lower().replace("united states", "")
+    claimed = MISSING_DIMENSIONS.search(title)
+    if claimed:
+        problems.append(f"title claims a breakdown by {claimed.group(0)!r}, which the system cannot chart")
+    return problems
+
+
+def check_recall(case, status) -> list[str]:
+    """The charted trials contain most of what a hand-written reference search finds (live, today).
+    Catches searches that answer a narrower question than asked: brand instead of generic name, an
+    alias instead of the registry name, an exact-field filter that drops spellings. Each entry may name
+    the compared side(s) it applies to with "match" (substrings of the side label); without it, all
+    charted trials are compared."""
+    refs = case["expect"].get("recall")
+    if not refs or not answered(status):
+        return []
+    sides = charted_trials(status)
+    if not sides:
+        return ["recall: no saved trials for the charted fetch"]
+    problems = []
+    for ref in refs:
+        names = [m.lower() for m in ref.get("match") or []]
+        chosen = [label for label in sides if not names or any(n in label.lower() for n in names)]
+        if not chosen:
+            problems.append(f"no charted side matches {ref['match']} (sides: {list(sides)})")
+            continue
+        got = set().union(*(sides[label] for label in chosen))
+        want = reference_ids(ref["search"])
+        if not want:
+            problems.append(f"reference search {ref['search']} matches nothing: fix the case")
+            continue
+        share = len(got & want) / len(want)
+        if share < ref.get("min", RECALL_MIN):
+            problems.append(
+                f"{'/'.join(chosen)}: has {len(got & want)} of the {len(want)} trials {ref['search']} finds "
+                f"({share:.0%} < {ref.get('min', RECALL_MIN):.0%})"
+            )
     return problems
 
 
@@ -186,6 +346,12 @@ def check_counts(case, status) -> list[str]:
         problems.append("a bar exceeds the trials analysed")
     if x in SINGLE_VALUED and "color" not in viz["encoding"] and sum(counts) > meta["trials_analyzed"]:
         problems.append(f"single-valued {x} sums to {sum(counts)} > {meta['trials_analyzed']} trials")
+    # In a comparison, trials_analyzed is the sum of the sides: each bar must fit its own side.
+    side_field = "group" if "group" in (x, (viz["encoding"].get("color") or {}).get("field")) else None
+    sizes = {label: len(ids) for label, ids in charted_trials(status).items()} if side_field else {}
+    over = [r for r in viz["data"] if r.get("group") in sizes and r["trial_count"] > sizes[r["group"]]]
+    if over:
+        problems.append(f"{len(over)} bar(s) exceed their own side's trials, e.g. {over[0]['group']}: {over[0]['trial_count']}")
     return problems
 
 
@@ -270,6 +436,8 @@ CHECKS = [
     check_format,
     check_chart,
     check_expectations,
+    check_labels,
+    check_recall,
     check_counts,
     check_citations,
     check_citations_live,

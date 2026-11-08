@@ -21,10 +21,10 @@ dates, so `x: completion_year` (counting by start year would be rejected).
 
 ## Ranking with a number
 
-"Top 10 countries hosting ovarian cancer studies that are enrolling now" asks for a number, so
+"Top 10 countries hosting endometriosis studies that are enrolling now" asks for a number, so
 `top_n: 10`. Without a number, a readable cut such as 15 is fine.
 ```json
-{"intent": "ranking", "chart_type": "bar_chart", "title": "Top 10 countries with recruiting ovarian cancer trials", "x": "country", "top_n": 10}
+{"intent": "ranking", "chart_type": "bar_chart", "title": "Top 10 countries for enrolling endometriosis studies", "x": "country", "top_n": 10}
 ```
 
 ## Named values
