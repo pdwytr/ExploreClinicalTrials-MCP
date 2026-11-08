@@ -6,6 +6,7 @@ values with counts, whether a trial can have several values, and per comparison 
 many are missing. Registry-wide /stats results are summarised the same way.
 """
 
+import re
 import statistics
 from collections import Counter
 from collections.abc import Callable, Iterable
@@ -48,6 +49,24 @@ FIELD_VALUES: dict[Dimension, Callable[[Trial], list[str]]] = {
     Dimension.INTERVENTION_TYPE: lambda t: [i.type for i in t.interventions if i.type],
     Dimension.COUNTRY: lambda t: t.countries,
 }
+def value_key(value: str) -> str:
+    """Values equal under this key are one category: case, hyphens, punctuation and spacing are
+    ignored ("Non-small Cell Lung Cancer" = "non small cell lung cancer", "Placebo" = "placebo")."""
+    return " ".join(re.sub(r"[\W_]+", " ", value.casefold()).split()) or value
+
+
+def merged_reader(read: Callable[[Trial], list[str]], trials: Iterable[Trial]) -> Callable[[Trial], set[str]]:
+    """Reads a field's distinct values per trial, with spellings that share a value_key merged into
+    the spelling most of `trials` use (ties: the alphabetically first)."""
+    spellings: Counter[str] = Counter()
+    for trial in trials:
+        spellings.update({" ".join(v.split()) for v in read(trial)})
+    label: dict[str, str] = {}
+    for spelling, _ in sorted(spellings.items(), key=lambda s: (-s[1], s[0])):
+        label.setdefault(value_key(spelling), spelling)
+    return lambda trial: {label.get(value_key(v), v) for v in read(trial)}
+
+
 _MULTI_VALUED = {Dimension.PHASE, Dimension.CONDITION, Dimension.INTERVENTION, Dimension.INTERVENTION_TYPE, Dimension.COUNTRY}
 
 
@@ -137,8 +156,9 @@ def build_profile(
     fields: dict[Dimension, FieldProfile] = {}
     stats = list(stats)
     if any(trials_by_group.values()):
-        for dim, read in FIELD_VALUES.items():
-            fields[dim] = _profile_values(trials_by_group, read, dim in _MULTI_VALUED)
+        everything = [t for trials in trials_by_group.values() for t in trials]
+        for dim, read in FIELD_VALUES.items():  # the agent sees the same merged values the chart uses
+            fields[dim] = _profile_values(trials_by_group, merged_reader(read, everything), dim in _MULTI_VALUED)
         fields[Dimension.ENROLLMENT] = _profile_enrollment(trials_by_group)
     else:  # registry-wide question: chartable fields come from /stats/field/values counts
         for dim, f in stats_fields(stats).items():

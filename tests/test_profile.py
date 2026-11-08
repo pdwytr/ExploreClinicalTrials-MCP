@@ -77,3 +77,14 @@ def test_profile_never_contains_records():
     text = p.model_dump_json()
     assert "NCT05064059" not in text  # no trial ids
     assert "Favezelimab" not in text.lower().replace("favezelimab/pembrolizumab", "")  # no titles
+
+
+def test_spellings_that_differ_by_case_hyphens_or_punctuation_are_one_value():
+    trials = [
+        trial(1, conditions=["Non-small Cell Lung Cancer"]),
+        trial(2, conditions=["Non Small Cell Lung Cancer"]),
+        trial(3, conditions=["non-small cell lung cancer "]),
+        trial(4, conditions=["Melanoma"]),
+    ]
+    p = build_profile({"All": trials}, total_matched=4)
+    assert p.fields[Dimension.CONDITION].top_values == [("Non Small Cell Lung Cancer", 3), ("Melanoma", 1)]

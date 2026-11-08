@@ -9,7 +9,8 @@ Counting rules:
     number of trials, which the caller reports in meta
   - phases keep clinical order, years run ascending with empty years shown as 0, other
     categories are sorted by count; more than MAX_CATEGORIES are cut to the top ones
-  - values that differ only by case or spacing ("Rituximab", "rituximab ") are one category,
+  - values that differ only by case, hyphens, punctuation or spacing ("Rituximab", "rituximab ",
+    "Non-small Cell Lung Cancer", "Non Small Cell Lung Cancer") are one category,
     shown with the spelling most trials use; citations still quote each trial's own spelling
   - enrollment is binned into fixed edges for histograms; the edges grow geometrically, so bins
     are drawn as ordered range labels of equal width ("50–99", "10,000+"), not on a linear axis
@@ -18,14 +19,14 @@ Counting rules:
     edge weight = trials sharing both values
 """
 
-from collections import Counter, defaultdict
+from collections import defaultdict
 from collections.abc import Callable
 from datetime import date
 
 from cheiron.fetch.models import Trial
 from cheiron.models.response import ChartVisualization, Citation, NetworkVisualization
 from cheiron.workflow.plans import YEAR_DIMENSIONS, ChartPlan, Dimension
-from cheiron.workflow.profile import FIELD_VALUES, stats_fields
+from cheiron.workflow.profile import FIELD_VALUES, merged_reader, stats_fields, value_key
 
 MAX_CATEGORIES = 25
 MAX_NODES = 40
@@ -52,24 +53,12 @@ FIELD_PATHS = {
 Pair = tuple[str, Trial]  # (comparison side label, trial)
 
 
-def _key(value: str) -> str:
-    """Values equal under this key are the same category."""
-    return " ".join(value.split()).casefold()
-
-
 def _reader(dim: Dimension, pairs: list[Pair]) -> Callable[[str, Trial], set[str]]:
-    """Reads a field's distinct values per trial, merging spellings that differ only by case or
-    spacing into the one most trials in `pairs` use (ties: the alphabetically first)."""
+    """Reads a field's distinct values per trial, merged by value_key (see profile.merged_reader)."""
     if dim is Dimension.GROUP:
         return lambda group, trial: {group}
-    read = FIELD_VALUES[dim]
-    spellings: Counter[str] = Counter()
-    for _, trial in pairs:
-        spellings.update({" ".join(v.split()) for v in read(trial)})
-    label: dict[str, str] = {}
-    for spelling, _ in sorted(spellings.items(), key=lambda s: (-s[1], s[0])):
-        label.setdefault(_key(spelling), spelling)
-    return lambda group, trial: {label.get(_key(v), v) for v in read(trial)}
+    read = merged_reader(FIELD_VALUES[dim], (t for _, t in pairs))
+    return lambda group, trial: read(trial)
 
 
 def _excerpt(dim: Dimension, value: str, trial: Trial) -> str:
@@ -78,7 +67,7 @@ def _excerpt(dim: Dimension, value: str, trial: Trial) -> str:
     if dim is Dimension.COMPLETION_YEAR and trial.completion_date:
         return trial.completion_date.isoformat()
     # the trial's own spelling of the (possibly merged) value
-    return next((v for v in FIELD_VALUES[dim](trial) if _key(v) == _key(value)), value)
+    return next((v for v in FIELD_VALUES[dim](trial) if value_key(v) == value_key(value)), value)
 
 
 def _citations(dims: list[tuple[Dimension, str]], trials: list[Trial]) -> list[Citation]:
