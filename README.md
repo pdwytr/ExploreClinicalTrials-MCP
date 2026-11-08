@@ -13,7 +13,7 @@ where that line sits, why, and how the evals were used to move it.
 Contents: [Running it](#running-it) · [What happens to a question](#what-happens-to-a-question) ·
 [Design decisions and trade-offs](#design-decisions-and-trade-offs) · [How it is tested](#how-it-is-tested) ·
 [Limitations and next steps](#limitations-and-next-steps) ·
-[Request and response schema](#request-and-response-schema) · [Use of AI tools](#use-of-ai-tools)
+[What I would build next](#what-i-would-build-next) · [Request and response schema](#request-and-response-schema) · [Use of AI tools](#use-of-ai-tools)
 
 ## Running it
 
@@ -339,6 +339,75 @@ What is not done, roughly in the order I would do it:
    trials.
 7. **One process, tasks in memory.** Task status is lost on restart (saved outputs remain) and is
    not shared between workers. Next: a persistent task store.
+
+## What I would build next
+
+The limitations above are fixes to the current design. The larger step is to make the system
+improve itself in a controlled way, so that each failure found in production makes the next answer
+better without anyone editing code.
+
+### A reinforcement-style feedback loop over configuration
+
+Today the knowledge that decides most outcomes is spread across code and skill text: the
+name-resolution thresholds (`RESOLVE_SAMPLE`, `RESOLVE_SHARE` in `workflow/intent.py`), region
+membership (`REGION_MEMBERS`), display names the registry lacks (`FALLBACK` in
+`visualize/labels.py`), arms that are not interventions (`NOT_AN_INTERVENTION`), the default chart
+for each question class and the known traps (the chart-planning skill), and the failure
+categories the evals use (`TAGS`). Changing any of them means a code change.
+
+The next version would move each of these into a versioned configuration file with a strict
+schema, and add a second agent whose only job is to propose changes to those files:
+
+1. **Signals.** Failed eval cases, user feedback (next section) and traces are collected as
+   evidence, each tied to the configuration version that produced the answer (recorded in `meta`).
+2. **Classification.** Each failure is classified in a fixed taxonomy (contract, judgement,
+   capability, data) and a fixed set of characteristics (field, question class, entity type), so
+   failures can be counted and grouped instead of read one by one.
+3. **Proposal.** The improvement agent proposes a change only to configuration, never to code: for
+   example, a sponsor alias, a region member, a new default chart for a question class, or a
+   threshold. Each proposal must validate against the file's schema and cite the failures it
+   addresses.
+4. **Gate.** A proposal is accepted only if the unit tests pass, the evals do not regress, and it
+   improves a held-out set of cases the improvement agent has never seen. That last condition is
+   what keeps the loop from overfitting to its own evidence. A person approves the merge.
+5. **Rollback.** Configurations are versioned, so a change that hurts can be reverted, and every
+   answer records which version produced it.
+
+This is reinforcement learning in its feedback structure, not in its mechanism: eval results and
+user feedback act as the reward, configuration changes are the actions, and the gate decides which
+changes are kept. No model weights change, so every improvement stays readable, testable and
+reversible.
+
+### User feedback as evidence
+
+A `POST /queries/{task_id}/feedback` endpoint would let a user flag an answer with a fixed reason
+(wrong trials searched, wrong count, wrong chart, missing data, wrong citation), point to the data
+point concerned, and add a comment. Feedback is stored with the query's trace, so the exact search,
+profile and chart behind the complaint can be replayed. Reviewed feedback becomes either a new eval
+case (split between the development and held-out sets, so it cannot be overfitted) or evidence for
+a configuration proposal.
+
+### Automatic API version updates
+
+Updating to a new ClinicalTrials.gov API version is manual today: run
+`scripts/refresh_ctgov_docs.py`, rebuild the skill references with `scripts/build_ctgov_skill.py`,
+review the diff, and bump `SNAPSHOT_API_VERSION`. The service only logs a warning when the live API
+moves past the documented version.
+
+A scheduled job would do this instead: detect the new version (`refresh_ctgov_docs.py --check`
+already exits with an error when it changes), refresh the snapshots, regenerate the references,
+run the unit tests and the evals, and open a pull request with the documentation diff and the eval
+report. A contract test would fail the run, and flag it for a person, whenever a field, enum value
+or parameter the code depends on disappears.
+
+### Leaner skills, measured
+
+The skills were written rule by rule as failures appeared. The traces already record which
+references the agent reads, so each part of a skill can be measured: rules no eval depends on can
+be removed, and rules that code can enforce can move into code, as happened with study type. Each
+remaining rule would get an eval case that fails without it. A new skill version would be adopted
+only if it does at least as well on the held-out cases with fewer tokens. A smaller skill leaves
+the agent less to misread, which is where accuracy gains are left at this point.
 
 ## Request and response schema
 
