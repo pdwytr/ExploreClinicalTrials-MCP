@@ -36,6 +36,10 @@ from cheiron.workflow.plans import (
 
 TOP_VALUES = 10  # per field: enough to choose a chart, small enough for the prompt
 
+# Arms that are not an intervention being tested: they topped "most common drug" rankings and
+# appeared as drug nodes in networks. Excluded from the intervention dimension only.
+NOT_AN_INTERVENTION = re.compile(r"\b(placebos?|sham)\b", re.IGNORECASE)
+
 # How each dimension is read from a trial; lists mean a trial can have several values.
 FIELD_VALUES: dict[Dimension, Callable[[Trial], list[str]]] = {
     Dimension.PHASE: lambda t: t.phases,
@@ -45,7 +49,7 @@ FIELD_VALUES: dict[Dimension, Callable[[Trial], list[str]]] = {
     Dimension.SPONSOR: lambda t: [t.lead_sponsor] if t.lead_sponsor else [],
     Dimension.SPONSOR_CLASS: lambda t: [t.sponsor_class] if t.sponsor_class else [],
     Dimension.CONDITION: lambda t: t.conditions,
-    Dimension.INTERVENTION: lambda t: [i.name for i in t.interventions],
+    Dimension.INTERVENTION: lambda t: [i.name for i in t.interventions if not NOT_AN_INTERVENTION.search(i.name)],
     Dimension.INTERVENTION_TYPE: lambda t: [i.type for i in t.interventions if i.type],
     Dimension.COUNTRY: lambda t: t.countries,
 }

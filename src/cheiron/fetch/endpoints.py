@@ -17,7 +17,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
-from cheiron.fetch.models import check_search_params
+from cheiron.models.request import RecruitmentStatus, TrialPhase
 
 # Patterns from the spec: `fields` items and the `nctId` path parameter.
 FIELD_NAME_PATTERN = r"^[a-zA-Z][a-zA-Z0-9\-. ]*$"
@@ -56,23 +56,70 @@ class Period(BaseModel):
 
 
 _DATE_RANGE_IN_TEXT = re.compile(r"AREA\[(StartDate|CompletionDate|PrimaryCompletionDate)\]", re.IGNORECASE)
+# Things that have their own slot: written in `advanced`, they would bypass the slot's rules.
+_SLOTTED_IN_TEXT = {
+    "AREA[Phase]": "phases",
+    "AREA[StudyType]": "study_type",
+    "AREA[OverallStatus]": "statuses",
+    "AREA[EnrollmentCount]": "min_enrollment / max_enrollment",
+    "AREA[LeadSponsorName]": "sponsors",
+    "AREA[InterventionName]": "drugs",
+    "AREA[Condition]": "conditions",
+    "AREA[LocationCountry]": "countries",
+}
+
+Region = Literal["europe", "asia", "africa", "north_america", "south_america", "oceania"]
+Name = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
 
 
 class StudiesStep(_Step):
-    """Search trials. The only step that can apply search filters (and the user's filters)."""
+    """Search trials, stated as what the question means. Code resolves the names to the registry's
+    own (brand -> generic, alias -> registered sponsor), adds the user's structured fields and
+    compiles the API parameters; the planner never writes query.* parameters itself.
+
+    Within a slot the values are alternatives (OR), except drugs with drugs_match="all"
+    (combination therapy: every drug in the same trial). Slots combine with AND."""
 
     endpoint: Literal["studies"] = "studies"
-    params: dict[str, str] = Field(min_length=1, description="query.* / filter.* parameters in Essie syntax.")
+    drugs: list[Name] = Field(default_factory=list, description="Drugs or other interventions, e.g. ['semaglutide'].")
+    drugs_match: Literal["any", "all"] = Field(default="any", description="'all' = tested together in one trial.")
+    exclude_drugs: list[Name] = Field(default_factory=list)
+    conditions: list[Name] = Field(default_factory=list, description="Diseases or conditions, e.g. ['type 2 diabetes'].")
+    exclude_conditions: list[Name] = Field(default_factory=list, description="e.g. ['type 1 diabetes'].")
+    sponsors: list[Name] = Field(default_factory=list, description="LEAD sponsors, e.g. ['Pfizer'].")
+    countries: list[Name] = Field(default_factory=list, description="Countries with a trial site, e.g. ['Japan'].")
+    region: Region | None = Field(default=None, description="A region; code expands it into its countries.")
+    phases: list[TrialPhase] = Field(default_factory=list)
+    statuses: list[RecruitmentStatus] = Field(default_factory=list)
+    study_type: Literal["any", "interventional", "observational"] = Field(
+        default="any", description="'interventional' only when the question asks for treatment trials explicitly."
+    )
+    min_enrollment: int | None = Field(default=None, ge=0)
+    max_enrollment: int | None = Field(default=None, ge=0)
     period: Period | None = Field(default=None, description="Year range on start or completion date.")
+    keywords: list[Name] = Field(default_factory=list, description="Other search words (acronyms, 'CAR-T'): query.term.")
+    advanced: str | None = Field(
+        default=None,
+        max_length=500,
+        description="Escape hatch: an Essie expression for a filter no slot covers (design, counters). Shown to the reader.",
+    )
 
-    @field_validator("params")
-    @classmethod
-    def known_params(cls, params: dict[str, str]) -> dict[str, str]:
-        params = check_search_params(params)
-        for value in params.values():
-            if _DATE_RANGE_IN_TEXT.search(value):
-                raise ValueError("put year ranges in 'period' (field start or completion), not in the query text")
-        return params
+    @model_validator(mode="after")
+    def check_step(self) -> "StudiesStep":
+        if self.exclude_drugs and not self.drugs or self.exclude_conditions and not self.conditions:
+            raise ValueError("exclude_drugs / exclude_conditions need drugs / conditions to exclude from")
+        slots = (self.drugs, self.conditions, self.sponsors, self.countries, self.phases, self.statuses, self.keywords)
+        if not any(slots) and not (self.region or self.advanced or self.period or self.study_type != "any"):
+            raise ValueError("a studies step needs at least one search slot (drugs, conditions, sponsors, ...)")
+        if self.min_enrollment is not None and self.max_enrollment is not None and self.min_enrollment > self.max_enrollment:
+            raise ValueError("min_enrollment must be at most max_enrollment")
+        if self.advanced:
+            if _DATE_RANGE_IN_TEXT.search(self.advanced):
+                raise ValueError("put year ranges in 'period' (field start or completion), not in advanced")
+            for area, slot in _SLOTTED_IN_TEXT.items():
+                if area.casefold() in self.advanced.casefold():
+                    raise ValueError(f"use the '{slot}' slot instead of {area} in advanced")
+        return self
 
     def path(self) -> str:
         return "/studies"

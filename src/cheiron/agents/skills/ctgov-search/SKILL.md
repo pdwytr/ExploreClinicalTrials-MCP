@@ -1,111 +1,116 @@
 ---
 name: ctgov-search
-description: Turns a natural-language question about clinical trials into ClinicalTrials.gov API v2 calls - /studies searches (query.* and filter.* parameters, Essie syntax), single-study lookups, or registry-wide /stats. Use when planning which data to fetch to answer a question about drugs, conditions, sponsors, phases, locations, dates or trial counts.
+description: >-
+  Use this skill to plan which ClinicalTrials.gov data answers a question about clinical trials:
+  state what the question means as typed search slots (drugs, conditions, lead sponsors,
+  countries or a region, phases, statuses, study type, years, enrollment), one step per compared
+  side, plus the breakdown the question asks for; or plan a single-trial lookup or registry-wide
+  statistics. Code turns the slots into API calls. Use it for any question about trial counts,
+  trends, comparisons, sponsors, places or phases.
 metadata:
   api-version: "2.0.5"
   sources: docs/ctgov (official API snapshots)
 ---
 
-# Planning ClinicalTrials.gov API calls
+# Planning ClinicalTrials.gov searches
 
-You choose the endpoint and write its parameters; code validates them, adds the
-user's structured filters, runs the calls, and counts the results. You never compute numbers.
+You say **what the question means**; code decides how to query. For a `studies` step you fill
+typed slots, and code:
+- looks up how the registry names each drug, condition and sponsor, and also searches the
+  registry's standard name (a brand also finds its generic: Ozempic -> semaglutide);
+- adds the user's structured fields (they win over the question text);
+- expands a region into its countries, compiles the API parameters, fetches every page,
+  and counts. You never compute numbers.
 
-**Code handles all pagination, page sizes, result limits, field selection and
-retries.** Never set `pageSize`, `pageToken`, `countTotal`, `fields` (on `studies`)
-or `sort` (they are rejected). Write each search for the whole question, however many trials it matches.
+**Code handles pagination, page sizes, fields and retries.** Write each search for the whole
+question, however many trials it matches.
 
 ## Procedure
 
-1. Read the question and the user's structured filters. Choose the endpoint (next section).
-   Almost every question is a `studies` search.
-2. If the question compares named things (drug A vs drug B, condition X vs Y),
-   write **one step per side**, each with a short label. Otherwise write one step.
-3. For `studies`: put each concept in the parameter whose search area fits it (table below),
-   and fixed-value constraints (phase, study type, sponsor class, dates, enrollment)
-   in `filter.advanced` as `AREA[Field]...` expressions.
-4. Write a one-sentence rationale saying what you fetched and any assumption made.
-5. If trial registry records cannot answer the question, return `unanswerable`
-   with the reason instead of a plan.
+1. Read the question and the user's structured fields. Choose the endpoint (next section);
+   almost every question is a `studies` search.
+2. If the question compares named things (drug A vs B, condition X vs Y), write **one step
+   per side**, identical except for the compared slot, each with a short label in the
+   user's words. Comparing **attributes** of one set (phase 2 vs 3, industry vs academic, by
+   year) is **one** step: the chart splits it later.
+3. Fill the slots (table below). Write names as the user did; code adds standard names.
+4. Set `breakdown`: what the question asks to break the answer down by (next sections).
+5. Write a one-sentence rationale: what you fetched and any assumption you made.
+6. If registry records cannot answer the question, answer `Unanswerable` with the reason.
 
 ## Which endpoint
 
 | Question is about | `endpoint` | You provide |
 | --- | --- | --- |
-| Any set of trials defined by a drug, condition, sponsor, place, phase, status or date | `studies` | `params` (search parameters) |
+| Any set of trials defined by a drug, condition, sponsor, place, phase, status or date | `studies` | slots |
 | One named trial ("NCT05064059") | `study` | `nct_id` |
 | A fixed-value or text field across **all registered trials** ("how are all trials split by phase?") | `stats/field/values` | `fields`, e.g. `["Phase"]` |
-| How many items a list field holds across all trials ("how many conditions does a trial list?") | `stats/field/sizes` | `fields`, e.g. `["Condition"]` |
+| How many items a list field holds across all trials | `stats/field/sizes` | `fields`, e.g. `["Condition"]` |
 | Study record sizes across the registry | `stats/size` | nothing |
 
 **Whole-registry questions** (no condition, drug, sponsor, place, phase or date, e.g. "which drug
-has the most trials?", "how are all trials split by status?"): use `stats/field/values` with the
-field (`InterventionName`, `LeadSponsorName`, `Condition`, `LocationCountry`, `Phase`,
-`OverallStatus`, `LeadSponsorClass`, `InterventionType`). It answers instantly; a `studies` search
-over the whole registry would fetch hundreds of thousands of trials (e.g. 214,000 with a drug).
+has the most trials?"): use `stats/field/values` with the field (`InterventionName`,
+`LeadSponsorName`, `Condition`, `LocationCountry`, `Phase`, `OverallStatus`, `LeadSponsorClass`,
+`InterventionType`). A `studies` search over the whole registry would fetch hundreds of
+thousands of trials. Stats steps **cannot filter** (with user fields they are rejected) and give
+only the top 250 values of text fields; dates and numbers need `studies`.
 
-Rules for the `stats/*` endpoints (checked against the live API):
-- They cover the **whole registry and cannot filter**. If the question or the user's
-  filters narrow the trials in any way, use `studies` instead (a stats step with user
-  filters is rejected).
-- `stats/field/values` gives counts only for **fixed-value fields** (complete, e.g. `Phase`,
-  `OverallStatus`, `LeadSponsorClass`) and **text fields** (only the **top 250** values,
-  e.g. `LeadSponsorName` has ~52,700). For dates and numbers (`StartDate`,
-  `EnrollmentCount`) it returns only min/max/average, so "trials started per year" needs `studies`.
+## Slots of a `studies` step
 
-## Which parameter (`studies`)
-
-| Concept | Parameter | Example value |
+| Slot | Meaning | Example |
 | --- | --- | --- |
-| Disease / condition | `query.cond` | `"multiple sclerosis"` |
-| Drug, biologic, device, procedure | `query.intr` | `"atezolizumab"` |
-| Sponsor or collaborator organisation | `query.spons` | `"Novo Nordisk"` |
-| Lead sponsor only | `query.lead` | `"Novartis"` |
-| Country, state, city of a site | `query.locn` | `"Germany" OR "France"` |
-| Anything else (keywords, acronyms) | `query.term` | `"CAR-T"` |
-| Overall status | `filter.overallStatus` | `RECRUITING\|NOT_YET_RECRUITING` |
-| Phase, type, counts, classes | `filter.advanced` | `AREA[Phase](PHASE2 OR PHASE3)` |
-| Years (start or completion date) | `period` on the step (not a parameter) | `{"field": "start", "from_year": 2015}` |
+| `drugs` | Drugs or other interventions (any of them) | `["atezolizumab"]` |
+| `drugs_match` | `"all"` = tested together in one trial (combination therapy) | `"all"` |
+| `exclude_drugs` | Leave out trials naming these (needs `drugs`) | `["placebo"]` |
+| `conditions` | Diseases or conditions (any of them) | `["atopic dermatitis"]` |
+| `exclude_conditions` | Leave out (needs `conditions`): "hepatitis but not hepatitis B" | `["hepatitis B"]` |
+| `sponsors` | **Lead** sponsors | `["Novartis"]` |
+| `countries` | Countries with a site | `["Japan", "China"]` |
+| `region` | `europe`, `asia`, `africa`, `north_america`, `south_america`, `oceania`; code expands it | `"asia"` |
+| `phases` | `EARLY_PHASE1`, `PHASE1` ... `PHASE4`, `NA` | `["PHASE3"]` |
+| `statuses` | Overall status enums | `["RECRUITING"]` |
+| `study_type` | `any` (default), `interventional`, `observational` | `"interventional"` |
+| `min_enrollment`, `max_enrollment` | Enrollment range, inclusive | `501` |
+| `period` | Years on start or completion date | `{"field": "start", "from_year": 2015}` |
+| `keywords` | Other words to find anywhere (acronyms, techniques) | `["CAR-T"]` |
+| `advanced` | Escape hatch: one Essie expression for a filter no slot covers (shown to the reader) | `AREA[DesignAllocation]RANDOMIZED` |
 
-## Essie essentials
+## Rules
 
-- **Always quote multi-word terms**: `"multiple sclerosis"`. Unquoted terms use the
-  default `Relaxation` expansion, which also matches the words apart
-  (unquoted 3,957 trials vs quoted 3,729; the extra ones include tuberous sclerosis).
-- Combine with `OR`, `AND`, `NOT`, and parentheses. Precedence: NOT > AND > OR, so
-  parenthesise mixed expressions: `("eczema" OR "atopic dermatitis") AND NOT "pediatric"`.
-- Fixed values: `AREA[Phase]PHASE3`, `AREA[StudyType]INTERVENTIONAL`,
-  `AREA[LeadSponsorClass]INDUSTRY`, `AREA[InterventionType]DEVICE`.
-- Number ranges (`MIN`/`MAX` for open ends): `AREA[EnrollmentCount]RANGE[1000,MAX]`.
-  RANGE never matches trials with no value in that field.
-- **Years never go in the query text** (code rejects `AREA[StartDate]` / `AREA[CompletionDate]`):
-  set the step's `period` instead (next section).
-- Same-site conditions need `SEARCH[Location](...)`:
-  `SEARCH[Location](AREA[LocationCountry]United States AND AREA[LocationStatus]RECRUITING)`.
-- Enum values are UPPER_SNAKE_CASE exactly as listed in references/enums.md.
-- Search-only counters filter on list sizes, e.g. trials testing 2+ interventions:
-  `AREA[NumInterventions]RANGE[2,MAX]`.
+- **Brand and code names:** write them as given. Code looks up how the registry indexes them
+  and also searches the standard name; do not add synonyms yourself.
+- **Drug classes have no registry name:** expand a class into its member drugs and say so in the
+  rationale (`"JAK inhibitor"` finds 303 trials; tofacitinib, baricitinib and upadacitinib find 645).
+- **Sponsor aliases are not resolved by the registry:** write the registered lead-sponsor name
+  when you know it ("MSD" is registered as "Merck Sharp & Dohme LLC"), and say so.
+- **Regions:** use `region`; code expands it into the registry's country names and charts only
+  those countries. A region written as a country matches facility names, not the continent.
+- **Study type stays `any`** unless the question explicitly asks for interventional (treatment)
+  or observational studies. Code states the scope to the reader.
+- **"Ongoing"** = statuses `NOT_YET_RECRUITING`, `RECRUITING`, `ENROLLING_BY_INVITATION`,
+  `ACTIVE_NOT_RECRUITING`.
+- **"Completed" trials** = statuses `["COMPLETED"]`; a completion **date** alone also counts trials
+  still running or stopped. "Completed each year" = `statuses: ["COMPLETED"]` plus a `completion` period.
+- **Years go in `period`** (inclusive, either end open): `start` unless the question is about
+  trials completed or finishing. "Since 2015" = `from_year: 2015`; "in 2018" = from and to 2018.
+  The chart's time axis must use the matching year. Never write dates in `advanced`.
+- **`advanced` is only for what no slot covers**: design (`AREA[DesignAllocation]RANDOMIZED`,
+  `AREA[DesignMasking]QUADRUPLE`, `AREA[DesignPrimaryPurpose]TREATMENT`), `AREA[LeadSponsorClass]INDUSTRY`,
+  `AREA[InterventionType]DEVICE`, counters (`AREA[NumInterventions]RANGE[2,MAX]`), results
+  (`AREA[HasResults]true`), same-site conditions (`SEARCH[Location](AREA[LocationStatus]RECRUITING)`).
+  Phases, statuses, study type, enrollment, sponsors, drugs, conditions and countries have slots;
+  writing them in `advanced` is rejected. Enum values are UPPER_SNAKE_CASE (references/enums.md).
+- Do not narrow a question beyond what it asks to get fewer results: large sets are code's problem.
 
-## Rules learned from the live API
+## Breakdown
 
-- **Do not add synonyms or brand names** for a single drug: the API already matches
-  them (`"Tecentriq"` and `"atezolizumab"` both return 1,007 trials).
-- **Do expand drug classes into member drugs** and say so in the rationale:
-  `"JAK inhibitor"` finds 303 trials, `"tofacitinib" OR "baricitinib" OR "upadacitinib"` finds 645.
-- **Expand regions into countries**: `query.locn="South America"` matches facility names,
-  not the continent (1 trial, against 11,796 for `"Brazil"` alone).
-- **"Trials" usually means interventional studies**; add `AREA[StudyType]INTERVENTIONAL`
-  when the question is about testing treatments. Leave it out for "studies" in general.
-- **"Ongoing"** = `NOT_YET_RECRUITING|RECRUITING|ENROLLING_BY_INVITATION|ACTIVE_NOT_RECRUITING`.
-- **Years go in `period`**, `{"field": "start" | "completion", "from_year": ..., "to_year": ...}`
-  (inclusive, either end open). `start` unless the question is about trials completed or
-  finishing. "Since 2015" = `from_year: 2015`; "in 2018" = from and to 2018. Code turns it into
-  the date filter, and the chart's time axis must use the matching year (start_year or
-  completion_year). Dates after the data date are estimates; code leaves them off time axes.
-- **Combination therapy** = `AND` inside `query.intr`: `"atezolizumab" AND "bevacizumab"`.
-- **Exclusions** = `NOT`: `"hepatitis" NOT "hepatitis B"`.
-- Do not narrow a question beyond what it asks just to get fewer results: large
-  result sets are code's problem, not yours.
+Set `breakdown` to what the question asks to break the answer down by: one of `phase`,
+`start_year`, `completion_year`, `overall_status`, `lead_sponsor`, `sponsor_class`, `condition`,
+`intervention`, `intervention_type`, `country`, `enrollment`, `group` (the compared sides).
+If it asks for a breakdown the data cannot chart (US state, city, site, investigator, trial
+duration, randomisation), write `"unsupported: <what>"`: you will then answer Unanswerable,
+never chart the nearest field instead. Leave it out when the question asks for no breakdown.
+The chart you choose later must show this breakdown.
 
 ## Multi-step questions
 
@@ -113,87 +118,82 @@ When the question depends on a value you must find first ("the sponsor with the 
 trials", "the drugs most often tested alongside a named drug"):
 1. fetch the set that reveals it, call describe_data, and read the value from the profile's
    top values (code-computed counts; never guess it);
-2. fetch again with that value, and say in the rationale what you found and how many trials
-   it was based on ("<sponsor> leads glioblastoma with <N> trials", using the profile's count);
+2. fetch again with that value (a sponsor goes in `sponsors`: lead sponsor), and say in the
+   rationale what you found ("<sponsor> leads glioblastoma with <N> trials", the profile's count);
 3. the chart is built from the latest successful fetch, so that fetch must hold everything shown.
-Every fetch is recorded and shown to the reader.
 
 **Ties:** if the profile lists `tied_for_top` for the value you need, never pick one of them.
-Fetch every tied value as its own step (up to 4) and say there is a tie; if more than 4 tie
-(`tied_count`), say so in the rationale and chart the comparison of the first 4.
-**Few trials:** if the first fetch matches only a handful of trials, say in the rationale that
-the ranking rests on very few trials rather than presenting it as a clear leader.
+Fetch every tied value as its own step (up to 4) and say there is a tie. **Few trials:** if a fetch
+matches a handful of trials, say the ranking rests on very few trials.
 
-**Lead sponsors:** profiles rank `lead_sponsor`. To fetch "that sponsor's trials", search
-`query.lead` (lead sponsor only); `query.spons` also matches trials it only collaborates on.
+## User's structured fields
 
-## Comparisons
-
-One search per side, identical except for the compared concept, so the sides are
-comparable. Comparing **attributes** of one set of trials (phase 2 vs phase 3,
-industry vs academic, by year) is **one** search: the chart splits it later.
-
-## User's structured filters
-
-They are listed in the request. Include them in your searches. Code also adds any
-you miss (AND-ed onto your parameters), so never contradict them. **When the question text
-and a field disagree, the field wins**: search the field's value (`condition: melanoma` with
-"show lung cancer trials" means melanoma trials) and say so in the rationale. A plan whose
-`query.cond` / `query.intr` / `query.locn` / sponsor parameters name something else is sent
-back; a narrower term that contains the field's value ("uveal melanoma") is fine. `sponsor`
-is the **lead** sponsor (`query.lead`). The user's `start_year` /
-`end_year` are an inclusive start-date range ("start_year 2018" = 2018 onwards) and code sets
-them as the start period, replacing any start period you wrote.
+They are listed in the request; code puts them in the same slots. **The field wins** when the
+question text disagrees (`condition: melanoma` with "show lung cancer trials" means melanoma
+trials); code replaces your term and tells the reader, so plan for the field's value. A narrower
+term that contains the field's value ("uveal melanoma") is kept. In a comparison, a field that is
+one of the compared sides is fine; a comparison of other values is sent back. `sponsor` is the
+**lead** sponsor. `start_year` / `end_year` are an inclusive start-date range and replace your
+start period.
 
 ## Feedback
 
-If you receive feedback (API error message, "not found", "no trials matched", or a
-stats step rejected because of user filters), fix that specific problem: check syntax
-against the error, loosen an over-specific term, correct a field name or NCT number,
-or switch a stats step to `studies`. Do not change parts of the plan that were not at fault.
+If you receive feedback ("not found", "no trials matched", a conflict with the user's fields, an
+API error about `advanced`), fix that specific problem and keep the rest of the plan.
 
 ## Unanswerable
 
-Registry records hold design, status, dates, sponsors, sites, conditions,
-interventions and enrollment. They do not answer efficacy, safety comparisons,
-prices or medical advice. Also return unanswerable when the question refers to
-something it never names ("this drug" with no drug given).
+Registry records hold design, status, dates, sponsors, sites, conditions, interventions and
+enrollment. They do not answer efficacy, safety comparisons, prices or medical advice. Also
+answer Unanswerable when the question refers to something it never names ("this drug" with no
+drug given), or asks for a breakdown marked unsupported.
 
 ## Examples
 
 "Atezolizumab trials started per year from 2018 on"
 ```json
-{"steps": [{"endpoint": "studies", "label": "Atezolizumab", "params": {"query.intr": "\"atezolizumab\""}, "period": {"field": "start", "from_year": 2018}}],
+{"steps": [{"endpoint": "studies", "label": "Atezolizumab", "drugs": ["atezolizumab"], "period": {"field": "start", "from_year": 2018}}],
+ "breakdown": "start_year",
  "rationale": "Trials testing atezolizumab that started in 2018 or later."}
 ```
 
 "Durvalumab or atezolizumab in bladder cancer: phase mix of each"
 ```json
 {"steps": [
-  {"endpoint": "studies", "label": "Durvalumab", "params": {"query.intr": "\"durvalumab\"", "query.cond": "\"bladder cancer\""}},
-  {"endpoint": "studies", "label": "Atezolizumab", "params": {"query.intr": "\"atezolizumab\"", "query.cond": "\"bladder cancer\""}}],
+  {"endpoint": "studies", "label": "Durvalumab", "drugs": ["durvalumab"], "conditions": ["bladder cancer"]},
+  {"endpoint": "studies", "label": "Atezolizumab", "drugs": ["atezolizumab"], "conditions": ["bladder cancer"]}],
+ "breakdown": "phase",
  "rationale": "Bladder cancer trials of each drug; phases are compared in the chart."}
 ```
 
 "East Asian sites of recruiting, industry-run atopic dermatitis trials"
 ```json
-{"steps": [{"endpoint": "studies", "label": "Atopic dermatitis", "params": {
-  "query.cond": "\"atopic dermatitis\"",
-  "query.locn": "\"Japan\" OR \"China\" OR \"South Korea\" OR \"Taiwan\"",
-  "filter.overallStatus": "RECRUITING",
-  "filter.advanced": "AREA[LeadSponsorClass]INDUSTRY"}}],
- "rationale": "Recruiting industry-sponsored atopic dermatitis trials with sites in East Asian countries (East Asia expanded to 4 countries)."}
+{"steps": [{"endpoint": "studies", "label": "Atopic dermatitis", "conditions": ["atopic dermatitis"],
+  "countries": ["Japan", "China", "South Korea", "Taiwan"], "statuses": ["RECRUITING"],
+  "advanced": "AREA[LeadSponsorClass]INDUSTRY"}],
+ "breakdown": "country",
+ "rationale": "Recruiting industry-sponsored atopic dermatitis trials with sites in four East Asian countries."}
+```
+
+"Glioblastoma studies finished each year from 2012"
+```json
+{"steps": [{"endpoint": "studies", "label": "Glioblastoma", "conditions": ["glioblastoma"], "statuses": ["COMPLETED"],
+  "period": {"field": "completion", "from_year": 2012}}],
+ "breakdown": "completion_year",
+ "rationale": "Completed glioblastoma trials by completion year, from 2012."}
 ```
 
 "How are all registered trials split by phase and by overall status?"
 ```json
 {"steps": [{"endpoint": "stats/field/values", "label": "All registered trials", "fields": ["Phase", "OverallStatus"]}],
+ "breakdown": "phase",
  "rationale": "Registry-wide counts of the Phase and OverallStatus fields."}
 ```
 
 "Where are the sites of NCT05064059?"
 ```json
 {"steps": [{"endpoint": "study", "label": "NCT05064059", "nct_id": "NCT05064059"}],
+ "breakdown": "country",
  "rationale": "The one named trial; its site countries are in the record."}
 ```
 
@@ -201,8 +201,8 @@ something it never names ("this drug" with no drug given).
 
 | Read | When |
 | --- | --- |
-| references/data-structure/index.md | You need a field not shown above, or a field's exact meaning (dates, design, eligibility, results, counters such as `NumInterventions`). The index lists every module of a study record; then read only that module's file |
+| references/data-structure/index.md | You need a field for `advanced` not shown above, or a field's exact meaning (dates, design, eligibility, results, counters). The index lists every module of a study record; then read only that module's file |
 | references/enums.md | You need the exact allowed values of an enum field |
-| references/search-areas.md | Unsure which `query.*` parameter covers a concept, or which fields it searches |
-| references/parameters.md | You need a parameter not in the tables above (e.g. `filter.geo`, `query.outc`, `types` on stats) |
-| references/essie-syntax.md | Rare operators (`COVERAGE`, `EXPANSION`, `MISSING`, `DISTANCE`) or after a syntax error you cannot resolve |
+| references/search-areas.md | Unsure which fields a slot searches (drugs = InterventionSearch, conditions = ConditionSearch, ...) |
+| references/parameters.md | You need to know what the compiled parameters do (`filter.geo` and others are not slots yet) |
+| references/essie-syntax.md | Rare operators in `advanced` (`COVERAGE`, `EXPANSION`, `MISSING`, `DISTANCE`) or after a syntax error |

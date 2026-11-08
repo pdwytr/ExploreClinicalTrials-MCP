@@ -13,7 +13,7 @@
 import asyncio
 import logging
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from cheiron.fetch.endpoints import StudyStep
 from cheiron.fetch.models import SNAPSHOT_API_VERSION, DataVersion, StudySearchParams, Trial
@@ -34,7 +34,8 @@ from cheiron.workflow.plans import (
 )
 from cheiron.workflow.steps import AgentResult, FetchRecord, QueryPlanner, RunLog, TrialSource
 from cheiron.workflow.trace import run_metrics
-from cheiron.workflow.translate import PreparedStep, apply_request_filters, filters_summary, year_bounds
+from cheiron.workflow.intent import Resolver, contains_term
+from cheiron.workflow.translate import PreparedStep, filters_summary, prepare_plan, year_bounds
 
 log = logging.getLogger(__name__)
 
@@ -52,6 +53,8 @@ class FetchOutcome:
     results: list[StepResult]  # one per prepared step, same order
     version: DataVersion
     warnings: list[str]
+    notes: list[str] = field(default_factory=list)  # resolutions and replaced terms, for meta.assumptions
+    descriptions: list[str] = field(default_factory=list)  # what each search covers, in plain words
 
     @property
     def trials_by_group(self) -> dict[str, list[Trial]]:
@@ -82,6 +85,11 @@ class QueryWorkflow:
     # None = fetch every matching trial. Counts must be exact; long fetches run as
     # async tasks with status updates, so correctness wins over latency.
     max_trials_per_search: int | None = None
+    resolver: Resolver | None = None  # how names map to the registry's own; built from `source` if not given
+
+    def __post_init__(self) -> None:
+        if self.resolver is None:
+            self.resolver = Resolver(self.source.search, getattr(self.source, "fetch_stats", None))
 
     async def run(
         self, request: QueryRequest, progress: ProgressCallback | None = None, log: RunLog | None = None
@@ -111,7 +119,7 @@ class QueryWorkflow:
         meta = Meta(
             interpretation=_interpretation(result, log.fetches),
             filters_applied=filters_summary(outcome.prepared),
-            assumptions=_assumptions(chart, result.profile),
+            assumptions=outcome.notes + _assumptions(chart, result.profile),
             warnings=outcome.warnings + result.chart_warnings + viz_warnings,
             total_trials_matched=outcome.total_matched,
             trials_analyzed=outcome.trials_fetched,
@@ -132,10 +140,12 @@ class QueryWorkflow:
         both carry a message meant for the agent to fix its plan.
         """
         try:
-            prepared, warnings = apply_request_filters(search, request)
+            plan = await prepare_plan(search, request, self.resolver)
+            prepared, warnings = plan.steps, plan.warnings
             results, version = await self._fetch_consistent(prepared, progress)
         except InvalidSearch as exc:
             raise InvalidSearch(f"The plan was rejected: {exc.message}", exc.details) from exc
+        results = [_within_countries(target, r) for (_, target), r in zip(prepared, results)]
         if not any(isinstance(r, StatsResult) or r.total_matched for r in results):
             summary = filters_summary(prepared)
             raise NoResults(f"No trials matched these steps: {summary['steps']}", summary)
@@ -151,7 +161,7 @@ class QueryWorkflow:
                 warnings.append(f"{label}: analyzed {len(result.trials)} of {result.total_matched} matching trials.")
             if not result.trials and search.is_comparison:
                 warnings.append(f"{label}: no matching trials.")
-        return FetchOutcome(search, prepared, results, version, warnings)
+        return FetchOutcome(search, prepared, results, version, warnings, plan.notes, plan.descriptions)
 
     def _execute(self, index: int, target, tracker: "_FetchTracker"):
         """The client call for one prepared step."""
@@ -300,9 +310,22 @@ def _chain(result: AgentResult, fetches: list[FetchRecord]) -> list[ChainStep]:
     return chain
 
 
+def _within_countries(target, result: StepResult) -> StepResult:
+    """A search limited to some countries charts only those: a trial's other site countries are
+    dropped from its record (a 'European countries' question must not chart the US)."""
+    if not isinstance(target, StudySearchParams) or not target.countries or not isinstance(result, FetchResult):
+        return result
+    keep = lambda country: any(contains_term(country, c) or contains_term(c, country) for c in target.countries)  # noqa: E731
+    trials = [t.model_copy(update={"countries": [c for c in t.countries if keep(c)]}) for t in result.trials]
+    return result.model_copy(update={"trials": trials})
+
+
 def _interpretation(result: AgentResult, fetches: list[FetchRecord]) -> str:
-    """What was done to answer the question: every successful fetch's rationale, in order."""
-    steps = [r.plan.rationale for r in fetches if r.outcome is not None]
-    if len(steps) <= 1:
-        return result.outcome.plan.rationale
-    return " ".join(f"Step {i}: {text}" for i, text in enumerate(steps, start=1))
+    """What was searched, written by code from the compiled steps (never the model's own prose,
+    which stays in meta.chain as the rationale). Earlier fetches of a multi-step run come first."""
+    charted = " ".join(result.outcome.descriptions) or result.outcome.plan.rationale
+    earlier = [r.outcome for r in fetches if r.outcome is not None and r.outcome is not result.outcome]
+    if not earlier:
+        return charted
+    found = " ".join(f"Fetch {i}: {' '.join(o.descriptions)}" for i, o in enumerate(earlier, start=1))
+    return f"{found} Charted: {charted}"

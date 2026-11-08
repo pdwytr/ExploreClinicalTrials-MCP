@@ -21,6 +21,7 @@ from cheiron.workflow import (
 )
 from cheiron.workflow import pipeline
 from cheiron.workflow.pipeline import check_chart_plan
+from cheiron.workflow.intent import RESOLVE_SAMPLE
 from cheiron.workflow.profile import build_profile
 
 # --- Fakes ---------------------------------------------------------------------------
@@ -36,7 +37,7 @@ def trial(n: int, phase: str = "PHASE2", year: int | None = 2020) -> Trial:
 
 def search_plan(*interventions: str) -> SearchPlan:
     return SearchPlan(
-        steps=[{"endpoint": "studies", "label": i.title(), "params": {"query.intr": i}} for i in interventions],
+        steps=[{"endpoint": "studies", "label": i.title(), "drugs": [i]} for i in interventions],
         rationale=f"Trials of {' vs '.join(interventions)}",
     )
 
@@ -54,8 +55,11 @@ class FakeSource:
         return self.versions.pop(0) if len(self.versions) > 1 else self.versions[0]
 
     async def search(self, params, limit, on_progress=None):
+        if limit == RESOLVE_SAMPLE:  # name lookups: no standard names in these tests
+            return FetchResult(trials=[], total_matched=0)
         self.calls.append(params)
-        result = self.by_intervention.get(params.search.get("query.intr"), FetchResult(trials=[], total_matched=0))
+        drug = params.search.get("query.intr", "").strip('"')
+        result = self.by_intervention.get(drug, FetchResult(trials=[], total_matched=0))
         if isinstance(result, Exception):
             raise result
         if on_progress:
@@ -101,9 +105,16 @@ def test_run_returns_a_full_response():
     response, result = run(wf)
 
     assert [(r.phase, r.trial_count) for r in response.visualization.data] == [("PHASE2", 1), ("PHASE3", 1)]
-    assert response.meta.interpretation == "Trials of pembrolizumab"
+    assert response.meta.interpretation == "Pembrolizumab: all study types testing pembrolizumab."  # written by code
     assert response.meta.filters_applied == {
-        "steps": [{"label": "Pembrolizumab", "endpoint": "studies", "params": {"query.intr": "pembrolizumab"}}]
+        "steps": [
+            {
+                "label": "Pembrolizumab",
+                "endpoint": "studies",
+                "params": {"query.intr": '"pembrolizumab"'},  # compiled by code
+                "intent": {"drugs": ["pembrolizumab"]},  # what the agent meant
+            }
+        ]
     }
     assert response.meta.total_trials_matched == 2 and response.meta.trials_analyzed == 2
     assert response.meta.data_as_of.isoformat() == "2026-11-06T10:00:05"
@@ -118,7 +129,7 @@ def test_comparison_is_charted_by_side_with_overlap_noted():
 
     response, _ = run(wf)
 
-    assert sorted(p.search["query.intr"] for p in source.calls) == ["nivolumab", "pembrolizumab"]
+    assert sorted(p.search["query.intr"] for p in source.calls) == ['"nivolumab"', '"pembrolizumab"']
     assert {r.group for r in response.visualization.data} == {"Nivolumab", "Pembrolizumab"}
     assert any("counted in each" in a for a in response.meta.assumptions)
     assert any("several values of phase" in a for a in response.meta.assumptions)
@@ -224,3 +235,25 @@ def test_chart_plan_structural_rules():
         ChartPlan(intent="correlation", chart_type="scatter_plot", title="t", x=Dimension.ENROLLMENT)
     with pytest.raises(ValueError, match="needs a series"):
         ChartPlan(intent="relationship", chart_type="network_graph", title="t", x=Dimension.SPONSOR)
+
+
+# --- Countries and interventions the reader must not see ------------------------------------------
+
+
+def test_a_country_limited_search_charts_only_those_countries():
+    # g07 / u2: "European countries" charted the US and Japan, the trials' other site countries
+    trials = [Trial(nct_id="NCT00000001", countries=["France", "United States"]), Trial(nct_id="NCT00000002", countries=["Japan", "Germany"])]
+    plan = SearchPlan(steps=[{"endpoint": "studies", "label": "x", "drugs": ["x"], "countries": ["France", "Germany"]}], rationale="r")
+    chart = ChartPlan(intent="ranking", chart_type="bar_chart", title="t", x=Dimension.COUNTRY)
+    wf, _ = make_workflow(plan, {"x": FetchResult(trials=trials, total_matched=2)}, chart=chart)
+    response, _ = run(wf)
+    assert sorted(r.country for r in response.visualization.data) == ["France", "Germany"]
+
+
+def test_placebo_and_sham_are_not_interventions():
+    from cheiron.fetch.models import Intervention
+    from cheiron.workflow.profile import FIELD_VALUES
+
+    t = Trial(nct_id="NCT00000001", interventions=[Intervention(name="Metformin"), Intervention(name="Placebo Oral Tablet"), Intervention(name="Sham procedure")])
+    assert FIELD_VALUES[Dimension.INTERVENTION](t) == ["Metformin"]
+

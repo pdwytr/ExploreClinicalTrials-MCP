@@ -19,17 +19,17 @@ from cheiron.workflow import FetchResult, QueryWorkflow
 from cheiron.workflow.errors import UnsupportedQuery
 from cheiron.workflow.steps import RunLog
 
-PLAN = {"steps": [{"endpoint": "studies", "label": "Pembrolizumab", "params": {"query.intr": '"pembrolizumab"'}}],
+PLAN = {"steps": [{"endpoint": "studies", "label": "Pembrolizumab", "drugs": ["pembrolizumab"]}],
         "rationale": "Pembrolizumab trials."}  # fmt: skip
-TWO_DRUGS = {"steps": [{"endpoint": "studies", "label": "Nivolumab", "params": {"query.intr": '"nivolumab"'}},
-                       {"endpoint": "studies", "label": "Pembrolizumab", "params": {"query.intr": '"pembrolizumab"'}}],
+TWO_DRUGS = {"steps": [{"endpoint": "studies", "label": "Nivolumab", "drugs": ["nivolumab"]},
+                       {"endpoint": "studies", "label": "Pembrolizumab", "drugs": ["pembrolizumab"]}],
              "rationale": "Each drug's trials."}  # fmt: skip
 BY_PHASE = {"intent": "distribution", "chart_type": "bar_chart", "title": "Pembrolizumab trials by phase", "x": "phase"}
 BY_DRUG = {"intent": "magnitude", "chart_type": "grouped_bar_chart", "title": "Phases by drug", "x": "phase", "series": "group"}
 
 DATA = {
-    '"pembrolizumab"': FOUND,
-    '"nivolumab"': FetchResult(trials=[trial(9, "PHASE3")], total_matched=1),
+    "pembrolizumab": FOUND,
+    "nivolumab": FetchResult(trials=[trial(9, "PHASE3")], total_matched=1),
 }
 
 
@@ -93,7 +93,7 @@ def test_instructions_hold_the_role_and_the_search_skill():
     model, seen = scripted(*HAPPY)
     decide(model)
     assert "You answer a question about clinical trials with exactly one chart" in seen["instructions"]
-    assert "# Planning ClinicalTrials.gov API calls" in seen["instructions"]
+    assert "# Planning ClinicalTrials.gov searches" in seen["instructions"]
     assert "# Choosing the chart" not in seen["instructions"]  # loaded only on demand
 
 
@@ -113,7 +113,7 @@ def test_describe_before_fetch_is_sent_back():
 
 
 def test_failed_fetch_returns_the_reason_and_allows_one_more():
-    bad = {"steps": [{"endpoint": "studies", "label": "Typo", "params": {"query.intr": '"pembrolizmab"'}}], "rationale": "r"}
+    bad = {"steps": [{"endpoint": "studies", "label": "Typo", "drugs": ["pembrolizmab"]}], "rationale": "r"}
     model, seen = scripted(("fetch_data", {"plan": bad}), *HAPPY)
     log = RunLog()
     result = decide(model, log=log)
@@ -236,3 +236,36 @@ def test_trace_and_metrics_record_the_run_without_records():
     assert metrics.model_turns == 5 and metrics.sent_back == 1 and metrics.fetches == 1
     assert metrics.tool_calls["fetch_data"] == 1 and metrics.tool_calls["describe_data"] == 1
     assert "NCT00000001" not in str(trace)
+
+
+# --- The breakdown the plan states ----------------------------------------------------------------
+
+BY_STATE = {**PLAN, "breakdown": "unsupported: US state"}
+BY_COUNTRY_PLAN = {**PLAN, "breakdown": "country"}
+
+
+def test_an_unsupported_breakdown_must_be_refused_not_swapped_for_another_field():
+    # r05: asked "by state", answered with a country chart
+    model, seen = scripted(
+        ("fetch_data", {"plan": BY_STATE}),
+        ("describe_data", {}),
+        ("ChartPlan", BY_PHASE),
+        ("Unanswerable", {"reason": "US state is not available in the fetched data."}),
+    )
+    with pytest.raises(UnsupportedQuery, match="US state"):
+        decide(model)
+    assert "Answer Unanswerable" in seen_text(seen["messages"])
+
+
+def test_the_chart_must_show_the_stated_breakdown():
+    model, seen = scripted(
+        ("fetch_data", {"plan": BY_COUNTRY_PLAN}),
+        ("describe_data", {}),
+        ("ChartPlan", BY_PHASE),  # charts phase although the plan said country
+        ("fetch_data", {"plan": {**PLAN, "breakdown": "phase"}}),  # the plan was wrong: corrected
+        ("describe_data", {}),
+        ("ChartPlan", BY_PHASE),
+    )
+    result = decide(model)
+    assert "asks for a breakdown by country, but the chart shows ['phase']" in seen_text(seen["messages"])
+    assert result.chart.x.value == "phase"

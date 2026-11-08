@@ -19,11 +19,12 @@ from cheiron.models.response import Intent, VisualizationType
 
 # --- Agent 1 output ------------------------------------------------------------------
 #
-# Deliberately thin: the planner picks ClinicalTrials.gov endpoints and writes their
-# parameters itself (for /studies: query.*, filter.* in Essie syntax), after reading
-# the API docs in its prompt. Code checks each step against its endpoint's rules,
-# adds the user's structured filters, executes the steps, and sends feedback if a
-# step fails or finds nothing.
+# The planner states what the question means: typed /studies steps (drugs, conditions,
+# sponsors, countries, phases, ... see fetch.endpoints.StudiesStep) and the breakdown the
+# question asks for. Code resolves names to the registry's own, merges the user's structured
+# fields, compiles the API parameters (workflow.intent), executes the steps, and sends
+# feedback if a step fails or finds nothing. Registry-wide stats and single-trial lookups are
+# plain endpoint steps.
 
 
 class SearchPlan(BaseModel):
@@ -31,6 +32,16 @@ class SearchPlan(BaseModel):
         min_length=1, max_length=4, description="One step, or one per compared side. Each names its endpoint."
     )
     rationale: str = Field(min_length=1, max_length=500, description="What is being fetched and why, in plain words.")
+    breakdown: str | None = Field(
+        default=None,
+        max_length=80,
+        description=(
+            "What the question asks to break the answer down by: a chartable field "
+            "(phase, start_year, completion_year, overall_status, lead_sponsor, sponsor_class, condition, "
+            "intervention, intervention_type, country, enrollment, group) or, if it asks for anything else, "
+            "'unsupported: <what>' (e.g. 'unsupported: US state'). None when it asks for no breakdown."
+        ),
+    )
 
     @property
     def is_comparison(self) -> bool:

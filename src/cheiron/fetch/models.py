@@ -52,6 +52,8 @@ DEFAULT_FIELDS = [
     "InterventionType",
     "LocationCountry",
     "EnrollmentCount",
+    "ConditionMeshTerm",  # the registry's standard (MeSH) names, used to resolve brands and spellings
+    "InterventionMeshTerm",
 ]
 
 
@@ -120,6 +122,12 @@ class StudySearchParams(BaseModel):
     page_size: int = Field(default=MAX_PAGE_SIZE, ge=1, le=MAX_PAGE_SIZE)
     page_token: str | None = None
     count_total: bool = True
+    # What the search means, for meta and evals (never sent to the API): the agent's slots after
+    # the user's fields were merged, names also searched under the registry's standard name, and
+    # the site countries it is limited to (registry spellings).
+    intent: dict | None = None
+    searched_as: dict[str, list[str]] = Field(default_factory=dict)
+    countries: list[str] = Field(default_factory=list)
 
     @field_validator("search")
     @classmethod
@@ -209,8 +217,24 @@ class ProtocolSection(_Raw):
     contacts_locations_module: ContactsLocationsModule | None = None
 
 
+class MeshTerm(_Raw):
+    term: str | None = None
+
+
+class BrowseModule(_Raw):
+    meshes: list[MeshTerm] = Field(default_factory=list)
+
+
+class DerivedSection(_Raw):
+    """Fields the registry derives from each record, e.g. the MeSH terms it indexed it under."""
+
+    condition_browse_module: BrowseModule | None = None
+    intervention_browse_module: BrowseModule | None = None
+
+
 class RawStudy(_Raw):
     protocol_section: ProtocolSection
+    derived_section: DerivedSection | None = None
 
 
 class StudiesPage(_Raw):
@@ -248,6 +272,8 @@ class Trial(BaseModel):
     interventions: list[Intervention] = Field(default_factory=list)
     countries: list[str] = Field(default_factory=list, description="Distinct, in order of first appearance.")
     enrollment: int | None = None
+    condition_mesh: list[str] = Field(default_factory=list, description="MeSH terms the registry indexed it under.")
+    intervention_mesh: list[str] = Field(default_factory=list)
 
     @property
     def start_year(self) -> int | None:
@@ -283,6 +309,11 @@ class Trial(BaseModel):
         design = p.design_module or DesignModule()
         locations = (p.contacts_locations_module or ContactsLocationsModule()).locations
         interventions = (p.arms_interventions_module or ArmsInterventionsModule()).interventions
+        derived = raw.derived_section or DerivedSection()
+
+        def mesh(module: BrowseModule | None) -> list[str]:
+            return list(dict.fromkeys(m.term for m in (module.meshes if module else []) if m.term))
+
         return cls(
             nct_id=p.identification_module.nct_id,
             title=p.identification_module.brief_title,
@@ -298,4 +329,6 @@ class Trial(BaseModel):
             interventions=[Intervention(name=i.name, type=i.type) for i in interventions if i.name],
             countries=list(dict.fromkeys(loc.country for loc in locations if loc.country)),
             enrollment=design.enrollment_info.count if design.enrollment_info else None,
+            condition_mesh=mesh(derived.condition_browse_module),
+            intervention_mesh=mesh(derived.intervention_browse_module),
         )

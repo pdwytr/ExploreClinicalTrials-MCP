@@ -29,7 +29,7 @@ def spec_params(path: str) -> dict[str, dict]:
 
 def test_every_step_calls_a_real_endpoint():
     steps = [
-        StudiesStep(label="x", params={"query.cond": "asthma"}),
+        StudiesStep(label="x", conditions=["asthma"]),
         StudyStep(label="x", nct_id="NCT05064059"),
         FieldValuesStep(label="x", fields=["Phase"]),
         STEP.validate_python({"endpoint": "stats/field/sizes", "label": "x", "fields": ["Condition"]}),
@@ -67,7 +67,9 @@ def test_steps_are_chosen_by_endpoint():
     "raw",
     [
         {"endpoint": "stats/everything", "label": "x"},  # no such endpoint
-        {"endpoint": "studies", "label": "x", "params": {"pageSize": "5"}},  # paging belongs to code
+        {"endpoint": "studies", "label": "x", "params": {"query.intr": "x"}},  # raw parameters: slots only
+        {"endpoint": "studies", "label": "x", "drugs": ["x"], "advanced": "AREA[Phase]PHASE3"},  # phases has a slot
+        {"endpoint": "studies", "label": "x", "exclude_conditions": ["type 1 diabetes"]},  # nothing to exclude from
         {"endpoint": "study", "label": "x", "nct_id": "12345"},  # not an NCT number
         {"endpoint": "stats/field/values", "label": "x", "fields": []},  # needs a field
         {"endpoint": "stats/field/values", "label": "x", "fields": ["Phase; DROP"]},  # breaks the spec pattern

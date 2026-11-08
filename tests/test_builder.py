@@ -215,6 +215,6 @@ def test_stacking_a_multi_valued_field_is_rejected():
     trials = [trial(1, phases=["PHASE1", "PHASE2"], sponsor_class="INDUSTRY")]
     profile = build_profile({"All": trials}, total_matched=1)
     chart = plan(intent="part_to_whole", chart_type="stacked_bar_chart", x=Dimension.SPONSOR_CLASS, series=Dimension.PHASE)
-    search = SearchPlan(steps=[{"endpoint": "studies", "label": "All", "params": {"query.cond": "x"}}], rationale="r")
+    search = SearchPlan(steps=[{"endpoint": "studies", "label": "All", "conditions": ["x"]}], rationale="r")
     with pytest.raises(UnsupportedQuery, match="several values per trial"):
         check_chart_plan(chart, search, profile)

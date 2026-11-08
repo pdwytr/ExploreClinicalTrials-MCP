@@ -13,7 +13,7 @@ import pytest
 from pydantic import ValidationError
 
 from cheiron.fetch import StudiesPage, StudySearchParams, Trial, build_advanced_filter
-from cheiron.fetch.models import date_range
+from cheiron.fetch.models import RawStudy, date_range
 from cheiron.models import TrialPhase
 
 FIXTURE = Path(__file__).parent / "fixtures" / "ctgov" / "pembrolizumab_phase3_page1.json"
@@ -127,3 +127,19 @@ def test_partial_start_date_becomes_first_of_month():
         }
     ).studies[0]
     assert Trial.from_raw(raw).start_date == date(2015, 3, 1)
+
+
+def test_mesh_terms_are_kept_from_the_derived_section():
+    raw = RawStudy.model_validate(
+        {
+            "protocolSection": {"identificationModule": {"nctId": "NCT04639414"}},
+            "derivedSection": {
+                "conditionBrowseModule": {"meshes": [{"term": "Diabetes Mellitus, Type 2"}]},
+                "interventionBrowseModule": {"meshes": [{"term": "semaglutide"}, {"term": "semaglutide"}]},
+            },
+        }
+    )
+    trial = Trial.from_raw(raw)
+    assert trial.condition_mesh == ["Diabetes Mellitus, Type 2"]
+    assert trial.intervention_mesh == ["semaglutide"]  # distinct
+    assert Trial.from_raw(RawStudy.model_validate({"protocolSection": {"identificationModule": {"nctId": "NCT00000001"}}})).intervention_mesh == []

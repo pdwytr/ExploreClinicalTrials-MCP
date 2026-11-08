@@ -18,8 +18,8 @@ from cheiron.workflow.profile import build_profile
 DATA_TS = "2026-11-06T10:00:05"
 
 COMPARISON = SearchPlan(
-    steps=[{"endpoint": "studies", "label": "Nivolumab", "params": {"query.intr": "nivolumab"}},
-           {"endpoint": "studies", "label": "Pembrolizumab", "params": {"query.intr": "pembrolizumab"}}],
+    steps=[{"endpoint": "studies", "label": "Nivolumab", "drugs": ["nivolumab"]},
+           {"endpoint": "studies", "label": "Pembrolizumab", "drugs": ["pembrolizumab"]}],
     rationale="Each drug's trials.",
 )  # fmt: skip
 PHASE_BY_DRUG = ChartPlan(
@@ -46,7 +46,7 @@ class Source:
         return DataVersion(api_version="2.0.5", data_timestamp=DATA_TS)
 
     async def search(self, params, limit=None, on_progress=None):
-        n = 2 if params.search["query.intr"] == "nivolumab" else 3
+        n = 2 if "nivolumab" in params.search.get("query.intr", "") else 3
         trials = [Trial(nct_id=f"NCT{i:08d}", phases=["PHASE3"]) for i in range(n)]
         if on_progress:
             on_progress(n, n)
@@ -167,7 +167,7 @@ def test_root_serves_the_web_ui(tmp_path):
 
 def test_stats_step_is_saved_next_to_trials(tmp_path):
     plan = SearchPlan(
-        steps=[{"endpoint": "studies", "label": "Nivolumab", "params": {"query.intr": "nivolumab"}},
+        steps=[{"endpoint": "studies", "label": "Nivolumab", "drugs": ["nivolumab"]},
                {"endpoint": "stats/field/values", "label": "All trials", "fields": ["Phase"]}],
         rationale="Nivolumab trials and the registry-wide phase split.",
     )  # fmt: skip

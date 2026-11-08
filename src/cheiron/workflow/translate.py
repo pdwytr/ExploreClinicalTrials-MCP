@@ -1,151 +1,52 @@
-"""Deterministic glue between steps: adding the user's structured filters to the
-planner's steps, and summarising what was fetched. No AI here."""
+"""Deterministic glue between steps: turning the agent's plan into executable API calls
+(see intent.py), and summarising what was fetched. No AI here."""
 
 import logging
-import re
+from dataclasses import dataclass, field
 
-from cheiron.fetch.endpoints import FieldSizesStep, FieldValuesStep, Period, RecordSizeStep, StudiesStep, StudyStep
-from cheiron.fetch.models import StudySearchParams, build_advanced_filter, date_range
+from cheiron.fetch.endpoints import FieldSizesStep, FieldValuesStep, RecordSizeStep, StudiesStep, StudyStep
+from cheiron.fetch.models import StudySearchParams
 from cheiron.models.request import QueryRequest
-from cheiron.workflow.errors import InvalidSearch
+from cheiron.workflow.intent import Resolver, compile_step, describe, effective_periods, merge_request, resolve_plan
 from cheiron.workflow.plans import SearchPlan
 
 log = logging.getLogger(__name__)
 
-# Request field -> (API text parameter the user's value goes on, other parameters that name the same thing).
-# `sponsor` is documented as the lead sponsor, so it filters query.lead; query.spons (lead or collaborator)
-# naming a different organisation would still conflict with it.
-_TEXT_FILTERS: dict[str, tuple[str, tuple[str, ...]]] = {
-    "drug_name": ("query.intr", ()),
-    "condition": ("query.cond", ()),
-    "sponsor": ("query.lead", ("query.spons",)),
-    "country": ("query.locn", ()),
-}
-
-# (label, what to execute): a /studies search with the user's filters added, or another endpoint's step.
+# (label, what to execute): a compiled /studies search, or another endpoint's step.
 PreparedStep = tuple[str, StudySearchParams | StudyStep | FieldValuesStep | FieldSizesStep | RecordSizeStep]
 
 
-def phrase(text: str) -> str:
-    """Quote a user value so the API matches it as a phrase and never reads it as syntax.
+@dataclass
+class PreparedPlan:
+    """A plan ready to run: every step compiled, plus what the reader must be told about it."""
 
-    Unquoted, 'multiple sclerosis' also matches 'tuberous sclerosis' (68 vs 55
-    trials in a live check). Inner double quotes are dropped: they would end the phrase.
-    """
-    return '"' + text.replace('"', "").strip() + '"'
-
-
-def _norm(expression: str) -> str:
-    """Ignore parentheses and spaces when checking whether a filter is already present."""
-    return re.sub(r"[()\s]", "", expression)
+    steps: list[PreparedStep]
+    warnings: list[str] = field(default_factory=list)  # -> meta.warnings
+    notes: list[str] = field(default_factory=list)  # -> meta.assumptions (resolutions, replaced terms)
+    descriptions: list[str] = field(default_factory=list)  # -> meta.interpretation, one per studies step
 
 
-def _bare(text: str) -> str:
-    return " ".join(text.replace('"', " ").split()).casefold()
-
-
-def _same_term(planner_value: str, user_value: str) -> bool:
-    """The planner searched exactly the user's term (ignoring quotes, case and spacing). Only then is
-    the user's filter already applied: a value that merely *contains* it (e.g. an OR) is wider."""
-    return _bare(planner_value) == _bare(user_value)
-
-
-def _contains_term(planner_value: str, user_value: str) -> bool:
-    """The planner's search names the user's term as whole words ("uveal melanoma" contains melanoma),
-    so AND-ing the user's value narrows it or keeps it; it does not turn it into another question."""
-    return re.search(rf"(?<!\w){re.escape(_bare(user_value))}(?!\w)", _bare(planner_value)) is not None
-
-
-def _and(existing: str | None, addition: str) -> str:
-    return f"({existing}) AND {addition}" if existing else addition
-
-
-def apply_request_filters(plan: SearchPlan, request: QueryRequest) -> tuple[list[PreparedStep], list[str]]:
-    """Add every structured field the user sent to every /studies step, so filters are guaranteed.
-
-    - Text fields (drug, condition, sponsor as the lead sponsor, country) are AND-ed onto the
-      matching parameter, unless the planner searched exactly that term (an OR containing it is
-      wider). If the planner's value for that parameter does not contain the user's term at all
-      (condition=melanoma, plan "lung cancer"), the two disagree: AND-ing them would answer neither
-      question, so the plan is sent back with InvalidSearch to search the user's value instead.
-    - Phases are AND-ed onto filter.advanced, unless it is exactly that phase filter.
-    - Years: each step's period becomes a RANGE on its date field. The user's start_year /
-      end_year are authoritative: they replace any start-date period the planner wrote.
-    - Statuses replace filter.overallStatus (the user's explicit choice wins).
-    Exception: if the steps compare sides on that very parameter and the user's value is one
-    of the sides (e.g. drug_name=X, "compare X with Y"), AND-ing it onto every side would erase
-    the comparison, so it is skipped with a user-facing warning. A comparison of other values is
-    a conflict like any other.
-
-    Registry-wide steps (/stats/*) cannot filter, so a plan using them while the user
-    sent filters is rejected with InvalidSearch: the planner gets that as feedback.
-
-    A single-study lookup is not filtered either; the user gets a warning.
-
-    Returns the executable steps (in plan order) and warnings.
-    """
-    warnings: list[str] = []
-    if request.filters():
-        unfilterable = [s.endpoint for s in plan.steps if s.endpoint.startswith("stats/")]
-        if unfilterable:
-            raise InvalidSearch(
-                f"The user supplied filters {request.filters()}, but {unfilterable} cover the whole registry "
-                "and cannot apply them. Use 'studies' steps for filtered questions."
-            )
-        if any(isinstance(s, StudyStep) for s in plan.steps):
-            warnings.append("Filters do not apply to a lookup of one trial by NCT number.")
-
-    studies = [s for s in plan.steps if isinstance(s, StudiesStep)]
-    all_params = [dict(s.params) for s in studies]
-
-    for req_field, (api_param, related) in _TEXT_FILTERS.items():
-        wanted = getattr(request, req_field)
-        if wanted is None:
-            continue
-        values = {p.get(api_param, "").casefold() for p in all_params}
-        if plan.is_comparison and len(values) > 1 and any(_same_term(p.get(api_param, ""), wanted) for p in all_params):
-            warnings.append(f"Ignored {req_field}={wanted!r}: the question compares searches by {api_param}.")
-            continue
-        conflicts = [
-            f"{param} {p[param]}"
-            for p in all_params
-            for param in (api_param, *related)
-            if p.get(param) and not _contains_term(p[param], wanted)
-        ]
-        if conflicts:
-            raise InvalidSearch(
-                f"The user set {req_field}={wanted!r}, but the plan searches {'; '.join(conflicts)}. The user's "
-                f"field wins: search {api_param}={phrase(wanted)} (code adds it), and drop or move the other term "
-                "unless it only narrows the user's value.",
-                {"field": req_field, "value": wanted, "conflicts": conflicts},
-            )
-        for p in all_params:
-            if not _same_term(p.get(api_param, ""), wanted):
-                log.info("added user filter: %s += %r", api_param, wanted)
-                p[api_param] = _and(p.get(api_param), phrase(wanted))
-
-    advanced = build_advanced_filter(request.trial_phase)
-    statuses = "|".join(s.value for s in request.recruitment_status) if request.recruitment_status else None
-    for step, p in zip(studies, all_params):
-        if advanced and _norm(advanced) != _norm(p.get("filter.advanced", "")):
-            p["filter.advanced"] = _and(p.get("filter.advanced"), advanced)
-        for period in effective_periods(step, request):
-            p["filter.advanced"] = _and(p.get("filter.advanced"), date_range(period.field, period.from_year, period.to_year))
-        if statuses and p.get("filter.overallStatus") != statuses:
-            log.info("user status filter replaces %r", p.get("filter.overallStatus"))
-            p["filter.overallStatus"] = statuses
-
-    filtered = iter(StudySearchParams(search=p) for p in all_params)
-    prepared: list[PreparedStep] = [
-        (s.label, next(filtered) if isinstance(s, StudiesStep) else s) for s in plan.steps
+async def prepare_plan(plan: SearchPlan, request: QueryRequest, resolver: Resolver) -> PreparedPlan:
+    """Merge the user's fields, resolve names to the registry's own, compile the API parameters.
+    Raises InvalidSearch when the plan conflicts with the user's fields (sent back to the agent)."""
+    merged, warnings, notes = merge_request(plan, request)
+    resolved, resolve_warnings, resolve_notes = await resolve_plan(merged, resolver)
+    steps: list[PreparedStep] = [
+        (s.label, compile_step(resolved[s.label], request) if isinstance(s, StudiesStep) else s) for s in merged.steps
     ]
-    return prepared, warnings
+    descriptions = [describe(label, r, request) for label, r in resolved.items()]
+    return PreparedPlan(steps, warnings + resolve_warnings, notes + resolve_notes, descriptions)
 
 
 def step_summary(label: str, target) -> dict:
     """One executed step as {label, endpoint, params}: exactly what was sent (rerunnable as-is)."""
     if isinstance(target, StudySearchParams):
-        return {"label": label, "endpoint": "studies", "params": target.search}
+        summary = {"label": label, "endpoint": "studies", "params": target.search}
+        if target.intent is not None:
+            summary["intent"] = target.intent
+        if target.searched_as:
+            summary["searched_as"] = target.searched_as
+        return summary
     if isinstance(target, StudyStep):
         return {"label": label, "endpoint": "study", "params": {"nct_id": target.nct_id.upper()}}
     return {"label": label, "endpoint": target.endpoint, "params": target.query_params()}
@@ -154,19 +55,6 @@ def step_summary(label: str, target) -> dict:
 def filters_summary(prepared: list[PreparedStep]) -> dict:
     """The exact API calls that ran, for meta.filters_applied."""
     return {"steps": [step_summary(label, target) for label, target in prepared]}
-
-
-def effective_periods(step: StudiesStep, request: QueryRequest) -> list[Period]:
-    """The periods a /studies step is actually filtered on. The user's start_year / end_year
-    replace the planner's start-date period; a completion-date period is kept alongside."""
-    periods = []
-    if request.start_year or request.end_year:
-        if step.period and step.period.field == "start":
-            log.info("user years replace the planner's start period %s", step.period)
-        periods.append(Period(field="start", from_year=request.start_year, to_year=request.end_year))
-    if step.period and not (periods and step.period.field == "start"):
-        periods.append(step.period)
-    return periods
 
 
 def year_bounds(plan: SearchPlan, request: QueryRequest) -> dict[str, tuple[int | None, int | None]]:

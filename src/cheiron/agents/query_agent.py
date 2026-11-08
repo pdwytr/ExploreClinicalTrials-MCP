@@ -31,7 +31,7 @@ from cheiron.models.request import QueryRequest
 from cheiron.settings import get_settings
 from cheiron.workflow.errors import InvalidSearch, NoResults, UnsupportedQuery
 from cheiron.workflow.pipeline import FetchOutcome, check_chart_plan
-from cheiron.workflow.plans import ChartPlan, DataProfile, SearchPlan, StatsResult, Unanswerable
+from cheiron.workflow.plans import ChartPlan, DataProfile, Dimension, SearchPlan, StatsResult, Unanswerable
 from cheiron.workflow.profile import build_profile
 from cheiron.workflow.translate import year_bounds
 from cheiron.workflow.steps import AgentResult, FetchRecord, RunLog
@@ -41,7 +41,8 @@ SEARCH_SKILL = "ctgov-search"
 FETCH_BUDGET = 5
 
 ROLE = f"""You answer a question about clinical trials with exactly one chart. Work in this order:
-1. Plan the API calls following the ctgov-search skill below, then call fetch_data with the plan.
+1. Write the search plan following the ctgov-search skill below (typed slots: what the question means;
+   code builds the API calls), then call fetch_data with it.
 2. Call describe_data to see a profile of the latest fetch (you never see the records).
 3. If the question depends on something you must find first (e.g. "the sponsor with the most
    melanoma trials", "the drugs most often combined with X"), read it from that profile, then call
@@ -130,8 +131,9 @@ class QueryAgent:
 
 
 async def fetch_data(ctx: RunContext[RunState], plan: SearchPlan) -> str:
-    """Execute a plan of API calls (see the ctgov-search skill). Code adds the user's filters, fetches
-    every page and keeps the data; you get back only how many trials each step matched."""
+    """Execute a search plan (see the ctgov-search skill). Code resolves names to the registry's own,
+    adds the user's fields, builds the API calls, fetches every page and keeps the data; you get back
+    how many trials each step matched and what each step searched."""
     state = ctx.deps
     if len(state.fetches) >= FETCH_BUDGET:
         raise ModelRetry(f"The fetch budget ({FETCH_BUDGET}) is used up. Call describe_data and decide.")
@@ -155,7 +157,15 @@ async def fetch_data(ctx: RunContext[RunState], plan: SearchPlan) -> str:
         for (label, _), r in zip(outcome.prepared, outcome.results)
     ]
     return json.dumps(
-        {"fetch": record.number, "fetched": steps, "warnings": outcome.warnings, "fetches_left": left, "next": "call describe_data"}
+        {
+            "fetch": record.number,
+            "fetched": steps,
+            "searched": outcome.descriptions,  # what code actually searched, incl. registry names added
+            "notes": outcome.notes,
+            "warnings": outcome.warnings,
+            "fetches_left": left,
+            "next": "call describe_data",
+        }
     )
 
 
@@ -205,12 +215,38 @@ async def validate_output(ctx: RunContext[RunState], output: ChartPlan | Unanswe
     state = ctx.deps
     if state.outcome is None or state.profile is None:
         raise ModelRetry("Fetch the data (fetch_data) and look at it (describe_data) before choosing a chart.")
+    problem = breakdown_problem(state.outcome.plan, output)
+    if problem:
+        raise ModelRetry(problem)
     try:
         bounds = year_bounds(state.outcome.plan, state.request)
         state.chart_warnings = check_chart_plan(output, state.outcome.plan, state.profile, bounds)
     except UnsupportedQuery as exc:
         raise ModelRetry(f"This chart does not fit the fetched data: {exc.message}") from exc
     return output
+
+
+def breakdown_problem(plan: SearchPlan, chart: ChartPlan) -> str | None:
+    """The chart must show the breakdown the plan said the question asks for. A breakdown the
+    system cannot chart must be refused, never answered with the nearest field it has."""
+    asked = (plan.breakdown or "").strip()
+    if not asked:
+        return None
+    if asked.lower().startswith("unsupported"):
+        what = asked.split(":", 1)[1].strip() if ":" in asked else "that breakdown"
+        return (
+            f"The plan says the question asks for a breakdown by {what}, which registry data here cannot chart. "
+            f"Answer Unanswerable and say that {what} is not available, instead of charting another field."
+        )
+    shown = {d.value for d in (chart.x, chart.series) if d is not None}
+    if asked not in {d.value for d in Dimension}:
+        return f"breakdown {asked!r} is not a chartable field; use one of {[d.value for d in Dimension]} or 'unsupported: <what>'."
+    if asked not in shown:
+        return (
+            f"The plan says the question asks for a breakdown by {asked}, but the chart shows {sorted(shown)}. "
+            f"Chart {asked}, or fetch again with a corrected breakdown if the plan was wrong."
+        )
+    return None
 
 
 def build_prompt(request: QueryRequest) -> str:
