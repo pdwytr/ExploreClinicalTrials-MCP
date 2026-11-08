@@ -188,3 +188,16 @@ def test_stats_step_is_saved_next_to_trials(tmp_path):
     }
     saved = json.loads((tmp_path / task_id / "fetch-1" / steps[1]["stats_file"]).read_text())
     assert saved[0]["topValues"][0] == {"value": "PHASE2", "studiesCount": 5}
+
+
+def test_committed_openapi_schema_matches_the_code():
+    """docs/api/openapi.json is what the README points readers to; regenerate it with
+    scripts/export_openapi.py when the API changes."""
+    import sys
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parent.parent
+    sys.path.insert(0, str(root / "scripts"))
+    from export_openapi import OUT, schema
+
+    assert json.loads(OUT.read_text()) == json.loads(json.dumps(schema())), "run scripts/export_openapi.py"
