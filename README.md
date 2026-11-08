@@ -362,7 +362,12 @@ What is not done, roughly in the order I would do it:
    drugs from its own knowledge.
 6. **Scatter plots** cover enrollment against duration only, and duration exists only for finished
    trials.
-7. **One process, tasks in memory.** Task status is lost on restart (saved outputs remain) and is
+7. **One model, untested against others.** Every result here comes from GPT-5.4. The code accepts
+   only OpenAI models today, although Pydantic AI supports most providers. Next: allow any
+   provider, run the full eval suite on several models, and compare pass rate, latency and cost
+   per question. Because the model only interprets and code does the rest, a smaller, cheaper
+   model may do as well, and the evals are the way to find out.
+8. **One process, tasks in memory.** Task status is lost on restart (saved outputs remain) and is
    not shared between workers. Next: a persistent task store.
 
 ## What I would build next
@@ -627,7 +632,9 @@ turning points were:
 - checking the output against the brief's examples and including complete trial lists after
   measuring their cost.
 
-**Running it.** The query agent uses an OpenAI model, set by `CHEIRON_PLANNER_MODEL`.
+**Running it.** The query agent runs on OpenAI's GPT-5.4 (`CHEIRON_PLANNER_MODEL=openai:gpt-5.4`).
+Every eval result in this README comes from that model. I have not compared it with other models;
+with more time I would run the same evals on several (see the limitations).
 
 **How correctness was checked.**
 
