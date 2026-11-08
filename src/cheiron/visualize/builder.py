@@ -62,10 +62,11 @@ def _reader(dim: Dimension, pairs: list[Pair]) -> Callable[[str, Trial], set[str
 
 
 def _excerpt(dim: Dimension, value: str, trial: Trial) -> str:
+    # the date the year came from, as the registry wrote it ("2018-03", not the padded 2018-03-01)
     if dim is Dimension.START_YEAR and trial.start_date:
-        return trial.start_date.isoformat()  # the exact date the year came from
+        return trial.start_date_text or trial.start_date.isoformat()
     if dim is Dimension.COMPLETION_YEAR and trial.completion_date:
-        return trial.completion_date.isoformat()
+        return trial.completion_date_text or trial.completion_date.isoformat()
     # the trial's own spelling of the (possibly merged) value
     return next((v for v in FIELD_VALUES[dim](trial) if value_key(v) == value_key(value)), value)
 

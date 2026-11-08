@@ -13,7 +13,7 @@ OpenAPI spec: https://clinicaltrials.gov/api/oas/v2
 import re
 from datetime import date, datetime
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from pydantic.alias_generators import to_camel
 
 from cheiron.models.request import RecruitmentStatus, TrialPhase
@@ -236,8 +236,10 @@ class Trial(BaseModel):
     title: str | None = None
     overall_status: str | None = None
     start_date: date | None = None
+    start_date_text: str | None = None  # the registry's own text ("2018-03"), quoted by citations
     start_date_type: str | None = None  # ACTUAL or ESTIMATED
     completion_date: date | None = None
+    completion_date_text: str | None = None
     completion_date_type: str | None = None
     phases: list[str] = Field(default_factory=list)
     lead_sponsor: str | None = None
@@ -254,6 +256,16 @@ class Trial(BaseModel):
     @property
     def completion_year(self) -> int | None:
         return self.completion_date.year if self.completion_date else None
+
+    @model_validator(mode="before")
+    @classmethod
+    def keep_date_text(cls, data):
+        """Remember each date exactly as the registry wrote it before it is parsed (and maybe padded)."""
+        if isinstance(data, dict):
+            for name in ("start_date", "completion_date"):
+                if isinstance(data.get(name), str) and not data.get(f"{name}_text"):
+                    data = {**data, f"{name}_text": data[name]}
+        return data
 
     @field_validator("start_date", "completion_date", mode="before")
     @classmethod

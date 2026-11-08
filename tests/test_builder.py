@@ -94,6 +94,20 @@ def test_time_series_fills_empty_years_with_zero():
     as_response(viz)
 
 
+def test_date_citations_quote_the_registry_text_not_the_padded_date():
+    # The registry gives year-month dates ("2018-03"); they are padded to the 1st for bucketing,
+    # but a citation must quote the API value exactly.
+    trials = [trial(1, start_date="2018-03"), trial(2, start_date="2019-07-15"), trial(3, completion_date="2020-11")]
+    starts, _ = build_visualization(
+        {"All": trials}, plan(intent="change_over_time", chart_type="time_series", x=Dimension.START_YEAR)
+    )
+    assert [c.excerpt for r in starts.data for c in r.citations] == ["2018-03", "2019-07-15"]
+    ends, _ = build_visualization(
+        {"All": trials}, plan(intent="change_over_time", chart_type="time_series", x=Dimension.COMPLETION_YEAR)
+    )
+    assert [c.excerpt for r in ends.data for c in r.citations] == ["2020-11"]
+
+
 def test_histogram_bins_enrollment():
     trials = [trial(1, enrollment=10), trial(2, enrollment=60), trial(3, enrollment=70), trial(4, enrollment=3000)]
     viz, _ = build_visualization({"All": trials}, plan(intent="distribution", chart_type="histogram", x=Dimension.ENROLLMENT))
