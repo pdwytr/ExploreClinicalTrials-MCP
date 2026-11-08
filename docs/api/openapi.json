@@ -3,12 +3,14 @@
   "info": {
     "title": "cheiron",
     "summary": "ClinicalTrials.gov question-to-data service",
+    "description": "Ask a natural-language question about clinical trials and get one visualization built from\nClinicalTrials.gov data, with every value citing the trials behind it.\n\n**How a question moves through the API**\n\n1. `POST /queries` submits the question (and optional filters) and returns a `task_id` at once.\n2. `GET /queries/{task_id}` is polled until `status` is `succeeded` or `failed`; the answer is in\n   `result`.\n3. `GET /health` only reports that the service is up.\n\nThe web page at `/` uses the first two. Use \"Try it out\" below to call them from the browser.\n",
     "version": "0.1.0"
   },
   "paths": {
     "/queries": {
       "post": {
-        "summary": "Submit Query",
+        "summary": "Submit a question",
+        "description": "Validate the question and its filters, then start answering it in the background.\n\nReturns `202` at once with a `task_id` and a `Location: /queries/{task_id}` header; poll\nthat URL for the answer. An invalid request (an unknown field, `start_year` after\n`end_year`) gets `422` before any work starts. Structured fields always apply; when the\nquestion text disagrees with one, the field wins.",
         "operationId": "submit_query_queries_post",
         "requestBody": {
           "content": {
@@ -46,7 +48,8 @@
     },
     "/queries/{task_id}": {
       "get": {
-        "summary": "Get Query",
+        "summary": "Get a question's progress and answer",
+        "description": "Poll every few seconds until `status` is `succeeded` or `failed`.\n\n`progress.stage` moves through `queued`, `planning` (the model reads the question and plans\nthe search), `fetching` (code calls ClinicalTrials.gov, with a trial count), `analyzing`,\n`building` (code counts, cites and builds the chart), `saving`, then `done` or `failed`.\n\nOn success, `result` is the `QueryResponse`: the `visualization` (every row cites its\ntrials), `meta`, and a ready-to-render `vega_lite` spec. On failure, `error` says why,\nincluding an honest refusal for a question the service cannot answer. Tasks are kept in\nmemory for 24 hours, then this returns `404`.",
         "operationId": "get_query_queries__task_id__get",
         "parameters": [
           {
@@ -85,7 +88,8 @@
     },
     "/health": {
       "get": {
-        "summary": "Health",
+        "summary": "Liveness check",
+        "description": "Not part of answering a question; the host calls it to check the service is up.",
         "operationId": "health_health_get",
         "responses": {
           "200": {
