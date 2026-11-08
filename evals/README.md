@@ -70,7 +70,7 @@ evals/
 | format | the response does not match the published `QueryResponse` schema, or a chart has no Vega-Lite spec |
 | chart | the chart type or x field is not the expected one |
 | expectations | `filters_include` / `filters_exclude` / `meta_mentions` / `data_excludes` / `units_include` are not met |
-| labels | a charted category is outside `labels_within` or matches `labels_exclude`, or the title claims a breakdown the system cannot chart (state, city, site, investigator, duration) |
+| labels | a charted category is outside `labels_within` or matches `labels_exclude`, or the title claims a breakdown the system cannot chart ("by state", "per site", "each investigator", ...) |
 | recall | the charted trials hold less than 80% of a `recall` reference search (live count) |
 | counts | a bar exceeds the trials analysed (or, in a comparison, its own side's trials), or a single-valued field sums to more than that |
 | citations | a data point has no citations, or a quoted excerpt is not in the saved trial record |

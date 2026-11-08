@@ -91,10 +91,13 @@ REGIONS = {
     },
 }  # fmt: skip
 
-# Dimensions the system cannot chart. A title naming one claims a breakdown the chart does not have
-# (e.g. "...by state" over a country chart). Checked on titles only: interpretations legitimately
-# mention filters such as "sites in India".
-MISSING_DIMENSIONS = re.compile(r"\b(states?|cit(?:y|ies)|sites?|facilit(?:y|ies)|investigators?|duration)\b")
+# A title claiming a breakdown by a dimension the system cannot chart ("...in the US by state" over a
+# country chart). Only "by / per / each / across <dimension>" counts: "trials with sites in India"
+# names a filter, not a breakdown.
+MISSING_DIMENSIONS = re.compile(
+    r"\b(?:by|per|each|across)\s+(?:us\s+|u\.s\.\s+)?"
+    r"(states?|cit(?:y|ies)|sites?|facilit(?:y|ies)|investigators?|duration)\b"
+)
 
 
 def check_case_definition(case: dict) -> list[str]:
@@ -292,10 +295,9 @@ def check_labels(case, status) -> list[str]:
         hits = [label for label in labels if text.lower() in label.lower()]
         if hits:
             problems.append(f"charted label(s) that must not appear: {hits[:4]}")
-    title = (viz.get("title") or "").lower().replace("united states", "")
-    claimed = MISSING_DIMENSIONS.search(title)
+    claimed = MISSING_DIMENSIONS.search((viz.get("title") or "").lower())
     if claimed:
-        problems.append(f"title claims a breakdown by {claimed.group(0)!r}, which the system cannot chart")
+        problems.append(f"title claims a breakdown by {claimed.group(1)!r}, which the system cannot chart")
     return problems
 
 
