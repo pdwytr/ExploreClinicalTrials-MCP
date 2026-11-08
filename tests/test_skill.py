@@ -97,17 +97,43 @@ def test_skill_only_teaches_parameters_code_accepts(path):
 CHART_SKILL = SKILL_DIR.parent / "chart-planning" / "SKILL.md"
 
 
-def test_chart_skill_follows_the_spec():
-    text = CHART_SKILL.read_text()
-    match = re.match(r"^---\n(.*?)\n---\n(.*)$", text, re.DOTALL)
+CHART_DIR = CHART_SKILL.parent
+ALL_SKILLS = sorted(p.parent for p in SKILL_DIR.parent.glob("*/SKILL.md"))
+
+
+@pytest.mark.parametrize("skill", ALL_SKILLS, ids=lambda p: p.name)
+def test_every_skill_follows_the_agent_skills_spec(skill):
+    """https://agentskills.io/specification: frontmatter fields and limits, a body under 500 lines and
+    ~5000 tokens, and every file it links to exists (relative to the skill root)."""
+    match = re.match(r"^---\n(.*?)\n---\n(.*)$", (skill / "SKILL.md").read_text(), re.DOTALL)
+    assert match, "SKILL.md must start with YAML frontmatter between --- lines"
     meta, body = yaml.safe_load(match.group(1)), match.group(2)
-    assert meta["name"] == CHART_SKILL.parent.name and 1 <= len(meta["description"]) <= 1024
+    assert set(meta) <= {"name", "description", "license", "compatibility", "metadata", "allowed-tools"}
+    name = meta["name"]
+    assert name == skill.name and len(name) <= 64 and re.fullmatch(r"[a-z0-9]+(-[a-z0-9]+)*", name)
+    assert 1 <= len(meta["description"]) <= 1024
+    assert all(isinstance(k, str) and isinstance(v, str) for k, v in (meta.get("metadata") or {}).items())
     assert len(body.splitlines()) < 500 and len(body) / 4 < 5000
+    for path in set(re.findall(r"\breferences/[\w./-]+\.md\b", body)):
+        assert (skill / path).is_file(), f"{skill.name} links to missing {path}"
+
+
+def test_chart_skill_is_a_procedure_with_gotchas_and_on_demand_references():
+    body = CHART_SKILL.read_text()
+    for section in ("## Procedure", "## Default chart per question", "## Output", "## Gotchas", "## References"):
+        assert section in body, f"missing {section}"
+    assert re.search(r"use this skill when", body.split("---")[1], re.IGNORECASE), "description says when to use it"
+    references = sorted(p.relative_to(CHART_DIR).as_posix() for p in (CHART_DIR / "references").glob("*.md"))
+    assert references, "detail lives in references/"
+    table = body.split("## References")[1]
+    for path in references:
+        assert f"`{path}`" in table, f"{path} is not listed with when to read it"
 
 
 def test_chart_skill_examples_are_valid_chart_plans():
-    examples = re.findall(r"```json\n(.*?)\n```", CHART_SKILL.read_text(), re.DOTALL)
-    assert len(examples) >= 4
+    files = [CHART_SKILL, *sorted((CHART_DIR / "references").glob("*.md"))]
+    examples = [e for f in files for e in re.findall(r"```json\n(.*?)\n```", f.read_text(), re.DOTALL)]
+    assert len(examples) >= 8
     for example in examples:
         ChartPlan.model_validate(json.loads(example))
 
