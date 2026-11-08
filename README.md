@@ -1,8 +1,19 @@
-# Cheiron: ClinicalTrials.gov query-to-visualization backend
+# Cheiron: from a clinical-trials question to a chart with sources
 
-Turns a natural-language question about clinical trials (plus optional structured fields) into
-one visualization spec (type, title, encoding, data with citations) and metadata, backed by the
-ClinicalTrials.gov API v2.
+Cheiron answers a natural-language question about clinical trials with one visualization: a
+structured spec (type, title, encoding, data) and metadata, built from ClinicalTrials.gov API v2
+data, with every value traceable to the trial records behind it.
+
+One principle shapes the whole design: **a language model decides what the question means, and
+plain code does everything that can be checked.** The model reads the question, plans the search,
+and chooses the chart. Code fetches the trials, counts them, cites them, and writes the response.
+The model never produces a number, so it cannot invent one. The rest of this README explains
+where that line sits, why, and how the evals were used to move it.
+
+Contents: [Running it](#running-it) · [What happens to a question](#what-happens-to-a-question) ·
+[Design decisions and trade-offs](#design-decisions-and-trade-offs) · [How it is tested](#how-it-is-tested) ·
+[Limitations and next steps](#limitations-and-next-steps) ·
+[Request and response schema](#request-and-response-schema) · [Use of AI tools](#use-of-ai-tools)
 
 ## Running it
 
@@ -12,413 +23,282 @@ uv sync
 PYTHONPATH=src uv run uvicorn cheiron.api.app:app --port 8765
 ```
 
-`PYTHONPATH=src` works around iCloud Drive hiding the virtualenv's `.pth` file. It isn't needed
+`PYTHONPATH=src` works around iCloud Drive hiding the virtualenv's `.pth` file; it is not needed
 outside iCloud.
 
-Ask a question (runs as a background task) and poll for the result:
+A question runs as a background task, because fetching every matching trial can take from
+seconds to a minute. Submit it, then poll until `status` is `succeeded` or `failed`:
 
 ```bash
 curl -s -X POST localhost:8765/queries -H 'content-type: application/json' \
-     -d '{"query": "How are breast cancer trials distributed across phases?"}'
+     -d '{"query": "How has the number of trials for this drug changed over time?", "drug_name": "Pembrolizumab"}'
 curl -s localhost:8765/queries/<task_id>
 ```
 
-Interactive API docs: http://localhost:8765/docs
+- `http://localhost:8765/` is a small web page that renders any answer and its sources.
+- `http://localhost:8765/docs` is the interactive API reference.
+- [`examples/`](examples/) holds five real requests and the exact JSON the service returned.
+- `uv run pytest` runs the 261 unit tests; they need no API key.
 
-## Request and response schema
+## What happens to a question
 
-The machine-readable schema is committed at [`docs/api/openapi.json`](docs/api/openapi.json)
-(regenerate with `uv run python scripts/export_openapi.py`; a test fails if it drifts). With the
-service running it is also served at `/openapi.json`, with interactive docs at `/docs` and
-`/redoc`. Real requests and responses for each question class are in [`examples/`](examples/).
-This section explains what the schema alone does not.
+The rest of the design is easiest to follow through one real question:
+`{"query": "Compare phases for Ozempic vs Mounjaro trials"}`.
 
-### Endpoints
+1. **The agent states what the question means.** It writes a search plan with two steps, one per
+   compared drug: `{"label": "Ozempic", "drugs": ["Ozempic"]}` and
+   `{"label": "Mounjaro", "drugs": ["Mounjaro"]}`. It writes no API syntax.
+2. **Code resolves the names.** The registry does not map these brand names to their drugs: a
+   search for "Ozempic" finds 104 trials, "semaglutide" finds 799. Code samples the trials each
+   name matches, sees that 43 of 50 Ozempic trials are indexed under the MeSH term *semaglutide*
+   (and 32 of 40 Mounjaro trials under *tirzepatide*), and searches both names.
+3. **Code compiles and fetches.** Each step becomes a ClinicalTrials.gov query
+   (`query.intr=("Ozempic" OR "semaglutide")`), and every matching trial is fetched, all on one
+   version of the registry's data.
+4. **The agent sees a profile, not the records.** For each field, the profile lists the number of
+   distinct values, the trials with no value, and the top values with their trial counts. From
+   it, the agent chooses a grouped bar chart of `phase` by compared side.
+5. **Code checks the chart against the data and builds it.** Code counts distinct trials per
+   phase and side (1,111 trials in all), attaches each bar's sources, adds display names
+   (`PHASE2` → "Phase 2"), and writes the metadata, including both name expansions and why they
+   were made.
 
-| Method | Path | Body / result |
+The response is in [`examples/2-comparison`](examples/2-comparison/response.json) for a
+similar question. Before step 2 existed, this question was answered from 144 trials, about 13% of
+the relevant ones, and the evals passed it. That failure is behind several decisions below.
+
+## Design decisions and trade-offs
+
+The decisions follow the path a question takes.
+
+### 1. The model interprets; code computes
+
+Language models are good at interpreting a question and poor at reliable arithmetic over
+thousands of records. The work is split along that line. The agent handles the parts that need
+judgement: what is being asked, whether a second search is needed, which chart answers it, and
+whether registry data can answer it at all. Code handles fetching, counting, citing, labelling and
+the metadata.
+
+Two things follow. Every number in a response is reproducible from the saved trial records. And a
+model error can make the answer wrong in *meaning*, but never wrong in *arithmetic* or sourcing,
+which narrows where errors can come from and lets the evals target interpretation.
+
+*Cost:* the agent can only express what the plan and chart models allow, so a new capability
+(percentages, scatter plots) needs code, not a prompt change.
+
+### 2. One agent with tools, not a pipeline of agents
+
+The first version was a pipeline: a search-planner agent, then code, then a chart-planner agent.
+I replaced it with one agent and four tools: `fetch_data` (code runs a search plan),
+`describe_data` (the profile of what was fetched), `load_skill` and `read_reference`.
+
+The pipeline could not serve two kinds of question:
+
+- **Multi-step questions** such as "the sponsor with the most melanoma trials, and its trials per
+  year". The second search depends on what the first found, so the planner has to see results
+  before it can finish. A one-way pipeline cannot loop back.
+- **Questions whose right chart depends on what the search found.** A separate chart planner
+  would not know why the search was shaped the way it was. One agent keeps the question, the
+  search and its results in one reasoning context.
+
+The agent may fetch up to five times, and each fetch is kept in `meta.chain` with the agent's
+reason, so intermediate findings ("NCI leads melanoma with 205 trials") can be checked. Code
+enforces the order: no chart is accepted before data has been fetched.
+
+*Cost:* one context carries both jobs. Section 5 keeps that context small.
+
+### 3. The agent states intent; code builds the query
+
+This decision went through three versions, and the evals drove each change.
+
+| Version | What the agent wrote | Why it changed |
 |---|---|---|
-| `POST` | `/queries` | `QueryRequest` → `202` with a task (`Location: /queries/{task_id}`). `422` if the request is invalid |
-| `GET` | `/queries/{task_id}` | The task: `status` (`queued`, `running`, `succeeded`, `failed`), `progress` (stage and message), `result` (a `QueryResponse` when succeeded), `error` (an `ErrorResponse` when failed). `404` once forgotten (tasks are kept 24 h, in memory) |
-| `GET` | `/health` | `{"status": "ok"}` |
+| 1 | A typed plan with fixed fields | Fixed fields decided in advance what could be asked. I replaced them with a thin plan, to add structure only where real questions showed it was needed |
+| 2 | ClinicalTrials.gov query syntax, checked by code | Wide coverage, but recall depended on what the model happened to know. The evals found wrong answers that passed: brand names searched instead of drugs (13% of the trials), a structured field intersected with a conflicting question term (melanoma trials that also mention lung cancer), regions charting other continents. Each fix meant code parsing strings the model wrote |
+| 3 (current) | **What it means**, in typed slots: drugs, conditions, lead sponsors, countries or a region, phases, statuses, study type, years, enrollment | — |
 
-A query takes seconds to a minute (it fetches every matching trial), so it runs as a task: poll
-`GET /queries/{task_id}` until `status` is `succeeded` or `failed`.
+In version 3, code turns the slots into the query, and the rules live in one place:
 
-### Request: `QueryRequest`
+- **Names are resolved against the registry, not the model's memory**, as in step 2 of the
+  example. Only the term on at least half of the sampled trials is added, so a drug co-tested in a
+  minority of trials is never pulled in. A name that is itself an index term is never expanded.
+  Searches stay text searches, because not every trial carries MeSH terms (596 semaglutide trials
+  are indexed; 799 mention it).
+- **The user's structured fields win.** They fill the same slots, so a conflict is a comparison of
+  two values rather than a string parse. The field replaces the question's term, and the metadata
+  says so.
+- **Comparison sides stay apart.** If resolution would make two sides search the same thing
+  (Ozempic and Wegovy are both semaglutide), those sides keep their literal names and a warning
+  explains why.
+- **Regions expand into countries from the registry's live country list**, so the list stays
+  current, and the chart shows only those countries.
+- **One rule for study type:** all studies, unless the question asks for interventional or
+  observational ones. That matches what clinicaltrials.gov returns.
 
-| Field | Type | Required | Validation |
-|---|---|---|---|
-| `query` | string | yes | 3–500 characters: the question |
-| `drug_name` | string | no | 1–200 characters |
-| `condition` | string | no | 1–200 characters |
-| `sponsor` | string | no | 1–200 characters; the **lead** sponsor |
-| `country` | string | no | 2–100 characters; a country with a trial site |
-| `trial_phase` | list of `EARLY_PHASE1`, `PHASE1`, `PHASE2`, `PHASE3`, `PHASE4`, `NA` | no | at least one |
-| `recruitment_status` | list of `NOT_YET_RECRUITING`, `RECRUITING`, `ENROLLING_BY_INVITATION`, `ACTIVE_NOT_RECRUITING`, `COMPLETED`, `SUSPENDED`, `TERMINATED`, `WITHDRAWN`, `UNKNOWN` | no | at least one |
-| `start_year`, `end_year` | integer | no | 1900–2100, `start_year` ≤ `end_year`; an inclusive range on the trial **start** date |
+Version 3 keeps version 2's coverage through `advanced`, an escape hatch for a filter no slot
+covers (for example randomised design). It is validated only by the API and shown to the reader.
+The move from version 2 to 3 took the evals from 55 to 70 of 72. The full reasoning is in
+[docs/design/search-intent.md](docs/design/search-intent.md).
 
-Unknown fields are rejected (`422`), so a typo cannot be silently ignored. Structured fields
-always apply: when the question text and a field disagree ("lung cancer trials" with
-`condition: melanoma`), the field wins and `meta.assumptions` says what was replaced.
+*Alternatives rejected:* query templates per question type are accurate but break on any question
+they did not foresee. Fine-tuning needs labelled data this project does not have, and it would
+hide the rules inside weights, where they cannot be read or tested.
 
-```json
-{"query": "How has the number of trials for this drug changed over time?", "drug_name": "Pembrolizumab"}
-```
+### 4. Every step is validated by code before it is used
 
-### Response: `QueryResponse`
+Instructions in a prompt are requests; code on the execution path is a guarantee. Every place the
+agent's output enters the system is checked, and a failure goes back to the agent with the reason
+so it can correct itself.
 
-```
-QueryResponse
-├── visualization   one chart or network (shape picked by `type`)
-│   ├── type        bar_chart | grouped_bar_chart | stacked_bar_chart | time_series | histogram | scatter_plot | network_graph
-│   ├── intent      what it shows: change_over_time, ranking, distribution, magnitude, part_to_whole, correlation, spatial, relationship
-│   ├── title
-│   ├── encoding    which data field goes on which visual channel (Vega-Lite vocabulary)
-│   └── data        rows (charts) or {nodes, edges} (network); each carries its sources
-├── meta            how it was computed: interpretation, filters, assumptions, warnings, units, counts, data date
-└── vega_lite       the same chart as a ready-to-render Vega-Lite v5 spec (null for networks)
-```
-
-#### `encoding` (charts)
-
-`x`, `y` and optional `color` (series), `xOffset` (grouped bars side by side) and `x2` are
-**channels**:
-
-| Channel key | Meaning |
-|---|---|
-| `field` | The key in each data row |
-| `type` | `quantitative` (numbers), `nominal` (categories), `ordinal` (ordered categories), `temporal` (ISO dates) |
-| `title` | Axis or legend title |
-| `sort` | `"-y"` = largest first; a list = explicit order (phases in clinical order) |
-| `timeUnit` | `utcyear` on time axes: each row's date is the 1st of January of its year |
-| `scale` | `"log"` where values are heavily skewed (enrollment in scatter plots) |
-| `labels` | Display name per coded value: `{"PHASE1": "Phase 1", "ACTIVE_NOT_RECRUITING": "Active, not recruiting"}`. Rows keep the registry's codes; show the label when there is one, else the value |
-
-Fields a chart can use: `phase`, `start_year`, `completion_year`, `overall_status`, `lead_sponsor`,
-`sponsor_class`, `condition`, `intervention`, `intervention_type`, `country`, `study_type`,
-`allocation`, `masking`, `primary_purpose`, `enrollment`, `duration_months`, and `group` (the side
-of a comparison, e.g. one drug).
-
-#### `data` rows, by chart type
-
-Every row has the encoded fields plus `citations` and `nct_ids` (below).
-
-| `type` | One row per | Value fields |
+| Where | What is checked | On failure |
 |---|---|---|
-| `bar_chart` | Category | `<x field>`, `trial_count` |
-| `grouped_bar_chart`, `stacked_bar_chart` | Category × series value | `<x field>`, `<series field>`, `trial_count` |
-| `time_series` | Year (empty years included as 0) | `start_year` or `completion_year` as `"2015-01-01"`, `trial_count` (plus a series field if any) |
-| `histogram` | Enrollment bin | `enrollment_range` (label, e.g. `"50–99"`, `"10,000+"`), `enrollment_from`, `enrollment_to` (**exclusive**; `null` = no upper bound), `trial_count` |
-| `scatter_plot` | Trial | `enrollment`, `duration_months` (start to actual primary completion), optional series field |
-| any bar or time series with a share | as above | adds `percent` (0–100) and `of_trials` (its denominator); `y` charts `percent` |
+| Request | Types, lengths, enum values, year order; unknown fields rejected | `422` to the client |
+| Search plan | Typed slots; `advanced` may not carry anything that has a slot (phases, dates, study type) | Back to the agent |
+| Compile | The user's fields against the plan; a comparison of values other than the user's field | Back to the agent |
+| Fetch | The API rejects the query, or nothing matches | Back to the agent (at most 5 fetches) |
+| Chart plan | The chart can be drawn; it fits the data fetched (the field has values, multi-valued fields are not stacked, the time axis uses the searched date); it shows the breakdown the plan said the question asks for | Back to the agent (3 retries), then the request fails |
+| Response | The published schema, every encoded field in every row; the Vega-Lite spec is validated against the official schema in tests | An error, never a malformed answer |
 
-Counts are **distinct trials**. A field a trial can have several values of (phase, condition,
-intervention, intervention type, country) counts the trial once per value, so bars can add up to
-more than `meta.trials_analyzed`; `meta.assumptions` says so when it applies.
+One check deserves a note. The plan states the breakdown the question asks for ("by phase", "by US
+state"), and the chart must show it. A breakdown the data cannot provide must be answered with a
+refusal. Before this check, "where in the US … by state" was answered with a chart of countries,
+titled "by state".
 
-#### `network_graph`
-
-`data` is a NetworkX node-link graph (`networkx.node_link_graph(data, edges="edges")` reads it):
-
-- `nodes`: `id`, `label`, `group` (the node kind, e.g. `lead_sponsor`, `intervention`), `size` (trials with this value)
-- `edges`: `source`, `target` (node ids), `weight` (trials that have both values)
-- `encoding` names those keys (`node_label`, `node_group`, `node_size`, `edge_weight`) and gives `group_labels` for display.
-
-#### Sources: `citations` and `nct_ids`
-
-Every bar, time bucket, bin, scatter point, node and edge carries:
-
-| Key | Meaning |
-|---|---|
-| `nct_ids` | **Every** trial counted in this data point (complete, sorted) |
-| `citations` | The first few of them in detail: `nct_id`, `excerpt` (the exact text or value from the API record that put the trial here, e.g. `"PHASE2"` or a start date as written, `"2018-03"`), `field` (the API field path it came from), `title` (the trial's brief title, exactly as in the API; given once per trial within a data point) |
-
-Answers built from registry-wide statistics (`/stats`, e.g. "which drug has the most trials?")
-have counts but no per-trial sources; `meta.warnings` says so.
-
-#### `meta`
-
-| Field | Meaning |
-|---|---|
-| `interpretation` | What was searched, in plain words, written by code from the executed searches |
-| `request_filters` | The structured fields the user sent, as sent |
-| `filters_applied` | `{"steps": [...]}`: the exact API calls (`params`), what the agent asked for (`intent`), and names also searched under the registry's standard name (`searched_as`, e.g. Ozempic → semaglutide) |
-| `assumptions` | Counting rules and decisions the reader needs (multi-valued fields, replaced terms, what a percentage is of) |
-| `warnings` | Missing values excluded, categories cut to the top N, partial current year, samples |
-| `units` | What each number counts, by data key (`trial_count`: trials; `percent`; `size`, `weight`; `enrollment`: participants) |
-| `total_trials_matched`, `trials_analyzed` | Matches at the source, and trials aggregated |
-| `data_as_of`, `api_version`, `source` | ClinicalTrials.gov data refresh time, API version, `"clinicaltrials.gov"` |
-| `chain` | Every fetch the agent made, in order, with its rationale (the agent's own words) and status |
-| `metrics` | Run time, tokens and tool calls |
-
-#### Errors: `ErrorResponse`
-
-`{"error": <code>, "message": <text for the user>, "details": {...}}` with `error` one of
-`invalid_request`, `unsupported_query` (registry data cannot answer it, e.g. efficacy, or a
-breakdown by a field that is not available, such as US state), `no_results`, `upstream_error`
-(ClinicalTrials.gov failed), `internal_error`.
-
-## Design decisions
-
-The system has two kinds of parts: an **agent** for what needs judgement, and **deterministic
-layers** (plain code) for everything that can be checked. Most decisions below are about where
-that line sits, and they changed as the evals showed what failed.
-
-### 1. What the agent does, and what it never does
-
-The agent interprets: it turns a question into a search plan, decides whether a second fetch is
-needed (multi-step questions), chooses the chart, or refuses. It never touches data: code fetches,
-counts, cites, labels and writes the metadata. The model never writes a number, so it cannot
-invent one.
-
-- *Trade-off:* the agent can only express what the plan and chart models allow; anything new
-  (shares, scatter, design fields) needs code, not a prompt change. In exchange every number is
-  reproducible and every value traceable to trial records.
-
-### 2. One agent with tools, not a pipeline of two agents
-
-The first design was a pipeline: a search-planner agent, then code, then a chart-planner agent.
-It was replaced by **one agent with four tools**: `fetch_data` (code runs the plan),
-`describe_data` (a profile of what was fetched), `load_skill`, `read_reference`.
-
-- *Why:* questions like "the sponsor with the most melanoma trials, and its trials per year" need
-  fetch, look, fetch again; and the right chart depends on what the data turned out to be. A fixed
-  pipeline cannot loop; one agent can, within a budget of 5 fetches, each recorded in `meta.chain`.
-- *Trade-off:* one agent carries both jobs in its context, so the chart knowledge is a separate
-  skill loaded only when needed (next sections), and code enforces the order (no chart before data).
-
-### 3. Search accuracy: skills and typed intent, not free text, templates or retrieval
-
-Options considered: hard-coded query templates per question type (accurate but brittle, fails on
-anything new), the model writing raw API queries (wide coverage, but correctness depends on the
-model), fine-tuning or RAG over the docs (opaque, needs data the project does not have).
-
-The search plan went through three versions:
-
-| Version | Why it changed |
-|---|---|
-| Typed plan (fixed fields) | Too narrow: could not express what the API supports |
-| The agent writes API syntax, code checks it | Wide coverage, but evals found wrong answers that passed: brand names searched instead of generics (13% of the trials), conflicting fields intersected, regions charting other continents. Fixes became string parsing piled on string parsing |
-| **Typed intent compiled by code** (current) | The agent states *what* (drugs, conditions, lead sponsors, countries or a region, phases, statuses, study type, years, enrollment); code decides *how*. An `advanced` escape hatch keeps the coverage of version 2 for rare filters, flagged in meta |
-
-Names are resolved against the **registry's own vocabulary**, not the model's memory: code samples
-the trials a name matches and also searches the MeSH term they are indexed under (Ozempic is
-indexed as semaglutide: 104 trials by name, 799 by generic). Only the dominant term is added, never
-a co-tested drug, and never when the name is itself an index term. A MeSH linker was first
-prototyped as an eval probe and dropped; resolution from samples of matching trials replaced it.
-Details: [docs/design/search-intent.md](docs/design/search-intent.md).
-
-### 4. Context: metadata, not records
-
-The agent never sees trial records, which can number tens of thousands. `fetch_data` returns only
-totals per step and what was searched; `describe_data` returns a **profile**: per field the
-distinct values, missing count, top 10 values with trial counts, whether a trial can have several
-values, ties at the top, numeric summaries. That is enough to choose a chart and small enough to
-fit any query. The records stay on disk (`data/queries/<id>/fetch-N/`) for the code that counts
-and cites them.
-
-### 5. Knowledge: skills read on demand, not vector retrieval
-
-The knowledge the agent needs is small, structured and authoritative: the ClinicalTrials.gov API
-reference (24 record modules, 41 enums, every search area and parameter). Instead of embedding it
-for similarity search, it is organised as **skills** (Agent Skills format) with **progressive
-disclosure**:
-
-- `ctgov-search/SKILL.md` (in the prompt): the procedure, the slots, rules learned from the live
-  API, multi-step patterns, examples. Its references (generated from official API snapshots in
-  `docs/ctgov/` by `scripts/build_ctgov_skill.py`) are read only when a table row says when.
-- `chart-planning/SKILL.md` (loaded once data is fetched): a default chart per question class,
-  gotchas, and references for networks, registry statistics and chart rules.
-
-*Why not RAG:* the agent should navigate an index deterministically ("read `enums.md` when you need
-an enum's values"), not hope a similarity search returns the right chunk; every reference read is
-recorded in the trace. A version check warns when the live API moves past the documented snapshot.
-*Trade-off:* the skills need curation, and this does not scale to a large, unstructured corpus.
-
-### 6. Making skills reliable
-
-- Follow the Agent Skills spec (frontmatter, size limits, references one level deep, "read when"
-  pointers) — enforced by tests.
-- Defaults, not menus: one default chart per question class; gotchas for the known traps.
-- Every example in a skill is validated by a test as a real plan or chart; a skill may only teach
-  API parameters the code accepts.
-- Every fact in a skill was checked against the live API, with the numbers quoted.
-- **No eval question may appear in a skill** (a test compares them), so evals measure judgement,
-  not copying.
-
-### 7. Validating what goes into and comes out of the agent
-
-| Layer | Checks | On failure |
-|---|---|---|
-| Request (`QueryRequest`) | Types, lengths, enums, year order; unknown fields rejected | `422` |
-| Tool arguments (`SearchPlan`) | Slots typed; `advanced` may not carry what has a slot (phases, dates, study type...) | Sent back to the agent |
-| Compile | Structured fields merged into slots; a comparison of values other than the user's field is rejected | Sent back |
-| Fetch | API rejects the query, or nothing matches | Sent back (5 fetches at most) |
-| Chart (`ChartPlan`, then the output validator) | The chart can be drawn; it fits the fetched data (field present, no stacking of multi-valued fields, time axis on the searched date); it shows the breakdown the plan said the question asks for; an unsupported breakdown must be refused | Sent back (3 retries), then the request fails |
-| Response (`QueryResponse`) | Schema, every encoded field in every row, chart-type requirements; Vega-Lite spec validated against the official schema in tests | Error, never a malformed answer |
-
-### 8. Structured outputs, never free text
-
-The agent ends only through typed final-result tools: `ChartPlan` or `Unanswerable`. The response
-itself is built by code from the chart plan and the trial records, so its structure cannot drift.
-The model's own prose (its rationale) is kept in `meta.chain`, labelled as the agent's;
+The agent ends only through typed final results, a `ChartPlan` or an `Unanswerable` reason, never
+free text. Its own explanation is kept in `meta.chain` and labelled as the agent's;
 `meta.interpretation` is written by code from what was actually searched.
 
-### 9. Improving the system from evidence
+### 5. The agent sees metadata, not records
 
-There is no training loop; improvement is a deliberate feedback loop:
+A broad question can match tens of thousands of trials. The agent never sees them. `fetch_data`
+returns only totals and what was searched. `describe_data` returns a profile: for each field, the
+distinct values, the trials with no value, the top ten values with trial counts, whether a trial
+can have several values, ties at the top, and numeric ranges. For the heart failure example, the
+profile is 10 KB and the trial records it summarises are 9 MB.
 
-1. Evals and adversarial reviews expose a failure (`trace.json` and `metrics` show what the agent
-   did on every query).
-2. Classify it: a broken **contract** (code was wrong, e.g. a conflicting field intersected) is
-   fixed in a deterministic layer; a **judgement** error is fixed with general skill guidance,
-   never a rule for one question; a **missing capability** becomes an honest refusal until built.
-3. Rerun the affected cases live, and the unit tests.
+That is all the agent needs to choose a chart: whether there is enough data, which fields are
+filled, how many categories there are. The records stay on disk (`data/queries/<id>/fetch-N/`) for
+the code that counts and cites them.
 
-Examples from the evals: dates cited exactly as written, the user's fields winning over the
-question text, regions limited to their countries, shares computed by code, enrollment bins of
-equal width, scatter plots once a second numeric field existed.
+### 6. Knowledge comes from skills read on demand, not retrieval
 
-### 10. Evals that resist bias and overfitting
+The agent needs to know the ClinicalTrials.gov API: 24 record modules, 41 enums, every search area
+and parameter. That knowledge is small, structured and authoritative, so I organised it as
+**skills** in the Agent Skills format instead of indexing it in a vector database:
 
-- **Cases from different sources:** the brief's examples, structured-field combinations, realistic
-  users (typos, brand names, vague or slangy wording, regions, shares), refusals (advice, efficacy,
-  made-up drugs, prompt injection), multi-step questions, and adversarial cases written by a
-  reviewing agent that set out to break the system.
-- **Tagged coverage:** every case is tagged by question class and input type; untested tags show.
-- **Correctness, not shape:** reference searches counted live (recall), allowed and forbidden chart
-  labels, the executed filters, citations checked against the live record, and API recounts.
-- **Expect only what the question decides**, and honest refusals for known gaps.
-- **No leakage:** skills never contain eval questions, and the agent never sees the cases.
-- **Fix the design, not the test:** when a case failed, the question was which layer was wrong;
-  checks that would reject correct answers were dropped rather than tuned to pass.
+- `ctgov-search` is in the prompt (about 3,100 tokens): the procedure, the slots, rules checked
+  against the live API, and worked examples. Its references (about 110 KB in all) are generated
+  from snapshots of the official API documentation, and the agent reads one only when a table row
+  says when ("read `enums.md` when you need an enum's allowed values").
+- `chart-planning` (about 1,700 tokens) is loaded only once data has been fetched: a default chart
+  for each question class, the known traps, and references for networks and registry statistics.
 
-### 11. Deterministic layers, named
+Retrieval by similarity can return the wrong chunk, or miss the right one, and the failure is
+silent. With an index, the agent decides what to read, the trace records each read, and the
+references are exact copies of the official documentation. A version check warns when the live API
+moves past the documented version.
 
-`request validation → plan (intent) → merge user fields → resolve names → compile query → fetch
-(one data version, every page) → profile → chart validation → build (count, cite, label) → meta`.
-Each layer has its own module and tests, so a failure points at one place.
+To keep the skills reliable, tests enforce the Agent Skills spec (size limits, references linked
+from the skill), validate every example as a real plan or chart, and fail if a skill teaches an API
+parameter the code does not accept. Each fact in a skill was checked against the live API with the
+numbers quoted. No skill may contain an eval question (also a test), so the evals measure
+judgement rather than copying.
 
-### Trade-offs at a glance
+*Cost:* the skills are curated by hand. That works for one well-documented API; it would not scale
+to a large, unstructured corpus, where retrieval is the better tool.
 
-| Choice | Cost |
+### 7. Counts are exact, and every value shows its sources
+
+- **Every page of every search is fetched.** Sampling would distort rankings and trends, and the
+  registry is small enough to fetch exactly (the largest eval question fetched about 20,000
+  trials). All steps run on one version of the registry's data, which refreshes daily. If it
+  changes mid-fetch, the fetch is repeated.
+- **Sources are exact.** Each bar, time bucket, bin, node, edge and scatter point lists every trial
+  behind it (`nct_ids`), and details the first few in `citations`: the exact text from the API
+  record (dates as written, such as `"2018-03"`), the field it came from, and the trial's title.
+
+*Cost:* broad questions are slower, and responses are larger. The complete trial lists add a median
+of 27 KB per response, and the largest examples are just under 1 MB.
+
+### 8. The output speaks a frontend's language
+
+The encoding uses Vega-Lite's vocabulary (`nominal`, `ordinal`, `temporal`, `quantitative`;
+`x`, `y`, `color`, `xOffset`), which is precise enough that a renderer does not have to guess,
+and each response also carries a ready Vega-Lite spec. Networks use the NetworkX node-link format.
+Coded values keep the registry's codes in the data, so sorting and citations stay exact, while
+`labels` gives each code its display name from the registry's own enum definitions.
+
+### 9. The system improves from its failures, in code
+
+Nothing in the system is trained. It improves through a deliberate loop:
+
+1. An eval or a review exposes a failure. Every query saves a trace of what the agent did and
+   metrics on time, tokens and tool calls, so a failure can be read, not guessed.
+2. The failure is classified, and the fix goes to the layer that was wrong:
+   - a broken **contract** (code combined two terms it should have replaced) is fixed in a
+     deterministic layer;
+   - a **judgement** error is fixed with general guidance in a skill, never a rule for one
+     question;
+   - a **missing capability** becomes an honest refusal until it is built.
+3. The affected cases are rerun live, with the unit tests.
+
+Evals drove these changes: citing dates exactly as written, the user's fields winning,
+regions limited to their countries, equal-width enrollment bins, percentages computed by code, and
+scatter plots once trial duration became available.
+
+## How it is tested
+
+The unit tests check the code with fake models and a fake registry. The evals check the whole
+system against the real model and the real ClinicalTrials.gov API, because the failures that matter
+most here (a search that misses most of the relevant trials) only appear with real data.
+
+### What the evals check
+
+There are 72 cases in six suites, one of them adversarial. Each case has a one-line intent,
+tags for its question class, and declarative expectations. The checks were designed so that a
+well-formed but wrong answer fails:
+
+- **Recall:** a hand-written reference search is counted live at grading time, and the answer must
+  contain at least 80% of its trials. This is the check that exposed the brand-name problem.
+- **Labels:** the charted categories must stay within what was asked (`$EUROPE` for a European
+  question), avoid what must not appear (placebo as a drug), and the title must not claim a
+  breakdown the system cannot chart.
+- **Filters:** the searches that actually ran must contain, or must not contain, given terms (for
+  example `COMPLETED` for "completed each year").
+- **Citations:** every excerpt must be in the saved trial record, and a sample must match the live
+  record.
+- **Recounts** of the largest bars against the API, count sanity, the response schema, and honest
+  refusals that name the missing field.
+
+### Guarding against bias and overfitting
+
+- **The cases come from different sources:** the brief's own examples, structured-field
+  combinations, realistic users (typos, brand names, vague wording, regions, percentages), refusals
+  (advice, efficacy, made-up drugs, prompt injection), multi-step questions, and cases written by an
+  adversarial reviewing agent whose job was to break the system.
+- **Tags show coverage**, including the categories nothing tests yet.
+- **No leakage:** the agent never sees the cases, and a test fails if a skill contains an eval
+  question. When one slipped in during development, that test caught it.
+- **Expectations cover only what the question decides**, so a correct answer is not failed for a
+  different but valid chart.
+- **The design is fixed, not the test.** When a case failed, the question was which layer was
+  wrong. Checks that would have rejected correct answers were dropped rather than tuned.
+
+### Results so far
+
+| Stage | Result |
 |---|---|
-| Fetch every matching trial | Broad questions are slower (tens of thousands of trials) |
-| Complete `nct_ids` on every value | Larger responses: median about +27 KB; the network and scatter examples are under 1 MB |
-| Typed slots instead of free API syntax | Rare filters go through `advanced`, validated only by the API (flagged in meta) |
-| Standard name only when it dominates (≥50% of sampled trials) | Brands indexed under mixed terms may not expand; never expands to a co-tested drug |
-| Study type defaults to all studies | Matches clinicaltrials.gov; "trials" includes observational studies unless asked otherwise |
-| Skills instead of retrieval | Curated by hand; fits this domain, would not fit a large unstructured corpus |
-| One run per eval case | Model choices can vary between runs; repeats are listed under limitations |
-| Scatter samples 1,000 points | Large sets show an even (hashed) sample, stated in warnings |
+| First checks (mostly shape) | 60/62 passing, but several passes were wrong answers |
+| Checks for correctness added, adversarial cases added | 53/72: the wrong answers now failed |
+| Conflicting fields and lead sponsor fixed | 55/72 |
+| Typed intent compiled by code | 70/72 |
+| Percentages, design fields, scatter plots | 72/72 |
 
-## Limitations
+The 72/72 report combines live reruns of the cases each change affected; a single full rerun is
+still to do. Each case also runs once, so a model choice that varies between runs can pass by
+chance; see the limitations.
 
-- **Investigators and sites are not available.** Networks of investigators or trial sites, and
-  breakdowns by US state, city or facility, are refused with the reason. Site fields exist in the
-  API but triple the response size, and investigator names are noisy.
-- **Sponsor aliases depend on the model.** The registry has no canonical sponsor names ("MSD"
-  matches six small MSD entities, not Merck Sharp & Dohme LLC); the skill tells the agent to write
-  the registered name.
-- **Drug classes** ("GLP-1 agonists") have no registry field: the agent expands them into member
-  drugs from its own knowledge.
-- **Network nodes** merge spellings that differ by case or punctuation only; other variants
-  ("Metformin" / "Metformin Hydrochloride") and non-drug interventions (procedures, tests) can
-  still appear as separate nodes. Placebo and sham are excluded.
-- **Scatter plots** cover enrollment against duration only; duration exists only for finished trials.
-- **One process, in-memory tasks:** task status is lost on restart (saved outputs remain) and not
-  shared between workers.
-- **Evals** run each case once (a model choice can vary between runs), check recall only where a
-  case defines a reference search, and `evals/results/report.json` is overwritten by every run.
-
-With more time:
-
-1. Site fields fetched only when a question needs them (US state, city, facility networks), and
-   investigators with a cleanup list.
-2. A sponsor alias table, built from the registry's lead-sponsor names.
-3. Network nodes keyed by MeSH terms (merging salts and spellings), and drug-only networks.
-4. Evals: each case 3 times with pass rates, a history of runs, a committed baseline, and a check
-   of the agent's intent slots (`meta.filters_applied` already carries them).
-5. A persistent task store (e.g. Redis or a database) for several workers.
-6. An endpoint for a data point's full sources, so very large responses can omit `nct_ids`.
-
-## Use of AI tools
-
-- **Building it:** developed with Claude Code (Anthropic) as a pair programmer. It wrote most of
-  the code, tests, skills, eval cases and documentation, in small steps I reviewed. The
-  decisions below were mine: I either proposed them or chose them from options it laid out.
-- **Reviewing it:** two adversarial agents (one questioning, one defending the evals) reviewed
-  the eval suite against the brief; their findings became the recall, label and filter checks
-  and the `grilled` eval suite.
-- **Running it:** the query agent uses an OpenAI model (`CHEIRON_PLANNER_MODEL`).
-- **How correctness was validated:**
-  - 261 unit tests with fake models and fake registries (no API key needed);
-  - live evals: 72 cases against the real model and API; all pass in the latest report, where the
-    cases each change affected were rerun live after it (a single full rerun is still to do);
-  - every number quoted in a skill or this README was checked against the live API;
-  - the web UI was checked with screenshots of real responses.
-
-### Decisions I made, and why
-
-**Frontend demo**
-- A minimal web page shaped around the brief, not a full app: the brief makes a frontend optional
-  and puts the structured output first, so the page exists to *show* the output (response JSON,
-  citations, opening saved example runs without an API key).
-
-**Evals: from "does it pass?" to "is it right?"**
-- Standardise the evals so each check states what it measures and passes or fails on its own:
-  results have to be trackable, not a single opaque score.
-- Review the evals with two agents holding a real conversation (one questioning, one defending)
-  instead of one-shot answers, which stay shallow. They could run subsets of cases and add new
-  ones, but not change the eval structure or the code they were judging.
-- Fix the evals before the bugs: a pass has to mean the answer is right before a fix can be
-  trusted. This moved the score from 60/62 (mostly checking shape) to 53/72 with real checks,
-  then back up through actual fixes.
-
-**Validation and guarantees**
-- No hooks: checks in the tool code and output validator already run on every call and the agent
-  cannot skip them, so hooks would add structure, not safety.
-- Guard against overfitting: skill examples must not contain eval questions (a test enforces it),
-  fixes must be general contracts rather than rules for one case, and brittle checks (such as "no
-  digits in titles") were dropped.
-
-**Searching: the design change**
-- Resolve drug and condition names through the registry's own vocabulary (MeSH) before searching,
-  instead of relying on the model's knowledge: look up how the registry indexes a name, search
-  under both, consolidate, and keep the user's name as the label.
-- Then step back: the string-level fixes were patching one design flaw, the agent writing raw API
-  queries. The agent now states what the question means in typed slots and code builds the query
-  ([design note](docs/design/search-intent.md)).
-- The country list for regions is read from the registry at run time, because it changes.
-- Mine the API for unused fields, and add only those that close real gaps (study design, duration
-  for scatter plots); shares came from a missing feature, not missing data.
-
-**Output**
-- Check the output against the brief's own examples, change the format first, document it after.
-- Include the complete list of trials behind every value, after measuring the overhead (median
-  +27 KB per response): the deep-citations bonus asks for references to the underlying records.
-- Commit the OpenAPI schema as well as serving `/docs`, since a reader may not run the server.
-
-**Working method**
-- Isolated worktrees for parallel or risky work, merged into `main` and then removed.
-- Pause or stop work when the direction was unclear; close open items one at a time.
-
-## Evals
-
-An eval is a test case with an expected outcome, run against the **live service** and checked
-automatically. Unit tests (`tests/`) check the code with fakes. Evals check the whole system:
-the real model, the real ClinicalTrials.gov API, and the response a user would get. Details of
-every check are in [`evals/README.md`](evals/README.md).
-
-```
-evals/
-  cases/<suite>.json   the test cases (brief, structured, users, refusals, multistep)
-  checks.py            the fixed tag list and every check
-  run.py               runs cases, checks answers, prints coverage by tag
-  results/             run outputs (gitignored)
-```
-
-### Running
+### Running the evals
 
 With the service on port 8765:
 
@@ -426,54 +306,189 @@ With the service on port 8765:
 uv run python evals/run.py                         # every case
 uv run python evals/run.py --suite=brief,refusals  # some suites
 uv run python evals/run.py --only=b3,m1            # some cases
-uv run python evals/run.py --regrade               # re-check saved responses, no service calls
+uv run python evals/run.py --regrade               # re-check saved answers, no service calls
 uv run python evals/run.py --coverage              # what the cases cover, no runs
 ```
 
-Every run ends with a coverage table per tag: the number of cases, how many ran, how many
-passed, and which ones failed. `NO CASES` marks categories nothing tests yet.
+How to add a case, every expectation key, and where outputs are stored are in
+[`evals/README.md`](evals/README.md). Run results go to `evals/results/` (not in git), and each
+answer links to the query's full saved output in `data/queries/<task_id>/`.
 
-### Adding an eval
+## Limitations and next steps
 
-1. Add one line to the right file in `evals/cases/`:
+What is not done, roughly in the order I would do it:
 
-   ```json
-   {"id": "u12", "intent": "Sponsor alias: MSD vs Merck Sharp & Dohme",
-    "tags": ["input.sponsor_alias", "chart.time_series"],
-    "request": {"query": "How many phase 3 trials does MSD run per year?"},
-    "expect": {"outcome": "answered", "chart": ["time_series"]}}
-   ```
+1. **Investigators and trial sites are not available.** Networks of investigators or sites, and
+   breakdowns by US state, city or facility, are refused with the reason. The API has the fields,
+   but fetching them for every question would triple response sizes, and investigator names are
+   noisy ("Pfizer CT.gov Call Center" appears as a person). Next: fetch site fields only when a
+   question needs them, and clean investigator names against a list.
+2. **Sponsor aliases depend on the model.** The registry has no canonical sponsor names: "MSD"
+   matches six small MSD entities, not Merck Sharp & Dohme LLC, so the name resolution that works
+   for drugs does not work for sponsors. The skill tells the agent to write the registered name.
+   Next: an alias table built from the registry's lead-sponsor names.
+3. **Network nodes are not normalised beyond spelling.** Names that differ by case or punctuation
+   are merged, and placebo is excluded, but "Metformin" and "Metformin Hydrochloride" are separate
+   nodes, and procedures can appear among drugs. Next: key nodes by their MeSH term.
+4. **Evals run each case once, and the report is overwritten.** Next: three runs per case with a
+   pass rate, a history of runs, a committed baseline, and a check of the agent's intent slots
+   (`meta.filters_applied` already carries them).
+5. **Drug classes** ("GLP-1 agonists") have no registry field; the agent expands them into member
+   drugs from its own knowledge.
+6. **Scatter plots** cover enrollment against duration only, and duration exists only for finished
+   trials.
+7. **One process, tasks in memory.** Task status is lost on restart (saved outputs remain) and is
+   not shared between workers. Next: a persistent task store.
 
-   - `intent` (one line on what the case tests) and `tags` are required.
-   - `request` is sent as-is to `POST /queries`.
-   - `expect.outcome` is `answered`, `refused` or `either`.
-   - Optional expectations (all listed in [`evals/README.md`](evals/README.md); unknown keys stop the run):
-     - `chart`, `x`: the allowed chart types and the x-axis field
-     - `recall`: reference searches whose trials the answer must mostly contain
-     - `labels_within` / `labels_exclude`: allowed or forbidden charted categories
-     - `filters_include` / `filters_exclude`: text that must or must not be in the executed searches
-     - `units_include`, `refusal_mentions`, `meta_mentions`, `data_excludes`
+## Request and response schema
 
-   Only expect what the question really decides.
-2. If the case needs a new category, add the tag with a one-line description to `TAGS` in
-   `evals/checks.py`. Unknown tags stop the run. If it needs a new kind of verification, add a
-   `check_…` function there and list it in `CHECKS`.
-3. Run `evals/run.py --coverage` to see where it lands, then `evals/run.py --only=u12`.
+The machine-readable schema is committed at [`docs/api/openapi.json`](docs/api/openapi.json)
+(regenerate with `uv run python scripts/export_openapi.py`; a test fails if it drifts from the
+code) and served at `/openapi.json`, `/docs` and `/redoc` while the service runs. This section
+covers what the schema alone does not.
 
-### Where outputs are stored
+### Endpoints
 
-Eval definitions and eval outputs are kept apart:
-
-| What | Where | In git |
+| Method | Path | Body or result |
 |---|---|---|
-| Eval definitions: cases, checks, runner | `evals/cases/`, `evals/checks.py`, `evals/run.py` | yes |
-| Run results: each response and the pass/fail report | `evals/results/` | no |
-| Full query output: fetched trials, profile, agent trace, metrics | `data/queries/<task_id>/`, written by the service | no |
+| `POST` | `/queries` | `QueryRequest` → `202` with a task (`Location: /queries/{task_id}`); `422` if the request is invalid |
+| `GET` | `/queries/{task_id}` | The task: `status` (`queued`, `running`, `succeeded`, `failed`), `progress` (stage and message), `result` (a `QueryResponse` once succeeded), `error` (an `ErrorResponse` if failed). `404` once forgotten: tasks are kept 24 hours, in memory |
+| `GET` | `/health` | `{"status": "ok"}` |
 
-A saved response links to its full output through `output_dir`, so nothing is copied twice.
+### Request: `QueryRequest`
 
-Right now `evals/results/responses/<id>.json` and `report.json` are overwritten on every run.
-Planned:
-- keep each run in its own folder (`evals/results/<run time>/`) with the model, git commit and
-  data date, so runs can be compared before and after a change
-- commit one small baseline report as evidence
+| Field | Type | Required | Validation |
+|---|---|---|---|
+| `query` | string | yes | 3–500 characters |
+| `drug_name` | string | no | 1–200 characters |
+| `condition` | string | no | 1–200 characters |
+| `sponsor` | string | no | 1–200 characters; the **lead** sponsor |
+| `country` | string | no | 2–100 characters; a country with a trial site |
+| `trial_phase` | list of `EARLY_PHASE1`, `PHASE1`, `PHASE2`, `PHASE3`, `PHASE4`, `NA` | no | at least one |
+| `recruitment_status` | list of `NOT_YET_RECRUITING`, `RECRUITING`, `ENROLLING_BY_INVITATION`, `ACTIVE_NOT_RECRUITING`, `COMPLETED`, `SUSPENDED`, `TERMINATED`, `WITHDRAWN`, `UNKNOWN` | no | at least one |
+| `start_year`, `end_year` | integer | no | 1900–2100, `start_year` ≤ `end_year`; an inclusive range on the trial's **start** date |
+
+Unknown fields are rejected, so a misspelt field cannot be silently ignored. Structured fields
+always apply, and when the question text disagrees with one, the field wins (section 3 above).
+
+### Response: `QueryResponse`
+
+```
+QueryResponse
+├── visualization   one chart or network; its shape depends on `type`
+│   ├── type        bar_chart | grouped_bar_chart | stacked_bar_chart | time_series | histogram | scatter_plot | network_graph
+│   ├── intent      change_over_time | ranking | distribution | magnitude | part_to_whole | correlation | spatial | relationship
+│   ├── title
+│   ├── encoding    which data field goes on which visual channel
+│   └── data        rows (charts) or {nodes, edges} (networks), each with its sources
+├── meta            how the answer was computed
+└── vega_lite       the same chart as a ready-to-render Vega-Lite v5 spec (null for networks)
+```
+
+#### Channels in `encoding`
+
+Charts use the channels `x` and `y`, and optionally `color` (a series), `xOffset` (grouped bars
+side by side) and `x2`. Each channel has:
+
+| Key | Meaning |
+|---|---|
+| `field` | The key in each data row |
+| `type` | `quantitative` (numbers), `nominal` (categories), `ordinal` (ordered categories), `temporal` (ISO dates) |
+| `title` | The axis or legend title |
+| `sort` | `"-y"` for largest first, or an explicit order (phases in clinical order) |
+| `timeUnit` | `utcyear` on time axes: each row's date is 1 January of its year |
+| `scale` | `"log"` where values are heavily skewed (enrollment in scatter plots) |
+| `labels` | The display name of each coded value, e.g. `{"PHASE1": "Phase 1"}`. Rows keep the codes; show the label when there is one |
+
+The fields a chart can use are `phase`, `start_year`, `completion_year`, `overall_status`,
+`lead_sponsor`, `sponsor_class`, `condition`, `intervention`, `intervention_type`, `country`,
+`study_type`, `allocation`, `masking`, `primary_purpose`, `enrollment`, `duration_months`, and
+`group` (the side of a comparison).
+
+#### Data rows by chart type
+
+Every row has its encoded fields, `citations` and `nct_ids`.
+
+| `type` | One row per | Value fields |
+|---|---|---|
+| `bar_chart` | category | `<x field>`, `trial_count` |
+| `grouped_bar_chart`, `stacked_bar_chart` | category and series value | `<x field>`, `<series field>`, `trial_count` |
+| `time_series` | year, including empty years as 0 | `start_year` or `completion_year` as `"2015-01-01"`, `trial_count` |
+| `histogram` | enrollment bin | `enrollment_range` (a label such as `"50–99"` or `"10,000+"`), `enrollment_from`, `enrollment_to` (**exclusive**; `null` means no upper bound), `trial_count` |
+| `scatter_plot` | trial | `enrollment`, `duration_months` (start to actual primary completion), optional series field |
+| a bar chart or time series showing shares | as above | also `percent` (0–100) and `of_trials` (its denominator); `y` charts `percent` |
+
+Counts are of distinct trials. A field that can hold several values per trial (phase, condition,
+intervention, intervention type, country) counts the trial once per value, so bars can add up to
+more than `meta.trials_analyzed`; `meta.assumptions` says so when it applies.
+
+#### Networks
+
+`data` is a NetworkX node-link graph (`networkx.node_link_graph(data, edges="edges")` reads it):
+
+- `nodes`: `id`, `label`, `group` (the node kind, such as `lead_sponsor`), `size` (trials with this value)
+- `edges`: `source`, `target` (node ids), `weight` (trials that have both values)
+- `encoding` names these keys and gives `group_labels` for display.
+
+#### Sources
+
+| Key | Meaning |
+|---|---|
+| `nct_ids` | Every trial counted in this data point, complete and sorted |
+| `citations` | The first few of those trials in detail: `nct_id`; `excerpt`, the exact text or value from the API record that placed the trial here; `field`, the API field path it came from; `title`, the trial's brief title as in the API, given once per trial within a data point |
+
+Answers built from registry-wide statistics (such as "which drug has the most trials?") have counts
+but no per-trial sources, and `meta.warnings` says so.
+
+#### `meta`
+
+| Field | Meaning |
+|---|---|
+| `interpretation` | What was searched, in plain words, written by code from the searches that ran |
+| `request_filters` | The structured fields the user sent, as sent |
+| `filters_applied` | `{"steps": [...]}`: each search's exact API parameters, what the agent asked for (`intent`), and names also searched under the registry's name (`searched_as`) |
+| `assumptions` | Counting rules and decisions the reader needs: multi-valued fields, replaced terms, what a percentage is of |
+| `warnings` | Values excluded, categories cut to the largest ones, a partial current year, samples |
+| `units` | What each number counts, by data key |
+| `total_trials_matched`, `trials_analyzed` | Matches at the source, and trials aggregated |
+| `data_as_of`, `api_version`, `source` | The registry's data refresh time, the API version, `"clinicaltrials.gov"` |
+| `chain` | Every fetch the agent made, in order, with its reason in the agent's words |
+| `metrics` | Run time, tokens and tool calls |
+
+#### Errors
+
+`{"error": <code>, "message": <text for the user>, "details": {...}}`, where `error` is one of
+`invalid_request`, `unsupported_query` (registry data cannot answer it: efficacy, advice, or a
+breakdown by a field that is not available), `no_results`, `upstream_error` (ClinicalTrials.gov
+failed) or `internal_error`.
+
+## Use of AI tools
+
+**Building it.** I built the project with Claude Code (Anthropic) as a pair programmer. It wrote
+most of the code, tests, skills, eval cases and documentation, in small steps I reviewed. The
+design decisions above were mine: I proposed them or chose them from options it laid out. The
+turning points were:
+
+- splitting the work between a model that interprets and code that computes, and replacing the
+  two-agent pipeline with one agent and tools when multi-step questions needed to loop;
+- organising the API knowledge as skills read on demand rather than retrieval;
+- reviewing the evals with two agents in an actual back-and-forth (one questioning, one
+  defending), because a single question-and-answer pass stayed shallow;
+- fixing the evals before the bugs, so that a pass meant a correct answer;
+- asking whether we were overfitting, which led to the leakage test and to dropping brittle checks;
+- recognising that the string-level search fixes were patching one design flaw, and moving to
+  typed intent with names resolved through the registry's own vocabulary;
+- keeping hooks out, because checks on the execution path already guarantee what hooks would add;
+- checking the output against the brief's examples and including complete trial lists after
+  measuring their cost.
+
+**Running it.** The query agent uses an OpenAI model, set by `CHEIRON_PLANNER_MODEL`.
+
+**How correctness was checked.**
+
+- 261 unit tests with fake models and a fake registry;
+- live evals: 72 cases against the real model and API, as described in
+  [How it is tested](#how-it-is-tested);
+- every number quoted in a skill or in this README was checked against the live API or measured
+  from saved outputs;
+- the web page was checked with screenshots of real responses.
