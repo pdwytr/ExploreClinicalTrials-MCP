@@ -19,14 +19,40 @@ Contents: [Running it](#running-it) · [What happens to a question](#what-happen
 
 ## Running it
 
+Requires Python 3.11+ and an OpenAI API key.
+
 ```bash
+git clone https://github.com/pdwytr/cheiron.git && cd cheiron
 cp .env.example .env          # set OPENAI_API_KEY; CHEIRON_PLANNER_MODEL=openai:gpt-5.4
-uv sync
-PYTHONPATH=src uv run uvicorn cheiron.api.app:app --port 8765
 ```
 
-`PYTHONPATH=src` works around iCloud Drive hiding the virtualenv's `.pth` file; it is not needed
-outside iCloud.
+With [uv](https://docs.astral.sh/uv/):
+
+```bash
+uv sync
+uv run uvicorn cheiron.api.app:app --port 8765
+```
+
+Or with pip:
+
+```bash
+python -m venv .venv && source .venv/bin/activate    # Windows: .venv\Scripts\activate
+pip install -e .
+uvicorn cheiron.api.app:app --port 8765
+```
+
+Instead of a `.env` file, you can set `OPENAI_API_KEY` and `CHEIRON_PLANNER_MODEL` as environment
+variables, which is how a hosting platform would supply them.
+
+### The frontend
+
+There is no separate frontend to build or start. The backend serves the web page itself: with
+the server running, open **http://localhost:8765/**, type a question, add any filters, and the
+page shows the chart, the numbers behind it and the trials each number cites. It is one file,
+[`src/cheiron/web/index.html`](src/cheiron/web/index.html), and it draws charts with Vega-Lite
+loaded from a CDN, so it needs internet access but no Node.js or `npm`.
+
+### The API
 
 A question runs as a background task, because fetching every matching trial can take from
 seconds to a minute. Submit it, then poll until `status` is `succeeded` or `failed`:
@@ -489,6 +515,67 @@ be removed, and rules that code can enforce can move into code, as happened with
 remaining rule would get an eval case that fails without it. A new skill version would be adopted
 only if it does at least as well on the held-out cases with fewer tokens. A smaller skill leaves
 the agent less to misread, which is where accuracy gains are left at this point.
+
+### Production hardening
+
+The service is built for correctness first. Before real users depend on it, I would harden three
+things.
+
+**Logging and tooling.** Modules log today with Python's standard `logging`, one logger each, and
+each query's full trace is saved to its output folder. Next comes one logging setup for the whole
+service: structured JSON lines carrying the task ID through every stage (request, intent, fetch,
+chart, response), with timings, model token counts and the number of ClinicalTrials.gov calls, and
+the API key and other secrets redacted. Those fields would feed metrics and alerts: error rate,
+latency per stage, model cost per query, and upstream API failures and retries.
+
+**Validation and error handling for edge cases.** The request schema and the refusal paths cover
+the cases the evals exercise. Next is a deliberate sweep of what they do not: empty or very long
+questions, contradictory filters (a start year after the end year), drug or sponsor names that
+resolve to nothing or to thousands of trials, ClinicalTrials.gov timeouts, rate limits and
+malformed pages, the model provider being down or returning invalid output, and a task cancelled
+or forgotten mid-run. Each would get a test that pins its behaviour, so every failure ends in a
+clear `ErrorResponse` with a stable error code, never a stack trace or a task stuck in `running`.
+
+**Load testing with 100 concurrent users.** The service has not been load tested. I would use
+[Locust](https://locust.io/) to simulate 100 users submitting a realistic mix of questions (from
+narrow ones that fetch a few trials to broad ones that fetch thousands) and polling their tasks,
+and measure throughput, latency percentiles, error rate and memory. The likely limits, each of
+which the test would confirm or rule out:
+
+- **Rate limits upstream.** Every query fetches from ClinicalTrials.gov and calls the model
+  provider, so both would throttle long before the server's CPU runs out.
+- **Memory.** Tasks and their results live in one process's memory for 24 hours, and a broad
+  question holds megabytes of records while it runs.
+- **One process.** The in-memory task store means the service cannot yet run as several
+  replicas behind a load balancer.
+
+The fixes follow from what the test shows: a cap on concurrent tasks with a queue in front of
+it, the fetch cache described above, and moving task state and outputs to shared storage (for
+example Redis or a database for tasks and object storage for outputs) so the service can scale
+out. The Locust scenario would then run in CI against each release to catch regressions.
+
+**Query data that keeps growing.** Every query writes a folder to `data/queries/` and nothing
+deletes it; only the in-memory task is forgotten after 24 hours. After development and the eval
+runs, 373 queries take 1.4 GB, and about 95% of that is the raw trial records each fetch saves
+(`fetch-<n>/trials/`). The request, response, metadata, trace, plans and profiles are small. So
+the plan is to treat the two kinds of data differently:
+
+- **Keep the small files; expire the raw trials.** The small files are what explains and replays
+  an answer, so they are kept long term. Raw trial files are kept for a fixed window (say 30
+  days), then deleted, unless the query was flagged through user feedback or became an eval
+  case, which pins it.
+- **Compress.** The JSON is written pretty-printed; gzip shrinks a typical trials file about
+  6.5 times (2.8 MB to 0.42 MB).
+- **Store each trial once.** Broad and repeated questions save the same trials again and again.
+  Storing each record once, keyed by NCT ID and its last-update date, and having each fetch keep
+  only the list of IDs it got, removes the duplication. This shares its storage with the fetch
+  cache above.
+- **Move off local disk.** Outputs go to object storage (S3, R2 or GCS) with lifecycle rules that
+  apply the retention window automatically, and the metadata goes to a database, so queries can
+  be searched and counted without reading folders. This is also what lets several replicas share
+  outputs.
+- **Watch it.** Storage used and growth per day become metrics with an alert, so a change that
+  suddenly saves much more data is noticed.
 
 ## Request and response schema
 
