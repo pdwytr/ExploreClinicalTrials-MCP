@@ -99,15 +99,46 @@ def test_comparison_may_skip_the_user_value_only_when_it_is_a_compared_side():
     assert "Ignored drug_name" in warnings[0]
 
 
-def test_comparison_cannot_replace_the_user_value_with_other_sides():
-    # the user asked about one drug; a plan comparing two others must still be limited to it
+def test_comparison_of_other_values_conflicts_with_the_user_value():
+    # the user asked about one drug; a plan comparing two others is sent back, not intersected with it
     p = plan(("Nivolumab", {"query.intr": "nivolumab"}), ("Ipilimumab", {"query.intr": "ipilimumab"}))
-    prepared, warnings = apply_request_filters(p, request(drug_name="Relatlimab"))
-    assert [params.search["query.intr"] for _, params in prepared] == [
-        '(nivolumab) AND "Relatlimab"',
-        '(ipilimumab) AND "Relatlimab"',
-    ]
-    assert "drug_name='Relatlimab' was applied to every compared side" in warnings[0]
+    with pytest.raises(InvalidSearch, match="drug_name='Relatlimab'"):
+        apply_request_filters(p, request(drug_name="Relatlimab"))
+
+
+def test_structured_field_conflicting_with_the_plan_sends_the_plan_back():
+    # r22 / g09: AND-ing a different term onto the planner's search answers neither question
+    # ("lung cancer" AND "melanoma" is the few trials that mention both)
+    with pytest.raises(InvalidSearch) as exc:
+        apply_request_filters(plan(("x", {"query.cond": '"lung cancer"'})), request(condition="melanoma"))
+    assert "condition='melanoma'" in exc.value.message and '"lung cancer"' in exc.value.message
+    with pytest.raises(InvalidSearch, match="drug_name='pembrolizumab'"):
+        apply_request_filters(plan(("x", {"query.intr": "nivolumab"})), request(drug_name="pembrolizumab"))
+
+
+def test_a_narrowing_of_the_user_value_is_kept():
+    p = plan(("x", {"query.cond": '"uveal melanoma"'}))
+    prepared, _ = apply_request_filters(p, request(condition="Melanoma"))
+    assert prepared[0][1].search["query.cond"] == '("uveal melanoma") AND "Melanoma"'
+
+
+def test_containment_is_by_whole_words():
+    # "melanoma" is not inside "melanomas-like" spellings of another word, and "lung" is not "lunge"
+    with pytest.raises(InvalidSearch):
+        apply_request_filters(plan(("x", {"query.cond": "hypermelanosis"})), request(condition="melanosis"))
+
+
+def test_sponsor_field_means_the_lead_sponsor():
+    # request.sponsor is documented as the lead sponsor; query.spons also matches collaborators
+    prepared, _ = apply_request_filters(plan(("x", {"query.cond": "asthma"})), request(sponsor="Pfizer"))
+    assert prepared[0][1].search == {"query.cond": "asthma", "query.lead": '"Pfizer"'}
+
+
+def test_a_different_sponsor_in_the_plan_conflicts_with_the_sponsor_field():
+    with pytest.raises(InvalidSearch, match="sponsor='Pfizer'"):
+        apply_request_filters(plan(("x", {"query.spons": '"Novartis"'})), request(sponsor="Pfizer"))
+    prepared, _ = apply_request_filters(plan(("x", {"query.spons": '"Pfizer"'})), request(sponsor="Pfizer"))
+    assert prepared[0][1].search == {"query.spons": '"Pfizer"', "query.lead": '"Pfizer"'}
 
 
 def test_filters_apply_to_every_search():

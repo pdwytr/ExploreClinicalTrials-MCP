@@ -12,8 +12,15 @@ from cheiron.workflow.plans import SearchPlan
 
 log = logging.getLogger(__name__)
 
-# Request field -> API text parameter
-_TEXT_FILTERS = {"drug_name": "query.intr", "condition": "query.cond", "sponsor": "query.spons", "country": "query.locn"}
+# Request field -> (API text parameter the user's value goes on, other parameters that name the same thing).
+# `sponsor` is documented as the lead sponsor, so it filters query.lead; query.spons (lead or collaborator)
+# naming a different organisation would still conflict with it.
+_TEXT_FILTERS: dict[str, tuple[str, tuple[str, ...]]] = {
+    "drug_name": ("query.intr", ()),
+    "condition": ("query.cond", ()),
+    "sponsor": ("query.lead", ("query.spons",)),
+    "country": ("query.locn", ()),
+}
 
 # (label, what to execute): a /studies search with the user's filters added, or another endpoint's step.
 PreparedStep = tuple[str, StudySearchParams | StudyStep | FieldValuesStep | FieldSizesStep | RecordSizeStep]
@@ -43,6 +50,12 @@ def _same_term(planner_value: str, user_value: str) -> bool:
     return _bare(planner_value) == _bare(user_value)
 
 
+def _contains_term(planner_value: str, user_value: str) -> bool:
+    """The planner's search names the user's term as whole words ("uveal melanoma" contains melanoma),
+    so AND-ing the user's value narrows it or keeps it; it does not turn it into another question."""
+    return re.search(rf"(?<!\w){re.escape(_bare(user_value))}(?!\w)", _bare(planner_value)) is not None
+
+
 def _and(existing: str | None, addition: str) -> str:
     return f"({existing}) AND {addition}" if existing else addition
 
@@ -50,16 +63,19 @@ def _and(existing: str | None, addition: str) -> str:
 def apply_request_filters(plan: SearchPlan, request: QueryRequest) -> tuple[list[PreparedStep], list[str]]:
     """Add every structured field the user sent to every /studies step, so filters are guaranteed.
 
-    - Text fields (drug, condition, sponsor, country) are AND-ed onto the matching
-      parameter, unless the planner searched exactly that term (an OR containing it is wider).
+    - Text fields (drug, condition, sponsor as the lead sponsor, country) are AND-ed onto the
+      matching parameter, unless the planner searched exactly that term (an OR containing it is
+      wider). If the planner's value for that parameter does not contain the user's term at all
+      (condition=melanoma, plan "lung cancer"), the two disagree: AND-ing them would answer neither
+      question, so the plan is sent back with InvalidSearch to search the user's value instead.
     - Phases are AND-ed onto filter.advanced, unless it is exactly that phase filter.
     - Years: each step's period becomes a RANGE on its date field. The user's start_year /
       end_year are authoritative: they replace any start-date period the planner wrote.
     - Statuses replace filter.overallStatus (the user's explicit choice wins).
     Exception: if the steps compare sides on that very parameter and the user's value is one
     of the sides (e.g. drug_name=X, "compare X with Y"), AND-ing it onto every side would erase
-    the comparison, so it is skipped with a user-facing warning. If the user's value is none of
-    the sides, the comparison cannot replace it: it is AND-ed onto every side, with a warning.
+    the comparison, so it is skipped with a user-facing warning. A comparison of other values is
+    a conflict like any other.
 
     Registry-wide steps (/stats/*) cannot filter, so a plan using them while the user
     sent filters is rejected with InvalidSearch: the planner gets that as feedback.
@@ -82,16 +98,27 @@ def apply_request_filters(plan: SearchPlan, request: QueryRequest) -> tuple[list
     studies = [s for s in plan.steps if isinstance(s, StudiesStep)]
     all_params = [dict(s.params) for s in studies]
 
-    for req_field, api_param in _TEXT_FILTERS.items():
+    for req_field, (api_param, related) in _TEXT_FILTERS.items():
         wanted = getattr(request, req_field)
         if wanted is None:
             continue
         values = {p.get(api_param, "").casefold() for p in all_params}
-        if plan.is_comparison and len(values) > 1:
-            if any(_same_term(p.get(api_param, ""), wanted) for p in all_params):
-                warnings.append(f"Ignored {req_field}={wanted!r}: the question compares searches by {api_param}.")
-                continue
-            warnings.append(f"{req_field}={wanted!r} was applied to every compared side.")
+        if plan.is_comparison and len(values) > 1 and any(_same_term(p.get(api_param, ""), wanted) for p in all_params):
+            warnings.append(f"Ignored {req_field}={wanted!r}: the question compares searches by {api_param}.")
+            continue
+        conflicts = [
+            f"{param} {p[param]}"
+            for p in all_params
+            for param in (api_param, *related)
+            if p.get(param) and not _contains_term(p[param], wanted)
+        ]
+        if conflicts:
+            raise InvalidSearch(
+                f"The user set {req_field}={wanted!r}, but the plan searches {'; '.join(conflicts)}. The user's "
+                f"field wins: search {api_param}={phrase(wanted)} (code adds it), and drop or move the other term "
+                "unless it only narrows the user's value.",
+                {"field": req_field, "value": wanted, "conflicts": conflicts},
+            )
         for p in all_params:
             if not _same_term(p.get(api_param, ""), wanted):
                 log.info("added user filter: %s += %r", api_param, wanted)

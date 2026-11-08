@@ -136,7 +136,12 @@ industry vs academic, by year) is **one** search: the chart splits it later.
 ## User's structured filters
 
 They are listed in the request. Include them in your searches. Code also adds any
-you miss (AND-ed onto your parameters), so never contradict them. The user's `start_year` /
+you miss (AND-ed onto your parameters), so never contradict them. **When the question text
+and a field disagree, the field wins**: search the field's value (`condition: melanoma` with
+"show lung cancer trials" means melanoma trials) and say so in the rationale. A plan whose
+`query.cond` / `query.intr` / `query.locn` / sponsor parameters name something else is sent
+back; a narrower term that contains the field's value ("uveal melanoma") is fine. `sponsor`
+is the **lead** sponsor (`query.lead`). The user's `start_year` /
 `end_year` are an inclusive start-date range ("start_year 2018" = 2018 onwards) and code sets
 them as the start period, replacing any start period you wrote.
 
