@@ -598,6 +598,26 @@ covers what the schema alone does not.
 | `GET` | `/queries/{task_id}` | The task: `status` (`queued`, `running`, `succeeded`, `failed`), `progress` (stage and message), `result` (a `QueryResponse` once succeeded), `error` (an `ErrorResponse` if failed). `404` once forgotten: tasks are kept 24 hours, in memory |
 | `GET` | `/health` | `{"status": "ok"}` |
 
+How one question moves through them:
+
+1. **`POST /queries` submits it.** The `QueryRequest` is validated first, so a bad request (an
+   unknown field, `start_year` after `end_year`) gets a `422` before any work starts. A valid one
+   returns `202` at once with a `task_id`, and the work runs in the background, because fetching
+   every matching trial can take from seconds to a minute.
+2. **`GET /queries/{task_id}` is polled** every few seconds until `status` is `succeeded` or
+   `failed`. `progress` names the current stage: `queued`, `planning` (the model reads the
+   question and plans the search), `fetching` (code calls ClinicalTrials.gov, with a trial
+   count), `analyzing`, `building` (code counts, cites and builds the chart), `saving`, then
+   `done` or `failed`. On success, `result` holds the `QueryResponse`: the `visualization` with
+   every row citing its trials, `meta`, and the `vega_lite` spec. On failure, `error` says why,
+   including an honest refusal for a question the service cannot answer.
+3. **`GET /health`** is not part of answering a question; the host (Fly.io) calls it to check the
+   service is up.
+
+The web page at `/` is a client of the first two: it posts the question, polls the task, then
+draws `vega_lite` and lists the trials behind each value. In `/docs`, "Try it out" calls the
+endpoints from the browser.
+
 ### Request: `QueryRequest`
 
 | Field | Type | Required | Validation |
