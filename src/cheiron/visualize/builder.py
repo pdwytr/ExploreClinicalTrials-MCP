@@ -279,7 +279,10 @@ def _build(
         series_channel = _channel(plan.series)
         encoding = {"x": _channel(plan.x), "y": Y, "color": series_channel}
         if plan.measure == "share":
-            if plan.series is Dimension.GROUP:  # of each compared side (its trials that have an x value)
+            if plan.share_of == "all":  # of every trial with a value for both x and the series
+                everyone = len({t.nct_id for ts in cells.values() for t in ts})
+                _add_shares(rows, lambda row: everyone)
+            elif plan.series is Dimension.GROUP:  # of each compared side (its trials that have an x value)
                 side = {s: len({t.nct_id for (x, s2), ts in cells.items() if s2 == s for t in ts}) for s in series_order}
                 _add_shares(rows, lambda row: side[row[plan.series.value]])
             else:  # of the trials in each x category

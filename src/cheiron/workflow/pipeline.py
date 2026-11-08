@@ -292,7 +292,9 @@ def _assumptions(chart: ChartPlan, profile: DataProfile) -> list[str]:
         notes.append("Compared sides are separate searches; a trial matching several sides is counted in each.")
     if chart.measure == "share":
         of = (
-            "each compared side" if chart.series is Dimension.GROUP
+            f"all charted trials with values for both {chart.x.value.replace('_', ' ')} and {chart.series.value.replace('_', ' ')}"
+            if chart.share_of == "all"
+            else "each compared side" if chart.series is Dimension.GROUP
             else f"the trials in each {chart.x.value.replace('_', ' ')}" if chart.series
             else f"all charted trials with a {chart.x.value.replace('_', ' ')}"
         )  # fmt: skip

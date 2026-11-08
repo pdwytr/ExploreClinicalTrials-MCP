@@ -215,6 +215,12 @@ class ChartPlan(BaseModel):
         description="'share' = percent of trials: of all charted trials (no series), of the trials in "
         "each x category (with a series), or of each compared side (series = group).",
     )
+    share_of: Literal["all"] | None = Field(
+        default=None,
+        description="Only with measure='share' and a series (not group): 'all' divides every cell by all charted "
+        "trials instead of the trials in its x category, so a bar's segments add up to that bar's share of all "
+        "trials (e.g. randomized AND double-blind).",
+    )
 
     @model_validator(mode="after")
     def renderable(self) -> "ChartPlan":
@@ -238,6 +244,8 @@ class ChartPlan(BaseModel):
             raise ValueError("enrollment and duration_months are numeric: chart them as a histogram or scatter_plot")
         if self.measure == "share" and self.chart_type not in ("bar_chart", "grouped_bar_chart", "stacked_bar_chart", "time_series"):
             raise ValueError("a share (percent of trials) needs a bar chart or a time series")
+        if self.share_of and (self.measure != "share" or self.series in (None, Dimension.GROUP)):
+            raise ValueError("share_of='all' needs measure='share' and a series that is not a comparison (group)")
         if self.series is not None and self.series == self.x and self.chart_type != "network_graph":
             raise ValueError("series must differ from x (the same field twice only makes sense in a network)")
         return self

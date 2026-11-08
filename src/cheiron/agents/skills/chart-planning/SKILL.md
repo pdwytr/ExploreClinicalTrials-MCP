@@ -63,7 +63,7 @@ observational studies.
 ## Output
 
 A ChartPlan: `intent`, `chart_type`, `title` (at most 120 characters), `x`, and optionally `series`,
-`top_n` (1–50), `measure` (`count`, the default, or `share`) and, for a `scatter_plot` only, `y`. For a comparison of two fetched sides by phase:
+`top_n` (1–50), `measure` (`count`, the default, or `share`), `share_of` (see Shares) and, for a `scatter_plot` only, `y`. For a comparison of two fetched sides by phase:
 
 ```json
 {"intent": "magnitude", "chart_type": "grouped_bar_chart", "title": "Trial phases: durvalumab vs atezolizumab", "x": "phase", "series": "group"}
@@ -93,6 +93,14 @@ A ChartPlan: `intent`, `chart_type`, `title` (at most 120 characters), `x`, and 
   share of all charted trials; with a series = share within each x category ("in each phase, what
   share is industry-run": `x: phase`, `series: sponsor_class`); `series: group` = share within each
   compared side. Bars and time series only; not registry-wide statistics.
+- **Shares of trials with two properties at once** ("what percent are both phase 3 and run by
+  industry"):
+  the answer is one cell's share of *all* trials, not of its x category. Chart a `stacked_bar_chart`
+  with one property on `x`, the other on `series`, `measure: "share"` and `share_of: "all"`; each
+  segment is then a percent of every charted trial. Say in the title which segments answer the
+  question. "Double-blind" in the registry is masking `DOUBLE`, `TRIPLE` or `QUADRUPLE` (triple and
+  quadruple blinding include it): name all three in the title or let the chart show them together.
+  Use `share_of` only for this; every other share keeps the default denominator.
 - **Numbers:** `enrollment` and `duration_months` are numeric. They are charted only as a
   `histogram` (enrollment) or a `scatter_plot` (one on `x`, the other on `y`; an optional `series`
   colors the points by a category). Duration exists only for finished trials: unfinished ones are

@@ -304,6 +304,35 @@ def test_share_in_a_comparison_is_within_each_side():
     assert cell[("PHASE3", "A")] == 50.0 and cell[("PHASE3", "B")] == 75.0  # phase mix of each side
 
 
+def test_share_of_all_with_a_series_divides_every_cell_by_all_charted_trials():
+    # u11: "What share of depression trials are randomized and double-blind?" Each cell is a share of
+    # every charted trial, so a randomized bar's segments add up to the share that is randomized.
+    trials = [
+        trial(1, allocation="RANDOMIZED", masking="DOUBLE"), trial(2, allocation="RANDOMIZED", masking="QUADRUPLE"),
+        trial(3, allocation="RANDOMIZED", masking="NONE"), trial(4, allocation="NA", masking="NONE"),
+        trial(5),  # no design data: not charted, not in the denominator
+    ]  # fmt: skip
+    viz, _ = build_visualization(
+        {"All": trials},
+        plan(intent="part_to_whole", chart_type="stacked_bar_chart", x=Dimension.ALLOCATION, series=Dimension.MASKING,
+             measure="share", share_of="all"),
+    )  # fmt: skip
+    cell = {(r.allocation, r.masking): (r.percent, r.of_trials) for r in viz.data}
+    assert cell[("RANDOMIZED", "DOUBLE")] == (25.0, 4) and cell[("RANDOMIZED", "QUADRUPLE")] == (25.0, 4)
+    assert cell[("NA", "NONE")] == (25.0, 4)
+    as_response(viz)
+
+
+def test_share_of_all_is_only_for_a_share_with_a_series_that_is_not_a_comparison():
+    with pytest.raises(ValidationError, match="share_of"):
+        plan(intent="part_to_whole", chart_type="bar_chart", x=Dimension.ALLOCATION, share_of="all")  # not a share
+    with pytest.raises(ValidationError, match="share_of"):
+        plan(intent="part_to_whole", chart_type="bar_chart", x=Dimension.ALLOCATION, measure="share", share_of="all")
+    with pytest.raises(ValidationError, match="share_of"):
+        plan(intent="magnitude", chart_type="grouped_bar_chart", x=Dimension.PHASE, series=Dimension.GROUP,
+             measure="share", share_of="all")  # fmt: skip
+
+
 @pytest.mark.parametrize("chart_type, x", [("histogram", Dimension.ENROLLMENT), ("network_graph", Dimension.CONDITION)])
 def test_share_needs_a_bar_or_trend_chart(chart_type, x):
     with pytest.raises(ValidationError, match="share"):
