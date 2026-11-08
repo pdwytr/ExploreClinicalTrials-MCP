@@ -1,0 +1,759 @@
+{
+ "task_id": "7d000f50-2ca1-4284-bd03-6364ac1355a3",
+ "status": "succeeded",
+ "progress": {
+  "stage": "done",
+  "message": "Saved 2,889 trials",
+  "trials_fetched": 2889,
+  "trials_total": 2889
+ },
+ "output_dir": "data/queries/7d000f50-2ca1-4284-bd03-6364ac1355a3",
+ "result": {
+  "visualization": {
+   "type": "bar_chart",
+   "intent": "ranking",
+   "title": "Top sponsors running obesity trials right now",
+   "encoding": {
+    "x": {
+     "field": "lead_sponsor",
+     "type": "nominal",
+     "title": "Lead sponsor",
+     "sort": "-y"
+    },
+    "y": {
+     "field": "trial_count",
+     "type": "quantitative",
+     "title": "Trials"
+    }
+   },
+   "data": [
+    {
+     "citations": [
+      {
+       "nct_id": "NCT04775082",
+       "excerpt": "Novo Nordisk A/S",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT05503927",
+       "excerpt": "Novo Nordisk A/S",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT05567796",
+       "excerpt": "Novo Nordisk A/S",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT05726227",
+       "excerpt": "Novo Nordisk A/S",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT05872022",
+       "excerpt": "Novo Nordisk A/S",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      }
+     ],
+     "lead_sponsor": "Novo Nordisk A/S",
+     "trial_count": 67
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT05556512",
+       "excerpt": "Eli Lilly and Company",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT05869903",
+       "excerpt": "Eli Lilly and Company",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT06037252",
+       "excerpt": "Eli Lilly and Company",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT06075667",
+       "excerpt": "Eli Lilly and Company",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT06143956",
+       "excerpt": "Eli Lilly and Company",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      }
+     ],
+     "lead_sponsor": "Eli Lilly and Company",
+     "trial_count": 60
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT02653092",
+       "excerpt": "University of Colorado, Denver",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT02669797",
+       "excerpt": "University of Colorado, Denver",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT03215836",
+       "excerpt": "University of Colorado, Denver",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT03584217",
+       "excerpt": "University of Colorado, Denver",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT03762395",
+       "excerpt": "University of Colorado, Denver",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      }
+     ],
+     "lead_sponsor": "University of Colorado, Denver",
+     "trial_count": 36
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT03238794",
+       "excerpt": "Mayo Clinic",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT03866408",
+       "excerpt": "Mayo Clinic",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT03868592",
+       "excerpt": "Mayo Clinic",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT04232566",
+       "excerpt": "Mayo Clinic",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT04297592",
+       "excerpt": "Mayo Clinic",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      }
+     ],
+     "lead_sponsor": "Mayo Clinic",
+     "trial_count": 30
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT06702085",
+       "excerpt": "Cairo University",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT06716125",
+       "excerpt": "Cairo University",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT06729203",
+       "excerpt": "Cairo University",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT06799104",
+       "excerpt": "Cairo University",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT06812364",
+       "excerpt": "Cairo University",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      }
+     ],
+     "lead_sponsor": "Cairo University",
+     "trial_count": 27
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT02904291",
+       "excerpt": "Norwegian University of Science and Technology",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT03440177",
+       "excerpt": "Norwegian University of Science and Technology",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT03448783",
+       "excerpt": "Norwegian University of Science and Technology",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT03449472",
+       "excerpt": "Norwegian University of Science and Technology",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT03449485",
+       "excerpt": "Norwegian University of Science and Technology",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      }
+     ],
+     "lead_sponsor": "Norwegian University of Science and Technology",
+     "trial_count": 23
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT03575897",
+       "excerpt": "University of Alabama at Birmingham",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT03704350",
+       "excerpt": "University of Alabama at Birmingham",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT04333745",
+       "excerpt": "University of Alabama at Birmingham",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT04633811",
+       "excerpt": "University of Alabama at Birmingham",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT04971720",
+       "excerpt": "University of Alabama at Birmingham",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      }
+     ],
+     "lead_sponsor": "University of Alabama at Birmingham",
+     "trial_count": 21
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT02557438",
+       "excerpt": "Massachusetts General Hospital",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT04551482",
+       "excerpt": "Massachusetts General Hospital",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT04899102",
+       "excerpt": "Massachusetts General Hospital",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT05799222",
+       "excerpt": "Massachusetts General Hospital",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT05933499",
+       "excerpt": "Massachusetts General Hospital",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      }
+     ],
+     "lead_sponsor": "Massachusetts General Hospital",
+     "trial_count": 19
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT07311850",
+       "excerpt": "Pfizer",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT07400653",
+       "excerpt": "Pfizer",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT07508241",
+       "excerpt": "Pfizer",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT07575932",
+       "excerpt": "Pfizer",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT07595549",
+       "excerpt": "Pfizer",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      }
+     ],
+     "lead_sponsor": "Pfizer",
+     "trial_count": 19
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT06660173",
+       "excerpt": "Amgen",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT06858839",
+       "excerpt": "Amgen",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT06858878",
+       "excerpt": "Amgen",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT06987695",
+       "excerpt": "Amgen",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT07037433",
+       "excerpt": "Amgen",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      }
+     ],
+     "lead_sponsor": "Amgen",
+     "trial_count": 18
+    }
+   ]
+  },
+  "meta": {
+   "source": "clinicaltrials.gov",
+   "interpretation": "Ongoing obesity studies to identify the leading sponsors currently running them; sponsor ranking will be read from the profile of this fetch.",
+   "filters_applied": {
+    "steps": [
+     {
+      "label": "Obesity trials",
+      "endpoint": "studies",
+      "params": {
+       "query.cond": "\"obesity\"",
+       "filter.overallStatus": "NOT_YET_RECRUITING|RECRUITING|ENROLLING_BY_INVITATION|ACTIVE_NOT_RECRUITING"
+      }
+     }
+    ]
+   },
+   "assumptions": [
+    "Counts are distinct trials."
+   ],
+   "warnings": [
+    "Showing the top 10 values of lead_sponsor; 1266 smaller categories are left out."
+   ],
+   "total_trials_matched": 2889,
+   "trials_analyzed": 2889,
+   "units": {
+    "trial_count": "trials"
+   },
+   "data_as_of": "2026-11-06T10:00:05",
+   "api_version": "2.0.5",
+   "chain": [
+    {
+     "fetch": 1,
+     "rationale": "Ongoing obesity studies to identify the leading sponsors currently running them; sponsor ranking will be read from the profile of this fetch.",
+     "searches": [
+      {
+       "label": "Obesity trials",
+       "endpoint": "studies",
+       "params": {
+        "query.cond": "\"obesity\"",
+        "filter.overallStatus": "NOT_YET_RECRUITING|RECRUITING|ENROLLING_BY_INVITATION|ACTIVE_NOT_RECRUITING"
+       }
+      }
+     ],
+     "status": "ok",
+     "total_trials_matched": 2889,
+     "error": null,
+     "charted": true,
+     "output_dir": "fetch-1"
+    }
+   ],
+   "metrics": {
+    "seconds_total": 6.59,
+    "seconds_model": 4.6,
+    "seconds_fetching": 1.98,
+    "seconds_building": 0.0,
+    "model_turns": 4,
+    "input_tokens": 22386,
+    "output_tokens": 184,
+    "tool_calls": {
+     "fetch_data": 1,
+     "describe_data": 1,
+     "load_skill": 1,
+     "final_result_ChartPlan": 1
+    },
+    "sent_back": 0,
+    "fetches": 1,
+    "failed_fetches": 0
+   },
+   "generated_at": "2026-11-07T23:50:36.421645Z"
+  },
+  "vega_lite": {
+   "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+   "title": "Top sponsors running obesity trials right now",
+   "width": "container",
+   "data": {
+    "values": [
+     {
+      "citations": [
+       {
+        "nct_id": "NCT04775082",
+        "excerpt": "Novo Nordisk A/S",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT05503927",
+        "excerpt": "Novo Nordisk A/S",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT05567796",
+        "excerpt": "Novo Nordisk A/S",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT05726227",
+        "excerpt": "Novo Nordisk A/S",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT05872022",
+        "excerpt": "Novo Nordisk A/S",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       }
+      ],
+      "lead_sponsor": "Novo Nordisk A/S",
+      "trial_count": 67
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT05556512",
+        "excerpt": "Eli Lilly and Company",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT05869903",
+        "excerpt": "Eli Lilly and Company",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT06037252",
+        "excerpt": "Eli Lilly and Company",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT06075667",
+        "excerpt": "Eli Lilly and Company",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT06143956",
+        "excerpt": "Eli Lilly and Company",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       }
+      ],
+      "lead_sponsor": "Eli Lilly and Company",
+      "trial_count": 60
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT02653092",
+        "excerpt": "University of Colorado, Denver",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT02669797",
+        "excerpt": "University of Colorado, Denver",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT03215836",
+        "excerpt": "University of Colorado, Denver",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT03584217",
+        "excerpt": "University of Colorado, Denver",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT03762395",
+        "excerpt": "University of Colorado, Denver",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       }
+      ],
+      "lead_sponsor": "University of Colorado, Denver",
+      "trial_count": 36
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT03238794",
+        "excerpt": "Mayo Clinic",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT03866408",
+        "excerpt": "Mayo Clinic",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT03868592",
+        "excerpt": "Mayo Clinic",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT04232566",
+        "excerpt": "Mayo Clinic",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT04297592",
+        "excerpt": "Mayo Clinic",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       }
+      ],
+      "lead_sponsor": "Mayo Clinic",
+      "trial_count": 30
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT06702085",
+        "excerpt": "Cairo University",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT06716125",
+        "excerpt": "Cairo University",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT06729203",
+        "excerpt": "Cairo University",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT06799104",
+        "excerpt": "Cairo University",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT06812364",
+        "excerpt": "Cairo University",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       }
+      ],
+      "lead_sponsor": "Cairo University",
+      "trial_count": 27
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT02904291",
+        "excerpt": "Norwegian University of Science and Technology",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT03440177",
+        "excerpt": "Norwegian University of Science and Technology",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT03448783",
+        "excerpt": "Norwegian University of Science and Technology",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT03449472",
+        "excerpt": "Norwegian University of Science and Technology",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT03449485",
+        "excerpt": "Norwegian University of Science and Technology",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       }
+      ],
+      "lead_sponsor": "Norwegian University of Science and Technology",
+      "trial_count": 23
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT03575897",
+        "excerpt": "University of Alabama at Birmingham",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT03704350",
+        "excerpt": "University of Alabama at Birmingham",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT04333745",
+        "excerpt": "University of Alabama at Birmingham",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT04633811",
+        "excerpt": "University of Alabama at Birmingham",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT04971720",
+        "excerpt": "University of Alabama at Birmingham",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       }
+      ],
+      "lead_sponsor": "University of Alabama at Birmingham",
+      "trial_count": 21
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT02557438",
+        "excerpt": "Massachusetts General Hospital",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT04551482",
+        "excerpt": "Massachusetts General Hospital",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT04899102",
+        "excerpt": "Massachusetts General Hospital",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT05799222",
+        "excerpt": "Massachusetts General Hospital",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT05933499",
+        "excerpt": "Massachusetts General Hospital",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       }
+      ],
+      "lead_sponsor": "Massachusetts General Hospital",
+      "trial_count": 19
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT07311850",
+        "excerpt": "Pfizer",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT07400653",
+        "excerpt": "Pfizer",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT07508241",
+        "excerpt": "Pfizer",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT07575932",
+        "excerpt": "Pfizer",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT07595549",
+        "excerpt": "Pfizer",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       }
+      ],
+      "lead_sponsor": "Pfizer",
+      "trial_count": 19
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT06660173",
+        "excerpt": "Amgen",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT06858839",
+        "excerpt": "Amgen",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT06858878",
+        "excerpt": "Amgen",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT06987695",
+        "excerpt": "Amgen",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT07037433",
+        "excerpt": "Amgen",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       }
+      ],
+      "lead_sponsor": "Amgen",
+      "trial_count": 18
+     }
+    ]
+   },
+   "mark": "bar",
+   "encoding": {
+    "x": {
+     "field": "lead_sponsor",
+     "type": "nominal",
+     "title": "Lead sponsor",
+     "sort": "-y"
+    },
+    "y": {
+     "field": "trial_count",
+     "type": "quantitative",
+     "title": "Trials"
+    },
+    "tooltip": [
+     {
+      "field": "lead_sponsor",
+      "type": "nominal"
+     },
+     {
+      "field": "trial_count",
+      "type": "quantitative"
+     }
+    ]
+   }
+  }
+ },
+ "error": null,
+ "created_at": "2026-11-07T23:50:29.828640Z",
+ "updated_at": "2026-11-07T23:50:36.447167Z",
+ "_seconds": 9.0
+}

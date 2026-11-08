@@ -1,0 +1,759 @@
+{
+ "task_id": "46e67501-3e3f-40f2-91d6-a98004791972",
+ "status": "succeeded",
+ "progress": {
+  "stage": "done",
+  "message": "Saved 444 trials",
+  "trials_fetched": 444,
+  "trials_total": 444
+ },
+ "output_dir": "data/queries/46e67501-3e3f-40f2-91d6-a98004791972",
+ "result": {
+  "visualization": {
+   "type": "bar_chart",
+   "intent": "ranking",
+   "title": "Most active lead sponsors in type 2 diabetes trials with sites in India",
+   "encoding": {
+    "x": {
+     "field": "lead_sponsor",
+     "type": "nominal",
+     "title": "Lead sponsor",
+     "sort": "-y"
+    },
+    "y": {
+     "field": "trial_count",
+     "type": "quantitative",
+     "title": "Trials"
+    }
+   },
+   "data": [
+    {
+     "citations": [
+      {
+       "nct_id": "NCT00318422",
+       "excerpt": "Novo Nordisk A/S",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT00318461",
+       "excerpt": "Novo Nordisk A/S",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT00331851",
+       "excerpt": "Novo Nordisk A/S",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT00343980",
+       "excerpt": "Novo Nordisk A/S",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT00469092",
+       "excerpt": "Novo Nordisk A/S",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      }
+     ],
+     "lead_sponsor": "Novo Nordisk A/S",
+     "trial_count": 96
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT00251953",
+       "excerpt": "AstraZeneca",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT00252876",
+       "excerpt": "AstraZeneca",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT00255645",
+       "excerpt": "AstraZeneca",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT00261352",
+       "excerpt": "AstraZeneca",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT00295633",
+       "excerpt": "AstraZeneca",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      }
+     ],
+     "lead_sponsor": "AstraZeneca",
+     "trial_count": 54
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT00191282",
+       "excerpt": "Eli Lilly and Company",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT00191464",
+       "excerpt": "Eli Lilly and Company",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT00279201",
+       "excerpt": "Eli Lilly and Company",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT00325364",
+       "excerpt": "Eli Lilly and Company",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT00330473",
+       "excerpt": "Eli Lilly and Company",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      }
+     ],
+     "lead_sponsor": "Eli Lilly and Company",
+     "trial_count": 48
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT00069784",
+       "excerpt": "Sanofi",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT00405418",
+       "excerpt": "Sanofi",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT00449605",
+       "excerpt": "Sanofi",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT00464061",
+       "excerpt": "Sanofi",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT00688701",
+       "excerpt": "Sanofi",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      }
+     ],
+     "lead_sponsor": "Sanofi",
+     "trial_count": 23
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT00601250",
+       "excerpt": "Boehringer Ingelheim",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT00621140",
+       "excerpt": "Boehringer Ingelheim",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT00622284",
+       "excerpt": "Boehringer Ingelheim",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT00736099",
+       "excerpt": "Boehringer Ingelheim",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT00798161",
+       "excerpt": "Boehringer Ingelheim",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      }
+     ],
+     "lead_sponsor": "Boehringer Ingelheim",
+     "trial_count": 21
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT00396851",
+       "excerpt": "Post Graduate Institute of Medical Education and Research, Chandigarh",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT00399204",
+       "excerpt": "Post Graduate Institute of Medical Education and Research, Chandigarh",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT00644241",
+       "excerpt": "Post Graduate Institute of Medical Education and Research, Chandigarh",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT01039532",
+       "excerpt": "Post Graduate Institute of Medical Education and Research, Chandigarh",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT01065298",
+       "excerpt": "Post Graduate Institute of Medical Education and Research, Chandigarh",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      }
+     ],
+     "lead_sponsor": "Post Graduate Institute of Medical Education and Research, Chandigarh",
+     "trial_count": 13
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT00964184",
+       "excerpt": "Diabetes Foundation, India",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT02027740",
+       "excerpt": "Diabetes Foundation, India",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT02513875",
+       "excerpt": "Diabetes Foundation, India",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT02513888",
+       "excerpt": "Diabetes Foundation, India",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT04025489",
+       "excerpt": "Diabetes Foundation, India",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      }
+     ],
+     "lead_sponsor": "Diabetes Foundation, India",
+     "trial_count": 11
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT00968812",
+       "excerpt": "Janssen Research & Development, LLC",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT01032629",
+       "excerpt": "Janssen Research & Development, LLC",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT01064414",
+       "excerpt": "Janssen Research & Development, LLC",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT01081834",
+       "excerpt": "Janssen Research & Development, LLC",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT01106651",
+       "excerpt": "Janssen Research & Development, LLC",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      }
+     ],
+     "lead_sponsor": "Janssen Research & Development, LLC",
+     "trial_count": 10
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT00286429",
+       "excerpt": "Takeda",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT00286442",
+       "excerpt": "Takeda",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT00286455",
+       "excerpt": "Takeda",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT00286468",
+       "excerpt": "Takeda",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT00286494",
+       "excerpt": "Takeda",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      }
+     ],
+     "lead_sponsor": "Takeda",
+     "trial_count": 10
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT06932159",
+       "excerpt": "Humanis Sagl\u0131k Anonim Sirketi",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT07039890",
+       "excerpt": "Humanis Sagl\u0131k Anonim Sirketi",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT07266766",
+       "excerpt": "Humanis Sagl\u0131k Anonim Sirketi",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT07266779",
+       "excerpt": "Humanis Sagl\u0131k Anonim Sirketi",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      },
+      {
+       "nct_id": "NCT07372118",
+       "excerpt": "Humanis Sagl\u0131k Anonim Sirketi",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+      }
+     ],
+     "lead_sponsor": "Humanis Sagl\u0131k Anonim Sirketi",
+     "trial_count": 9
+    }
+   ]
+  },
+  "meta": {
+   "source": "clinicaltrials.gov",
+   "interpretation": "Trials in India for type 2 diabetes to identify the most active sponsors from the fetched set; sponsors will be read from the profile rather than guessed.",
+   "filters_applied": {
+    "steps": [
+     {
+      "label": "Type 2 diabetes in India",
+      "endpoint": "studies",
+      "params": {
+       "query.cond": "\"type 2 diabetes\"",
+       "query.locn": "\"India\""
+      }
+     }
+    ]
+   },
+   "assumptions": [
+    "Counts are distinct trials."
+   ],
+   "warnings": [
+    "Showing the top 10 values of lead_sponsor; 75 smaller categories are left out."
+   ],
+   "total_trials_matched": 444,
+   "trials_analyzed": 444,
+   "units": {
+    "trial_count": "trials"
+   },
+   "data_as_of": "2026-11-06T10:00:05",
+   "api_version": "2.0.5",
+   "chain": [
+    {
+     "fetch": 1,
+     "rationale": "Trials in India for type 2 diabetes to identify the most active sponsors from the fetched set; sponsors will be read from the profile rather than guessed.",
+     "searches": [
+      {
+       "label": "Type 2 diabetes in India",
+       "endpoint": "studies",
+       "params": {
+        "query.cond": "\"type 2 diabetes\"",
+        "query.locn": "\"India\""
+       }
+      }
+     ],
+     "status": "ok",
+     "total_trials_matched": 444,
+     "error": null,
+     "charted": true,
+     "output_dir": "fetch-1"
+    }
+   ],
+   "metrics": {
+    "seconds_total": 5.24,
+    "seconds_model": 4.64,
+    "seconds_fetching": 0.6,
+    "seconds_building": 0.0,
+    "model_turns": 4,
+    "input_tokens": 22429,
+    "output_tokens": 176,
+    "tool_calls": {
+     "fetch_data": 1,
+     "describe_data": 1,
+     "load_skill": 1,
+     "final_result_ChartPlan": 1
+    },
+    "sent_back": 0,
+    "fetches": 1,
+    "failed_fetches": 0
+   },
+   "generated_at": "2026-11-07T23:51:11.226074Z"
+  },
+  "vega_lite": {
+   "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+   "title": "Most active lead sponsors in type 2 diabetes trials with sites in India",
+   "width": "container",
+   "data": {
+    "values": [
+     {
+      "citations": [
+       {
+        "nct_id": "NCT00318422",
+        "excerpt": "Novo Nordisk A/S",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT00318461",
+        "excerpt": "Novo Nordisk A/S",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT00331851",
+        "excerpt": "Novo Nordisk A/S",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT00343980",
+        "excerpt": "Novo Nordisk A/S",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT00469092",
+        "excerpt": "Novo Nordisk A/S",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       }
+      ],
+      "lead_sponsor": "Novo Nordisk A/S",
+      "trial_count": 96
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT00251953",
+        "excerpt": "AstraZeneca",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT00252876",
+        "excerpt": "AstraZeneca",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT00255645",
+        "excerpt": "AstraZeneca",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT00261352",
+        "excerpt": "AstraZeneca",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT00295633",
+        "excerpt": "AstraZeneca",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       }
+      ],
+      "lead_sponsor": "AstraZeneca",
+      "trial_count": 54
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT00191282",
+        "excerpt": "Eli Lilly and Company",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT00191464",
+        "excerpt": "Eli Lilly and Company",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT00279201",
+        "excerpt": "Eli Lilly and Company",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT00325364",
+        "excerpt": "Eli Lilly and Company",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT00330473",
+        "excerpt": "Eli Lilly and Company",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       }
+      ],
+      "lead_sponsor": "Eli Lilly and Company",
+      "trial_count": 48
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT00069784",
+        "excerpt": "Sanofi",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT00405418",
+        "excerpt": "Sanofi",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT00449605",
+        "excerpt": "Sanofi",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT00464061",
+        "excerpt": "Sanofi",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT00688701",
+        "excerpt": "Sanofi",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       }
+      ],
+      "lead_sponsor": "Sanofi",
+      "trial_count": 23
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT00601250",
+        "excerpt": "Boehringer Ingelheim",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT00621140",
+        "excerpt": "Boehringer Ingelheim",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT00622284",
+        "excerpt": "Boehringer Ingelheim",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT00736099",
+        "excerpt": "Boehringer Ingelheim",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT00798161",
+        "excerpt": "Boehringer Ingelheim",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       }
+      ],
+      "lead_sponsor": "Boehringer Ingelheim",
+      "trial_count": 21
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT00396851",
+        "excerpt": "Post Graduate Institute of Medical Education and Research, Chandigarh",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT00399204",
+        "excerpt": "Post Graduate Institute of Medical Education and Research, Chandigarh",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT00644241",
+        "excerpt": "Post Graduate Institute of Medical Education and Research, Chandigarh",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT01039532",
+        "excerpt": "Post Graduate Institute of Medical Education and Research, Chandigarh",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT01065298",
+        "excerpt": "Post Graduate Institute of Medical Education and Research, Chandigarh",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       }
+      ],
+      "lead_sponsor": "Post Graduate Institute of Medical Education and Research, Chandigarh",
+      "trial_count": 13
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT00964184",
+        "excerpt": "Diabetes Foundation, India",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT02027740",
+        "excerpt": "Diabetes Foundation, India",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT02513875",
+        "excerpt": "Diabetes Foundation, India",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT02513888",
+        "excerpt": "Diabetes Foundation, India",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT04025489",
+        "excerpt": "Diabetes Foundation, India",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       }
+      ],
+      "lead_sponsor": "Diabetes Foundation, India",
+      "trial_count": 11
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT00968812",
+        "excerpt": "Janssen Research & Development, LLC",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT01032629",
+        "excerpt": "Janssen Research & Development, LLC",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT01064414",
+        "excerpt": "Janssen Research & Development, LLC",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT01081834",
+        "excerpt": "Janssen Research & Development, LLC",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT01106651",
+        "excerpt": "Janssen Research & Development, LLC",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       }
+      ],
+      "lead_sponsor": "Janssen Research & Development, LLC",
+      "trial_count": 10
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT00286429",
+        "excerpt": "Takeda",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT00286442",
+        "excerpt": "Takeda",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT00286455",
+        "excerpt": "Takeda",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT00286468",
+        "excerpt": "Takeda",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT00286494",
+        "excerpt": "Takeda",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       }
+      ],
+      "lead_sponsor": "Takeda",
+      "trial_count": 10
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT06932159",
+        "excerpt": "Humanis Sagl\u0131k Anonim Sirketi",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT07039890",
+        "excerpt": "Humanis Sagl\u0131k Anonim Sirketi",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT07266766",
+        "excerpt": "Humanis Sagl\u0131k Anonim Sirketi",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT07266779",
+        "excerpt": "Humanis Sagl\u0131k Anonim Sirketi",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       },
+       {
+        "nct_id": "NCT07372118",
+        "excerpt": "Humanis Sagl\u0131k Anonim Sirketi",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.name"
+       }
+      ],
+      "lead_sponsor": "Humanis Sagl\u0131k Anonim Sirketi",
+      "trial_count": 9
+     }
+    ]
+   },
+   "mark": "bar",
+   "encoding": {
+    "x": {
+     "field": "lead_sponsor",
+     "type": "nominal",
+     "title": "Lead sponsor",
+     "sort": "-y"
+    },
+    "y": {
+     "field": "trial_count",
+     "type": "quantitative",
+     "title": "Trials"
+    },
+    "tooltip": [
+     {
+      "field": "lead_sponsor",
+      "type": "nominal"
+     },
+     {
+      "field": "trial_count",
+      "type": "quantitative"
+     }
+    ]
+   }
+  }
+ },
+ "error": null,
+ "created_at": "2026-11-07T23:51:05.989694Z",
+ "updated_at": "2026-11-07T23:51:11.237594Z",
+ "_seconds": 6.0
+}

@@ -1,0 +1,828 @@
+{
+ "task_id": "7395c645-f6f2-4bbd-b280-aa11776a3931",
+ "status": "succeeded",
+ "progress": {
+  "stage": "done",
+  "message": "Saved 144 trials",
+  "trials_fetched": 144,
+  "trials_total": 144
+ },
+ "output_dir": "data/queries/7395c645-f6f2-4bbd-b280-aa11776a3931",
+ "result": {
+  "visualization": {
+   "type": "grouped_bar_chart",
+   "intent": "magnitude",
+   "title": "Trial phases: Ozempic vs Mounjaro",
+   "encoding": {
+    "x": {
+     "field": "phase",
+     "type": "ordinal",
+     "title": "Phase",
+     "sort": [
+      "EARLY_PHASE1",
+      "PHASE1",
+      "PHASE2",
+      "PHASE3",
+      "PHASE4",
+      "NA"
+     ]
+    },
+    "y": {
+     "field": "trial_count",
+     "type": "quantitative",
+     "title": "Trials"
+    },
+    "color": {
+     "field": "group",
+     "type": "nominal",
+     "title": "Group"
+    },
+    "xOffset": {
+     "field": "group",
+     "type": "nominal",
+     "title": "Group"
+    }
+   },
+   "data": [
+    {
+     "citations": [
+      {
+       "nct_id": "NCT05249881",
+       "excerpt": "EARLY_PHASE1",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT06751589",
+       "excerpt": "EARLY_PHASE1",
+       "field": "protocolSection.designModule.phases"
+      }
+     ],
+     "phase": "EARLY_PHASE1",
+     "group": "Ozempic",
+     "trial_count": 2
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT06734273",
+       "excerpt": "EARLY_PHASE1",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT06934642",
+       "excerpt": "EARLY_PHASE1",
+       "field": "protocolSection.designModule.phases"
+      }
+     ],
+     "phase": "EARLY_PHASE1",
+     "group": "Mounjaro",
+     "trial_count": 2
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT03789578",
+       "excerpt": "PHASE1",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT04702516",
+       "excerpt": "PHASE1",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT05071898",
+       "excerpt": "PHASE1",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT05670379",
+       "excerpt": "PHASE1",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT05671653",
+       "excerpt": "PHASE1",
+       "field": "protocolSection.designModule.phases"
+      }
+     ],
+     "phase": "PHASE1",
+     "group": "Ozempic",
+     "trial_count": 8
+    },
+    {
+     "citations": [],
+     "phase": "PHASE1",
+     "group": "Mounjaro",
+     "trial_count": 0
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT03899402",
+       "excerpt": "PHASE2",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT04019197",
+       "excerpt": "PHASE2",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT04451837",
+       "excerpt": "PHASE2",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT04515849",
+       "excerpt": "PHASE2",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT04615871",
+       "excerpt": "PHASE2",
+       "field": "protocolSection.designModule.phases"
+      }
+     ],
+     "phase": "PHASE2",
+     "group": "Ozempic",
+     "trial_count": 29
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT05912621",
+       "excerpt": "PHASE2",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT06162715",
+       "excerpt": "PHASE2",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT06518837",
+       "excerpt": "PHASE2",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT06651177",
+       "excerpt": "PHASE2",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT06727331",
+       "excerpt": "PHASE2",
+       "field": "protocolSection.designModule.phases"
+      }
+     ],
+     "phase": "PHASE2",
+     "group": "Mounjaro",
+     "trial_count": 16
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT03899402",
+       "excerpt": "PHASE3",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT04447859",
+       "excerpt": "PHASE3",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT05205928",
+       "excerpt": "PHASE3",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT05305794",
+       "excerpt": "PHASE3",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT05569772",
+       "excerpt": "PHASE3",
+       "field": "protocolSection.designModule.phases"
+      }
+     ],
+     "phase": "PHASE3",
+     "group": "Ozempic",
+     "trial_count": 19
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT06162715",
+       "excerpt": "PHASE3",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT06246799",
+       "excerpt": "PHASE3",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT07284511",
+       "excerpt": "PHASE3",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT07734792",
+       "excerpt": "PHASE3",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT07846865",
+       "excerpt": "PHASE3",
+       "field": "protocolSection.designModule.phases"
+      }
+     ],
+     "phase": "PHASE3",
+     "group": "Mounjaro",
+     "trial_count": 5
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT03292315",
+       "excerpt": "PHASE4",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT03724981",
+       "excerpt": "PHASE4",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT04263415",
+       "excerpt": "PHASE4",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT04538352",
+       "excerpt": "PHASE4",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT04639414",
+       "excerpt": "PHASE4",
+       "field": "protocolSection.designModule.phases"
+      }
+     ],
+     "phase": "PHASE4",
+     "group": "Ozempic",
+     "trial_count": 30
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT05708859",
+       "excerpt": "PHASE4",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT06374875",
+       "excerpt": "PHASE4",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT06533527",
+       "excerpt": "PHASE4",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT06657209",
+       "excerpt": "PHASE4",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT06721507",
+       "excerpt": "PHASE4",
+       "field": "protocolSection.designModule.phases"
+      }
+     ],
+     "phase": "PHASE4",
+     "group": "Mounjaro",
+     "trial_count": 10
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT04174755",
+       "excerpt": "NA",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT05078255",
+       "excerpt": "NA",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT07195994",
+       "excerpt": "NA",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT07280403",
+       "excerpt": "NA",
+       "field": "protocolSection.designModule.phases"
+      }
+     ],
+     "phase": "NA",
+     "group": "Ozempic",
+     "trial_count": 4
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT06431308",
+       "excerpt": "NA",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT06950684",
+       "excerpt": "NA",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT07303556",
+       "excerpt": "NA",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT07457437",
+       "excerpt": "NA",
+       "field": "protocolSection.designModule.phases"
+      }
+     ],
+     "phase": "NA",
+     "group": "Mounjaro",
+     "trial_count": 4
+    }
+   ]
+  },
+  "meta": {
+   "source": "clinicaltrials.gov",
+   "interpretation": "Trials testing Ozempic versus Mounjaro; phases will be compared in the chart.",
+   "filters_applied": {
+    "steps": [
+     {
+      "label": "Ozempic",
+      "endpoint": "studies",
+      "params": {
+       "query.intr": "\"Ozempic\""
+      }
+     },
+     {
+      "label": "Mounjaro",
+      "endpoint": "studies",
+      "params": {
+       "query.intr": "\"Mounjaro\""
+      }
+     }
+    ]
+   },
+   "assumptions": [
+    "Counts are distinct trials.",
+    "A trial can have several values of phase, so counts can sum to more than the trials.",
+    "Compared sides are separate searches; a trial matching several sides is counted in each."
+   ],
+   "warnings": [
+    "25 of 144 trials have no phase and are excluded."
+   ],
+   "total_trials_matched": 144,
+   "trials_analyzed": 144,
+   "units": {
+    "trial_count": "trials"
+   },
+   "data_as_of": "2026-11-06T10:00:05",
+   "api_version": "2.0.5",
+   "chain": [
+    {
+     "fetch": 1,
+     "rationale": "Trials testing Ozempic versus Mounjaro; phases will be compared in the chart.",
+     "searches": [
+      {
+       "label": "Ozempic",
+       "endpoint": "studies",
+       "params": {
+        "query.intr": "\"Ozempic\""
+       }
+      },
+      {
+       "label": "Mounjaro",
+       "endpoint": "studies",
+       "params": {
+        "query.intr": "\"Mounjaro\""
+       }
+      }
+     ],
+     "status": "ok",
+     "total_trials_matched": 144,
+     "error": null,
+     "charted": true,
+     "output_dir": "fetch-1"
+    }
+   ],
+   "metrics": {
+    "seconds_total": 5.15,
+    "seconds_model": 4.91,
+    "seconds_fetching": 0.24,
+    "seconds_building": 0.0,
+    "model_turns": 4,
+    "input_tokens": 22929,
+    "output_tokens": 176,
+    "tool_calls": {
+     "fetch_data": 1,
+     "describe_data": 1,
+     "load_skill": 1,
+     "final_result_ChartPlan": 1
+    },
+    "sent_back": 0,
+    "fetches": 1,
+    "failed_fetches": 0
+   },
+   "generated_at": "2026-11-07T23:50:44.694920Z"
+  },
+  "vega_lite": {
+   "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+   "title": "Trial phases: Ozempic vs Mounjaro",
+   "width": "container",
+   "data": {
+    "values": [
+     {
+      "citations": [
+       {
+        "nct_id": "NCT05249881",
+        "excerpt": "EARLY_PHASE1",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT06751589",
+        "excerpt": "EARLY_PHASE1",
+        "field": "protocolSection.designModule.phases"
+       }
+      ],
+      "phase": "EARLY_PHASE1",
+      "group": "Ozempic",
+      "trial_count": 2
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT06734273",
+        "excerpt": "EARLY_PHASE1",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT06934642",
+        "excerpt": "EARLY_PHASE1",
+        "field": "protocolSection.designModule.phases"
+       }
+      ],
+      "phase": "EARLY_PHASE1",
+      "group": "Mounjaro",
+      "trial_count": 2
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT03789578",
+        "excerpt": "PHASE1",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT04702516",
+        "excerpt": "PHASE1",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT05071898",
+        "excerpt": "PHASE1",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT05670379",
+        "excerpt": "PHASE1",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT05671653",
+        "excerpt": "PHASE1",
+        "field": "protocolSection.designModule.phases"
+       }
+      ],
+      "phase": "PHASE1",
+      "group": "Ozempic",
+      "trial_count": 8
+     },
+     {
+      "citations": [],
+      "phase": "PHASE1",
+      "group": "Mounjaro",
+      "trial_count": 0
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT03899402",
+        "excerpt": "PHASE2",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT04019197",
+        "excerpt": "PHASE2",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT04451837",
+        "excerpt": "PHASE2",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT04515849",
+        "excerpt": "PHASE2",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT04615871",
+        "excerpt": "PHASE2",
+        "field": "protocolSection.designModule.phases"
+       }
+      ],
+      "phase": "PHASE2",
+      "group": "Ozempic",
+      "trial_count": 29
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT05912621",
+        "excerpt": "PHASE2",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT06162715",
+        "excerpt": "PHASE2",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT06518837",
+        "excerpt": "PHASE2",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT06651177",
+        "excerpt": "PHASE2",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT06727331",
+        "excerpt": "PHASE2",
+        "field": "protocolSection.designModule.phases"
+       }
+      ],
+      "phase": "PHASE2",
+      "group": "Mounjaro",
+      "trial_count": 16
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT03899402",
+        "excerpt": "PHASE3",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT04447859",
+        "excerpt": "PHASE3",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT05205928",
+        "excerpt": "PHASE3",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT05305794",
+        "excerpt": "PHASE3",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT05569772",
+        "excerpt": "PHASE3",
+        "field": "protocolSection.designModule.phases"
+       }
+      ],
+      "phase": "PHASE3",
+      "group": "Ozempic",
+      "trial_count": 19
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT06162715",
+        "excerpt": "PHASE3",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT06246799",
+        "excerpt": "PHASE3",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT07284511",
+        "excerpt": "PHASE3",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT07734792",
+        "excerpt": "PHASE3",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT07846865",
+        "excerpt": "PHASE3",
+        "field": "protocolSection.designModule.phases"
+       }
+      ],
+      "phase": "PHASE3",
+      "group": "Mounjaro",
+      "trial_count": 5
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT03292315",
+        "excerpt": "PHASE4",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT03724981",
+        "excerpt": "PHASE4",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT04263415",
+        "excerpt": "PHASE4",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT04538352",
+        "excerpt": "PHASE4",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT04639414",
+        "excerpt": "PHASE4",
+        "field": "protocolSection.designModule.phases"
+       }
+      ],
+      "phase": "PHASE4",
+      "group": "Ozempic",
+      "trial_count": 30
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT05708859",
+        "excerpt": "PHASE4",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT06374875",
+        "excerpt": "PHASE4",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT06533527",
+        "excerpt": "PHASE4",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT06657209",
+        "excerpt": "PHASE4",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT06721507",
+        "excerpt": "PHASE4",
+        "field": "protocolSection.designModule.phases"
+       }
+      ],
+      "phase": "PHASE4",
+      "group": "Mounjaro",
+      "trial_count": 10
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT04174755",
+        "excerpt": "NA",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT05078255",
+        "excerpt": "NA",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT07195994",
+        "excerpt": "NA",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT07280403",
+        "excerpt": "NA",
+        "field": "protocolSection.designModule.phases"
+       }
+      ],
+      "phase": "NA",
+      "group": "Ozempic",
+      "trial_count": 4
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT06431308",
+        "excerpt": "NA",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT06950684",
+        "excerpt": "NA",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT07303556",
+        "excerpt": "NA",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT07457437",
+        "excerpt": "NA",
+        "field": "protocolSection.designModule.phases"
+       }
+      ],
+      "phase": "NA",
+      "group": "Mounjaro",
+      "trial_count": 4
+     }
+    ]
+   },
+   "mark": "bar",
+   "encoding": {
+    "x": {
+     "field": "phase",
+     "type": "ordinal",
+     "title": "Phase",
+     "sort": [
+      "EARLY_PHASE1",
+      "PHASE1",
+      "PHASE2",
+      "PHASE3",
+      "PHASE4",
+      "NA"
+     ]
+    },
+    "y": {
+     "field": "trial_count",
+     "type": "quantitative",
+     "title": "Trials",
+     "stack": null
+    },
+    "color": {
+     "field": "group",
+     "type": "nominal",
+     "title": "Group"
+    },
+    "xOffset": {
+     "field": "group",
+     "type": "nominal",
+     "title": "Group"
+    },
+    "tooltip": [
+     {
+      "field": "phase",
+      "type": "ordinal"
+     },
+     {
+      "field": "trial_count",
+      "type": "quantitative"
+     },
+     {
+      "field": "group",
+      "type": "nominal"
+     }
+    ]
+   }
+  }
+ },
+ "error": null,
+ "created_at": "2026-11-07T23:50:39.543528Z",
+ "updated_at": "2026-11-07T23:50:44.707802Z",
+ "_seconds": 6.0
+}

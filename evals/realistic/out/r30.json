@@ -1,0 +1,1258 @@
+{
+ "task_id": "bcadfd62-9ea2-49c0-910e-1141a6fd650f",
+ "status": "succeeded",
+ "progress": {
+  "stage": "done",
+  "message": "Saved 523 trials",
+  "trials_fetched": 523,
+  "trials_total": 523
+ },
+ "output_dir": "data/queries/bcadfd62-9ea2-49c0-910e-1141a6fd650f",
+ "result": {
+  "visualization": {
+   "type": "grouped_bar_chart",
+   "intent": "magnitude",
+   "title": "Melanoma trial phases for the top lead sponsors, with a tie for fifth",
+   "encoding": {
+    "x": {
+     "field": "phase",
+     "type": "ordinal",
+     "title": "Phase",
+     "sort": [
+      "EARLY_PHASE1",
+      "PHASE1",
+      "PHASE2",
+      "PHASE3",
+      "PHASE4",
+      "NA"
+     ]
+    },
+    "y": {
+     "field": "trial_count",
+     "type": "quantitative",
+     "title": "Trials"
+    },
+    "color": {
+     "field": "group",
+     "type": "nominal",
+     "title": "Group"
+    },
+    "xOffset": {
+     "field": "group",
+     "type": "nominal",
+     "title": "Group"
+    }
+   },
+   "data": [
+    {
+     "citations": [],
+     "phase": "EARLY_PHASE1",
+     "group": "National Cancer Institute (NCI)",
+     "trial_count": 0
+    },
+    {
+     "citations": [],
+     "phase": "EARLY_PHASE1",
+     "group": "M.D. Anderson Cancer Center",
+     "trial_count": 0
+    },
+    {
+     "citations": [],
+     "phase": "EARLY_PHASE1",
+     "group": "Bristol-Myers Squibb",
+     "trial_count": 0
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT00580060",
+       "excerpt": "EARLY_PHASE1",
+       "field": "protocolSection.designModule.phases"
+      }
+     ],
+     "phase": "EARLY_PHASE1",
+     "group": "Memorial Sloan Kettering Cancer Center",
+     "trial_count": 1
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT00001439",
+       "excerpt": "PHASE1",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00001577",
+       "excerpt": "PHASE1",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00001683",
+       "excerpt": "PHASE1",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00003556",
+       "excerpt": "PHASE1",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00003665",
+       "excerpt": "PHASE1",
+       "field": "protocolSection.designModule.phases"
+      }
+     ],
+     "phase": "PHASE1",
+     "group": "National Cancer Institute (NCI)",
+     "trial_count": 68
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT00386906",
+       "excerpt": "PHASE1",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00412425",
+       "excerpt": "PHASE1",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00412581",
+       "excerpt": "PHASE1",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00508443",
+       "excerpt": "PHASE1",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00527657",
+       "excerpt": "PHASE1",
+       "field": "protocolSection.designModule.phases"
+      }
+     ],
+     "phase": "PHASE1",
+     "group": "M.D. Anderson Cancer Center",
+     "trial_count": 53
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT00261365",
+       "excerpt": "PHASE1",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00441337",
+       "excerpt": "PHASE1",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00729950",
+       "excerpt": "PHASE1",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00730639",
+       "excerpt": "PHASE1",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00796991",
+       "excerpt": "PHASE1",
+       "field": "protocolSection.designModule.phases"
+      }
+     ],
+     "phase": "PHASE1",
+     "group": "Bristol-Myers Squibb",
+     "trial_count": 20
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT00003022",
+       "excerpt": "PHASE1",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00004065",
+       "excerpt": "PHASE1",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00005633",
+       "excerpt": "PHASE1",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00005815",
+       "excerpt": "PHASE1",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00104845",
+       "excerpt": "PHASE1",
+       "field": "protocolSection.designModule.phases"
+      }
+     ],
+     "phase": "PHASE1",
+     "group": "Memorial Sloan Kettering Cancer Center",
+     "trial_count": 19
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT00001685",
+       "excerpt": "PHASE2",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00001705",
+       "excerpt": "PHASE2",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00001832",
+       "excerpt": "PHASE2",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00003895",
+       "excerpt": "PHASE2",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00005949",
+       "excerpt": "PHASE2",
+       "field": "protocolSection.designModule.phases"
+      }
+     ],
+     "phase": "PHASE2",
+     "group": "National Cancer Institute (NCI)",
+     "trial_count": 148
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT00027586",
+       "excerpt": "PHASE2",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00254397",
+       "excerpt": "PHASE2",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00338377",
+       "excerpt": "PHASE2",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00412425",
+       "excerpt": "PHASE2",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00505635",
+       "excerpt": "PHASE2",
+       "field": "protocolSection.designModule.phases"
+      }
+     ],
+     "phase": "PHASE2",
+     "group": "M.D. Anderson Cancer Center",
+     "trial_count": 52
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT00050102",
+       "excerpt": "PHASE2",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00084656",
+       "excerpt": "PHASE2",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00135408",
+       "excerpt": "PHASE2",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00162123",
+       "excerpt": "PHASE2",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00261365",
+       "excerpt": "PHASE2",
+       "field": "protocolSection.designModule.phases"
+      }
+     ],
+     "phase": "PHASE2",
+     "group": "Bristol-Myers Squibb",
+     "trial_count": 29
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT00003346",
+       "excerpt": "PHASE2",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00003362",
+       "excerpt": "PHASE2",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00004152",
+       "excerpt": "PHASE2",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00004250",
+       "excerpt": "PHASE2",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00005815",
+       "excerpt": "PHASE2",
+       "field": "protocolSection.designModule.phases"
+      }
+     ],
+     "phase": "PHASE2",
+     "group": "Memorial Sloan Kettering Cancer Center",
+     "trial_count": 29
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT00001296",
+       "excerpt": "PHASE3",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00003789",
+       "excerpt": "PHASE3",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00019682",
+       "excerpt": "PHASE3",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00072124",
+       "excerpt": "PHASE3",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00110019",
+       "excerpt": "PHASE3",
+       "field": "protocolSection.designModule.phases"
+      }
+     ],
+     "phase": "PHASE3",
+     "group": "National Cancer Institute (NCI)",
+     "trial_count": 10
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT00002882",
+       "excerpt": "PHASE3",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT01259284",
+       "excerpt": "PHASE3",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT01592968",
+       "excerpt": "PHASE3",
+       "field": "protocolSection.designModule.phases"
+      }
+     ],
+     "phase": "PHASE3",
+     "group": "M.D. Anderson Cancer Center",
+     "trial_count": 3
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT00094653",
+       "excerpt": "PHASE3",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00324155",
+       "excerpt": "PHASE3",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00636168",
+       "excerpt": "PHASE3",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT01515189",
+       "excerpt": "PHASE3",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT01721746",
+       "excerpt": "PHASE3",
+       "field": "protocolSection.designModule.phases"
+      }
+     ],
+     "phase": "PHASE3",
+     "group": "Bristol-Myers Squibb",
+     "trial_count": 20
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT01223248",
+       "excerpt": "PHASE3",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT07890415",
+       "excerpt": "PHASE3",
+       "field": "protocolSection.designModule.phases"
+      }
+     ],
+     "phase": "PHASE3",
+     "group": "Memorial Sloan Kettering Cancer Center",
+     "trial_count": 2
+    },
+    {
+     "citations": [],
+     "phase": "PHASE4",
+     "group": "National Cancer Institute (NCI)",
+     "trial_count": 0
+    },
+    {
+     "citations": [],
+     "phase": "PHASE4",
+     "group": "M.D. Anderson Cancer Center",
+     "trial_count": 0
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT07459543",
+       "excerpt": "PHASE4",
+       "field": "protocolSection.designModule.phases"
+      }
+     ],
+     "phase": "PHASE4",
+     "group": "Bristol-Myers Squibb",
+     "trial_count": 1
+    },
+    {
+     "citations": [],
+     "phase": "PHASE4",
+     "group": "Memorial Sloan Kettering Cancer Center",
+     "trial_count": 0
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT00006243",
+       "excerpt": "NA",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT04866810",
+       "excerpt": "NA",
+       "field": "protocolSection.designModule.phases"
+      }
+     ],
+     "phase": "NA",
+     "group": "National Cancer Institute (NCI)",
+     "trial_count": 2
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT00378781",
+       "excerpt": "NA",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00394134",
+       "excerpt": "NA",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00432471",
+       "excerpt": "NA",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00504582",
+       "excerpt": "NA",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00506311",
+       "excerpt": "NA",
+       "field": "protocolSection.designModule.phases"
+      }
+     ],
+     "phase": "NA",
+     "group": "M.D. Anderson Cancer Center",
+     "trial_count": 13
+    },
+    {
+     "citations": [],
+     "phase": "NA",
+     "group": "Bristol-Myers Squibb",
+     "trial_count": 0
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT00596362",
+       "excerpt": "NA",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00597272",
+       "excerpt": "NA",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT01266096",
+       "excerpt": "NA",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT02307630",
+       "excerpt": "NA",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT05053230",
+       "excerpt": "NA",
+       "field": "protocolSection.designModule.phases"
+      }
+     ],
+     "phase": "NA",
+     "group": "Memorial Sloan Kettering Cancer Center",
+     "trial_count": 6
+    }
+   ]
+  },
+  "meta": {
+   "source": "clinicaltrials.gov",
+   "interpretation": "Step 1: Fetch melanoma studies first so the profile can identify the lead sponsors with the most melanoma trials; phase counts for those sponsors will be fetched next from the identified top sponsors. Step 2: The melanoma profile shows the top lead sponsors, but there is a tie for 5th place between Novartis Pharmaceuticals, Mayo Clinic, and Hoffmann-La Roche at 47 trials each; fetching the top 4 sponsors as separate lead-sponsor searches gives comparable melanoma trial sets whose phase distributions can be charted without arbitrarily breaking the tie.",
+   "filters_applied": {
+    "steps": [
+     {
+      "label": "National Cancer Institute (NCI)",
+      "endpoint": "studies",
+      "params": {
+       "query.cond": "\"melanoma\"",
+       "query.lead": "\"National Cancer Institute (NCI)\""
+      }
+     },
+     {
+      "label": "M.D. Anderson Cancer Center",
+      "endpoint": "studies",
+      "params": {
+       "query.cond": "\"melanoma\"",
+       "query.lead": "\"M.D. Anderson Cancer Center\""
+      }
+     },
+     {
+      "label": "Bristol-Myers Squibb",
+      "endpoint": "studies",
+      "params": {
+       "query.cond": "\"melanoma\"",
+       "query.lead": "\"Bristol-Myers Squibb\""
+      }
+     },
+     {
+      "label": "Memorial Sloan Kettering Cancer Center",
+      "endpoint": "studies",
+      "params": {
+       "query.cond": "\"melanoma\"",
+       "query.lead": "\"Memorial Sloan Kettering Cancer Center\""
+      }
+     }
+    ]
+   },
+   "assumptions": [
+    "Counts are distinct trials.",
+    "A trial can have several values of phase, so counts can sum to more than the trials.",
+    "Compared sides are separate searches; a trial matching several sides is counted in each."
+   ],
+   "warnings": [
+    "95 of 523 trials have no phase and are excluded."
+   ],
+   "total_trials_matched": 523,
+   "trials_analyzed": 523,
+   "units": {
+    "trial_count": "trials"
+   },
+   "data_as_of": "2026-11-06T10:00:05",
+   "api_version": "2.0.5",
+   "chain": [
+    {
+     "fetch": 1,
+     "rationale": "Fetch melanoma studies first so the profile can identify the lead sponsors with the most melanoma trials; phase counts for those sponsors will be fetched next from the identified top sponsors.",
+     "searches": [
+      {
+       "label": "Melanoma",
+       "endpoint": "studies",
+       "params": {
+        "query.cond": "\"melanoma\""
+       }
+      }
+     ],
+     "status": "ok",
+     "total_trials_matched": 3782,
+     "error": null,
+     "charted": false,
+     "output_dir": "fetch-1"
+    },
+    {
+     "fetch": 2,
+     "rationale": "The melanoma profile shows the top lead sponsors, but there is a tie for 5th place between Novartis Pharmaceuticals, Mayo Clinic, and Hoffmann-La Roche at 47 trials each; fetching the top 4 sponsors as separate lead-sponsor searches gives comparable melanoma trial sets whose phase distributions can be charted without arbitrarily breaking the tie.",
+     "searches": [
+      {
+       "label": "National Cancer Institute (NCI)",
+       "endpoint": "studies",
+       "params": {
+        "query.cond": "\"melanoma\"",
+        "query.lead": "\"National Cancer Institute (NCI)\""
+       }
+      },
+      {
+       "label": "M.D. Anderson Cancer Center",
+       "endpoint": "studies",
+       "params": {
+        "query.cond": "\"melanoma\"",
+        "query.lead": "\"M.D. Anderson Cancer Center\""
+       }
+      },
+      {
+       "label": "Bristol-Myers Squibb",
+       "endpoint": "studies",
+       "params": {
+        "query.cond": "\"melanoma\"",
+        "query.lead": "\"Bristol-Myers Squibb\""
+       }
+      },
+      {
+       "label": "Memorial Sloan Kettering Cancer Center",
+       "endpoint": "studies",
+       "params": {
+        "query.cond": "\"melanoma\"",
+        "query.lead": "\"Memorial Sloan Kettering Cancer Center\""
+       }
+      }
+     ],
+     "status": "ok",
+     "total_trials_matched": 523,
+     "error": null,
+     "charted": true,
+     "output_dir": "fetch-2"
+    }
+   ],
+   "metrics": {
+    "seconds_total": 11.38,
+    "seconds_model": 8.12,
+    "seconds_fetching": 3.26,
+    "seconds_building": 0.0,
+    "model_turns": 6,
+    "input_tokens": 38654,
+    "output_tokens": 444,
+    "tool_calls": {
+     "fetch_data": 2,
+     "describe_data": 2,
+     "load_skill": 1,
+     "final_result_ChartPlan": 1
+    },
+    "sent_back": 0,
+    "fetches": 2,
+    "failed_fetches": 0
+   },
+   "generated_at": "2026-11-07T23:51:30.311835Z"
+  },
+  "vega_lite": {
+   "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+   "title": "Melanoma trial phases for the top lead sponsors, with a tie for fifth",
+   "width": "container",
+   "data": {
+    "values": [
+     {
+      "citations": [],
+      "phase": "EARLY_PHASE1",
+      "group": "National Cancer Institute (NCI)",
+      "trial_count": 0
+     },
+     {
+      "citations": [],
+      "phase": "EARLY_PHASE1",
+      "group": "M.D. Anderson Cancer Center",
+      "trial_count": 0
+     },
+     {
+      "citations": [],
+      "phase": "EARLY_PHASE1",
+      "group": "Bristol-Myers Squibb",
+      "trial_count": 0
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT00580060",
+        "excerpt": "EARLY_PHASE1",
+        "field": "protocolSection.designModule.phases"
+       }
+      ],
+      "phase": "EARLY_PHASE1",
+      "group": "Memorial Sloan Kettering Cancer Center",
+      "trial_count": 1
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT00001439",
+        "excerpt": "PHASE1",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00001577",
+        "excerpt": "PHASE1",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00001683",
+        "excerpt": "PHASE1",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00003556",
+        "excerpt": "PHASE1",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00003665",
+        "excerpt": "PHASE1",
+        "field": "protocolSection.designModule.phases"
+       }
+      ],
+      "phase": "PHASE1",
+      "group": "National Cancer Institute (NCI)",
+      "trial_count": 68
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT00386906",
+        "excerpt": "PHASE1",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00412425",
+        "excerpt": "PHASE1",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00412581",
+        "excerpt": "PHASE1",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00508443",
+        "excerpt": "PHASE1",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00527657",
+        "excerpt": "PHASE1",
+        "field": "protocolSection.designModule.phases"
+       }
+      ],
+      "phase": "PHASE1",
+      "group": "M.D. Anderson Cancer Center",
+      "trial_count": 53
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT00261365",
+        "excerpt": "PHASE1",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00441337",
+        "excerpt": "PHASE1",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00729950",
+        "excerpt": "PHASE1",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00730639",
+        "excerpt": "PHASE1",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00796991",
+        "excerpt": "PHASE1",
+        "field": "protocolSection.designModule.phases"
+       }
+      ],
+      "phase": "PHASE1",
+      "group": "Bristol-Myers Squibb",
+      "trial_count": 20
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT00003022",
+        "excerpt": "PHASE1",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00004065",
+        "excerpt": "PHASE1",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00005633",
+        "excerpt": "PHASE1",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00005815",
+        "excerpt": "PHASE1",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00104845",
+        "excerpt": "PHASE1",
+        "field": "protocolSection.designModule.phases"
+       }
+      ],
+      "phase": "PHASE1",
+      "group": "Memorial Sloan Kettering Cancer Center",
+      "trial_count": 19
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT00001685",
+        "excerpt": "PHASE2",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00001705",
+        "excerpt": "PHASE2",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00001832",
+        "excerpt": "PHASE2",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00003895",
+        "excerpt": "PHASE2",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00005949",
+        "excerpt": "PHASE2",
+        "field": "protocolSection.designModule.phases"
+       }
+      ],
+      "phase": "PHASE2",
+      "group": "National Cancer Institute (NCI)",
+      "trial_count": 148
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT00027586",
+        "excerpt": "PHASE2",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00254397",
+        "excerpt": "PHASE2",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00338377",
+        "excerpt": "PHASE2",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00412425",
+        "excerpt": "PHASE2",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00505635",
+        "excerpt": "PHASE2",
+        "field": "protocolSection.designModule.phases"
+       }
+      ],
+      "phase": "PHASE2",
+      "group": "M.D. Anderson Cancer Center",
+      "trial_count": 52
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT00050102",
+        "excerpt": "PHASE2",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00084656",
+        "excerpt": "PHASE2",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00135408",
+        "excerpt": "PHASE2",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00162123",
+        "excerpt": "PHASE2",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00261365",
+        "excerpt": "PHASE2",
+        "field": "protocolSection.designModule.phases"
+       }
+      ],
+      "phase": "PHASE2",
+      "group": "Bristol-Myers Squibb",
+      "trial_count": 29
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT00003346",
+        "excerpt": "PHASE2",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00003362",
+        "excerpt": "PHASE2",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00004152",
+        "excerpt": "PHASE2",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00004250",
+        "excerpt": "PHASE2",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00005815",
+        "excerpt": "PHASE2",
+        "field": "protocolSection.designModule.phases"
+       }
+      ],
+      "phase": "PHASE2",
+      "group": "Memorial Sloan Kettering Cancer Center",
+      "trial_count": 29
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT00001296",
+        "excerpt": "PHASE3",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00003789",
+        "excerpt": "PHASE3",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00019682",
+        "excerpt": "PHASE3",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00072124",
+        "excerpt": "PHASE3",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00110019",
+        "excerpt": "PHASE3",
+        "field": "protocolSection.designModule.phases"
+       }
+      ],
+      "phase": "PHASE3",
+      "group": "National Cancer Institute (NCI)",
+      "trial_count": 10
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT00002882",
+        "excerpt": "PHASE3",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT01259284",
+        "excerpt": "PHASE3",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT01592968",
+        "excerpt": "PHASE3",
+        "field": "protocolSection.designModule.phases"
+       }
+      ],
+      "phase": "PHASE3",
+      "group": "M.D. Anderson Cancer Center",
+      "trial_count": 3
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT00094653",
+        "excerpt": "PHASE3",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00324155",
+        "excerpt": "PHASE3",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00636168",
+        "excerpt": "PHASE3",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT01515189",
+        "excerpt": "PHASE3",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT01721746",
+        "excerpt": "PHASE3",
+        "field": "protocolSection.designModule.phases"
+       }
+      ],
+      "phase": "PHASE3",
+      "group": "Bristol-Myers Squibb",
+      "trial_count": 20
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT01223248",
+        "excerpt": "PHASE3",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT07890415",
+        "excerpt": "PHASE3",
+        "field": "protocolSection.designModule.phases"
+       }
+      ],
+      "phase": "PHASE3",
+      "group": "Memorial Sloan Kettering Cancer Center",
+      "trial_count": 2
+     },
+     {
+      "citations": [],
+      "phase": "PHASE4",
+      "group": "National Cancer Institute (NCI)",
+      "trial_count": 0
+     },
+     {
+      "citations": [],
+      "phase": "PHASE4",
+      "group": "M.D. Anderson Cancer Center",
+      "trial_count": 0
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT07459543",
+        "excerpt": "PHASE4",
+        "field": "protocolSection.designModule.phases"
+       }
+      ],
+      "phase": "PHASE4",
+      "group": "Bristol-Myers Squibb",
+      "trial_count": 1
+     },
+     {
+      "citations": [],
+      "phase": "PHASE4",
+      "group": "Memorial Sloan Kettering Cancer Center",
+      "trial_count": 0
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT00006243",
+        "excerpt": "NA",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT04866810",
+        "excerpt": "NA",
+        "field": "protocolSection.designModule.phases"
+       }
+      ],
+      "phase": "NA",
+      "group": "National Cancer Institute (NCI)",
+      "trial_count": 2
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT00378781",
+        "excerpt": "NA",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00394134",
+        "excerpt": "NA",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00432471",
+        "excerpt": "NA",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00504582",
+        "excerpt": "NA",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00506311",
+        "excerpt": "NA",
+        "field": "protocolSection.designModule.phases"
+       }
+      ],
+      "phase": "NA",
+      "group": "M.D. Anderson Cancer Center",
+      "trial_count": 13
+     },
+     {
+      "citations": [],
+      "phase": "NA",
+      "group": "Bristol-Myers Squibb",
+      "trial_count": 0
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT00596362",
+        "excerpt": "NA",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00597272",
+        "excerpt": "NA",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT01266096",
+        "excerpt": "NA",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT02307630",
+        "excerpt": "NA",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT05053230",
+        "excerpt": "NA",
+        "field": "protocolSection.designModule.phases"
+       }
+      ],
+      "phase": "NA",
+      "group": "Memorial Sloan Kettering Cancer Center",
+      "trial_count": 6
+     }
+    ]
+   },
+   "mark": "bar",
+   "encoding": {
+    "x": {
+     "field": "phase",
+     "type": "ordinal",
+     "title": "Phase",
+     "sort": [
+      "EARLY_PHASE1",
+      "PHASE1",
+      "PHASE2",
+      "PHASE3",
+      "PHASE4",
+      "NA"
+     ]
+    },
+    "y": {
+     "field": "trial_count",
+     "type": "quantitative",
+     "title": "Trials",
+     "stack": null
+    },
+    "color": {
+     "field": "group",
+     "type": "nominal",
+     "title": "Group"
+    },
+    "xOffset": {
+     "field": "group",
+     "type": "nominal",
+     "title": "Group"
+    },
+    "tooltip": [
+     {
+      "field": "phase",
+      "type": "ordinal"
+     },
+     {
+      "field": "trial_count",
+      "type": "quantitative"
+     },
+     {
+      "field": "group",
+      "type": "nominal"
+     }
+    ]
+   }
+  }
+ },
+ "error": null,
+ "created_at": "2026-11-07T23:51:18.931741Z",
+ "updated_at": "2026-11-07T23:51:30.368027Z",
+ "_seconds": 12.0
+}

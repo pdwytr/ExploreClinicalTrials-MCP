@@ -1,0 +1,749 @@
+{
+ "task_id": "290f9e3f-d534-4795-8f15-4d8998ab2553",
+ "status": "succeeded",
+ "progress": {
+  "stage": "done",
+  "message": "Saved 674 trials",
+  "trials_fetched": 674,
+  "trials_total": 674
+ },
+ "output_dir": "data/queries/290f9e3f-d534-4795-8f15-4d8998ab2553",
+ "result": {
+  "visualization": {
+   "type": "bar_chart",
+   "intent": "distribution",
+   "title": "Intervention types being tested for long COVID",
+   "encoding": {
+    "x": {
+     "field": "intervention_type",
+     "type": "nominal",
+     "title": "Intervention type",
+     "sort": "-y"
+    },
+    "y": {
+     "field": "trial_count",
+     "type": "quantitative",
+     "title": "Trials"
+    }
+   },
+   "data": [
+    {
+     "citations": [
+      {
+       "nct_id": "NCT03105713",
+       "excerpt": "OTHER",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      },
+      {
+       "nct_id": "NCT04652518",
+       "excerpt": "OTHER",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      },
+      {
+       "nct_id": "NCT04724395",
+       "excerpt": "OTHER",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      },
+      {
+       "nct_id": "NCT04736732",
+       "excerpt": "OTHER",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      },
+      {
+       "nct_id": "NCT04742946",
+       "excerpt": "OTHER",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      }
+     ],
+     "intervention_type": "OTHER",
+     "trial_count": 217
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT03554265",
+       "excerpt": "DRUG",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      },
+      {
+       "nct_id": "NCT04482595",
+       "excerpt": "DRUG",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      },
+      {
+       "nct_id": "NCT04604704",
+       "excerpt": "DRUG",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      },
+      {
+       "nct_id": "NCT04652518",
+       "excerpt": "DRUG",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      },
+      {
+       "nct_id": "NCT04809974",
+       "excerpt": "DRUG",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      }
+     ],
+     "intervention_type": "DRUG",
+     "trial_count": 137
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT04694768",
+       "excerpt": "BEHAVIORAL",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      },
+      {
+       "nct_id": "NCT04718506",
+       "excerpt": "BEHAVIORAL",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      },
+      {
+       "nct_id": "NCT04768257",
+       "excerpt": "BEHAVIORAL",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      },
+      {
+       "nct_id": "NCT04950725",
+       "excerpt": "BEHAVIORAL",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      },
+      {
+       "nct_id": "NCT04961333",
+       "excerpt": "BEHAVIORAL",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      }
+     ],
+     "intervention_type": "BEHAVIORAL",
+     "trial_count": 107
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT04939558",
+       "excerpt": "DEVICE",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      },
+      {
+       "nct_id": "NCT04950673",
+       "excerpt": "DEVICE",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      },
+      {
+       "nct_id": "NCT04978571",
+       "excerpt": "DEVICE",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      },
+      {
+       "nct_id": "NCT05040659",
+       "excerpt": "DEVICE",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      },
+      {
+       "nct_id": "NCT05074771",
+       "excerpt": "DEVICE",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      }
+     ],
+     "intervention_type": "DEVICE",
+     "trial_count": 102
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT02965898",
+       "excerpt": "DIETARY_SUPPLEMENT",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      },
+      {
+       "nct_id": "NCT04604704",
+       "excerpt": "DIETARY_SUPPLEMENT",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      },
+      {
+       "nct_id": "NCT04777981",
+       "excerpt": "DIETARY_SUPPLEMENT",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      },
+      {
+       "nct_id": "NCT04795557",
+       "excerpt": "DIETARY_SUPPLEMENT",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      },
+      {
+       "nct_id": "NCT04828668",
+       "excerpt": "DIETARY_SUPPLEMENT",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      }
+     ],
+     "intervention_type": "DIETARY_SUPPLEMENT",
+     "trial_count": 41
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT04444128",
+       "excerpt": "DIAGNOSTIC_TEST",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      },
+      {
+       "nct_id": "NCT04659889",
+       "excerpt": "DIAGNOSTIC_TEST",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      },
+      {
+       "nct_id": "NCT04851561",
+       "excerpt": "DIAGNOSTIC_TEST",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      },
+      {
+       "nct_id": "NCT04881305",
+       "excerpt": "DIAGNOSTIC_TEST",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      },
+      {
+       "nct_id": "NCT04940208",
+       "excerpt": "DIAGNOSTIC_TEST",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      }
+     ],
+     "intervention_type": "DIAGNOSTIC_TEST",
+     "trial_count": 36
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT04842448",
+       "excerpt": "PROCEDURE",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      },
+      {
+       "nct_id": "NCT04996212",
+       "excerpt": "PROCEDURE",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      },
+      {
+       "nct_id": "NCT05235698",
+       "excerpt": "PROCEDURE",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      },
+      {
+       "nct_id": "NCT05293366",
+       "excerpt": "PROCEDURE",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      },
+      {
+       "nct_id": "NCT05389592",
+       "excerpt": "PROCEDURE",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      }
+     ],
+     "intervention_type": "PROCEDURE",
+     "trial_count": 26
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT04798066",
+       "excerpt": "BIOLOGICAL",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      },
+      {
+       "nct_id": "NCT04880161",
+       "excerpt": "BIOLOGICAL",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      },
+      {
+       "nct_id": "NCT05126563",
+       "excerpt": "BIOLOGICAL",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      },
+      {
+       "nct_id": "NCT05212610",
+       "excerpt": "BIOLOGICAL",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      },
+      {
+       "nct_id": "NCT05587868",
+       "excerpt": "BIOLOGICAL",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      }
+     ],
+     "intervention_type": "BIOLOGICAL",
+     "trial_count": 19
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT04905888",
+       "excerpt": "COMBINATION_PRODUCT",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      },
+      {
+       "nct_id": "NCT05445674",
+       "excerpt": "COMBINATION_PRODUCT",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      },
+      {
+       "nct_id": "NCT05760092",
+       "excerpt": "COMBINATION_PRODUCT",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      },
+      {
+       "nct_id": "NCT06118138",
+       "excerpt": "COMBINATION_PRODUCT",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      },
+      {
+       "nct_id": "NCT06163690",
+       "excerpt": "COMBINATION_PRODUCT",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      }
+     ],
+     "intervention_type": "COMBINATION_PRODUCT",
+     "trial_count": 6
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT05453188",
+       "excerpt": "GENETIC",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      },
+      {
+       "nct_id": "NCT05722717",
+       "excerpt": "GENETIC",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      },
+      {
+       "nct_id": "NCT05817006",
+       "excerpt": "GENETIC",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      },
+      {
+       "nct_id": "NCT06441955",
+       "excerpt": "GENETIC",
+       "field": "protocolSection.armsInterventionsModule.interventions.type"
+      }
+     ],
+     "intervention_type": "GENETIC",
+     "trial_count": 4
+    }
+   ]
+  },
+  "meta": {
+   "source": "clinicaltrials.gov",
+   "interpretation": "Trials studying long COVID under common registry terms, so the latest fetch can be profiled for intervention types.",
+   "filters_applied": {
+    "steps": [
+     {
+      "label": "Long COVID",
+      "endpoint": "studies",
+      "params": {
+       "query.cond": "\"long COVID\" OR \"post-acute sequelae of SARS-CoV-2 infection\" OR PASC OR \"post-COVID condition\" OR \"post-acute COVID-19 syndrome\""
+      }
+     }
+    ]
+   },
+   "assumptions": [
+    "Counts are distinct trials.",
+    "A trial can have several values of intervention_type, so counts can sum to more than the trials."
+   ],
+   "warnings": [
+    "77 of 674 trials have no intervention_type and are excluded.",
+    "Showing the top 10 values of intervention_type; 1 smaller categories are left out."
+   ],
+   "total_trials_matched": 674,
+   "trials_analyzed": 674,
+   "units": {
+    "trial_count": "trials"
+   },
+   "data_as_of": "2026-11-06T10:00:05",
+   "api_version": "2.0.5",
+   "chain": [
+    {
+     "fetch": 1,
+     "rationale": "Trials studying long COVID under common registry terms, so the latest fetch can be profiled for intervention types.",
+     "searches": [
+      {
+       "label": "Long COVID",
+       "endpoint": "studies",
+       "params": {
+        "query.cond": "\"long COVID\" OR \"post-acute sequelae of SARS-CoV-2 infection\" OR PASC OR \"post-COVID condition\" OR \"post-acute COVID-19 syndrome\""
+       }
+      }
+     ],
+     "status": "ok",
+     "total_trials_matched": 674,
+     "error": null,
+     "charted": true,
+     "output_dir": "fetch-1"
+    }
+   ],
+   "metrics": {
+    "seconds_total": 5.3,
+    "seconds_model": 4.77,
+    "seconds_fetching": 0.53,
+    "seconds_building": 0.0,
+    "model_turns": 4,
+    "input_tokens": 22422,
+    "output_tokens": 183,
+    "tool_calls": {
+     "fetch_data": 1,
+     "describe_data": 1,
+     "load_skill": 1,
+     "final_result_ChartPlan": 1
+    },
+    "sent_back": 0,
+    "fetches": 1,
+    "failed_fetches": 0
+   },
+   "generated_at": "2026-11-07T23:50:47.812687Z"
+  },
+  "vega_lite": {
+   "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+   "title": "Intervention types being tested for long COVID",
+   "width": "container",
+   "data": {
+    "values": [
+     {
+      "citations": [
+       {
+        "nct_id": "NCT03105713",
+        "excerpt": "OTHER",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       },
+       {
+        "nct_id": "NCT04652518",
+        "excerpt": "OTHER",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       },
+       {
+        "nct_id": "NCT04724395",
+        "excerpt": "OTHER",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       },
+       {
+        "nct_id": "NCT04736732",
+        "excerpt": "OTHER",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       },
+       {
+        "nct_id": "NCT04742946",
+        "excerpt": "OTHER",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       }
+      ],
+      "intervention_type": "OTHER",
+      "trial_count": 217
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT03554265",
+        "excerpt": "DRUG",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       },
+       {
+        "nct_id": "NCT04482595",
+        "excerpt": "DRUG",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       },
+       {
+        "nct_id": "NCT04604704",
+        "excerpt": "DRUG",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       },
+       {
+        "nct_id": "NCT04652518",
+        "excerpt": "DRUG",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       },
+       {
+        "nct_id": "NCT04809974",
+        "excerpt": "DRUG",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       }
+      ],
+      "intervention_type": "DRUG",
+      "trial_count": 137
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT04694768",
+        "excerpt": "BEHAVIORAL",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       },
+       {
+        "nct_id": "NCT04718506",
+        "excerpt": "BEHAVIORAL",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       },
+       {
+        "nct_id": "NCT04768257",
+        "excerpt": "BEHAVIORAL",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       },
+       {
+        "nct_id": "NCT04950725",
+        "excerpt": "BEHAVIORAL",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       },
+       {
+        "nct_id": "NCT04961333",
+        "excerpt": "BEHAVIORAL",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       }
+      ],
+      "intervention_type": "BEHAVIORAL",
+      "trial_count": 107
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT04939558",
+        "excerpt": "DEVICE",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       },
+       {
+        "nct_id": "NCT04950673",
+        "excerpt": "DEVICE",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       },
+       {
+        "nct_id": "NCT04978571",
+        "excerpt": "DEVICE",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       },
+       {
+        "nct_id": "NCT05040659",
+        "excerpt": "DEVICE",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       },
+       {
+        "nct_id": "NCT05074771",
+        "excerpt": "DEVICE",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       }
+      ],
+      "intervention_type": "DEVICE",
+      "trial_count": 102
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT02965898",
+        "excerpt": "DIETARY_SUPPLEMENT",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       },
+       {
+        "nct_id": "NCT04604704",
+        "excerpt": "DIETARY_SUPPLEMENT",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       },
+       {
+        "nct_id": "NCT04777981",
+        "excerpt": "DIETARY_SUPPLEMENT",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       },
+       {
+        "nct_id": "NCT04795557",
+        "excerpt": "DIETARY_SUPPLEMENT",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       },
+       {
+        "nct_id": "NCT04828668",
+        "excerpt": "DIETARY_SUPPLEMENT",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       }
+      ],
+      "intervention_type": "DIETARY_SUPPLEMENT",
+      "trial_count": 41
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT04444128",
+        "excerpt": "DIAGNOSTIC_TEST",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       },
+       {
+        "nct_id": "NCT04659889",
+        "excerpt": "DIAGNOSTIC_TEST",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       },
+       {
+        "nct_id": "NCT04851561",
+        "excerpt": "DIAGNOSTIC_TEST",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       },
+       {
+        "nct_id": "NCT04881305",
+        "excerpt": "DIAGNOSTIC_TEST",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       },
+       {
+        "nct_id": "NCT04940208",
+        "excerpt": "DIAGNOSTIC_TEST",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       }
+      ],
+      "intervention_type": "DIAGNOSTIC_TEST",
+      "trial_count": 36
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT04842448",
+        "excerpt": "PROCEDURE",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       },
+       {
+        "nct_id": "NCT04996212",
+        "excerpt": "PROCEDURE",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       },
+       {
+        "nct_id": "NCT05235698",
+        "excerpt": "PROCEDURE",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       },
+       {
+        "nct_id": "NCT05293366",
+        "excerpt": "PROCEDURE",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       },
+       {
+        "nct_id": "NCT05389592",
+        "excerpt": "PROCEDURE",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       }
+      ],
+      "intervention_type": "PROCEDURE",
+      "trial_count": 26
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT04798066",
+        "excerpt": "BIOLOGICAL",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       },
+       {
+        "nct_id": "NCT04880161",
+        "excerpt": "BIOLOGICAL",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       },
+       {
+        "nct_id": "NCT05126563",
+        "excerpt": "BIOLOGICAL",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       },
+       {
+        "nct_id": "NCT05212610",
+        "excerpt": "BIOLOGICAL",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       },
+       {
+        "nct_id": "NCT05587868",
+        "excerpt": "BIOLOGICAL",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       }
+      ],
+      "intervention_type": "BIOLOGICAL",
+      "trial_count": 19
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT04905888",
+        "excerpt": "COMBINATION_PRODUCT",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       },
+       {
+        "nct_id": "NCT05445674",
+        "excerpt": "COMBINATION_PRODUCT",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       },
+       {
+        "nct_id": "NCT05760092",
+        "excerpt": "COMBINATION_PRODUCT",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       },
+       {
+        "nct_id": "NCT06118138",
+        "excerpt": "COMBINATION_PRODUCT",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       },
+       {
+        "nct_id": "NCT06163690",
+        "excerpt": "COMBINATION_PRODUCT",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       }
+      ],
+      "intervention_type": "COMBINATION_PRODUCT",
+      "trial_count": 6
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT05453188",
+        "excerpt": "GENETIC",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       },
+       {
+        "nct_id": "NCT05722717",
+        "excerpt": "GENETIC",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       },
+       {
+        "nct_id": "NCT05817006",
+        "excerpt": "GENETIC",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       },
+       {
+        "nct_id": "NCT06441955",
+        "excerpt": "GENETIC",
+        "field": "protocolSection.armsInterventionsModule.interventions.type"
+       }
+      ],
+      "intervention_type": "GENETIC",
+      "trial_count": 4
+     }
+    ]
+   },
+   "mark": "bar",
+   "encoding": {
+    "x": {
+     "field": "intervention_type",
+     "type": "nominal",
+     "title": "Intervention type",
+     "sort": "-y"
+    },
+    "y": {
+     "field": "trial_count",
+     "type": "quantitative",
+     "title": "Trials"
+    },
+    "tooltip": [
+     {
+      "field": "intervention_type",
+      "type": "nominal"
+     },
+     {
+      "field": "trial_count",
+      "type": "quantitative"
+     }
+    ]
+   }
+  }
+ },
+ "error": null,
+ "created_at": "2026-11-07T23:50:42.507960Z",
+ "updated_at": "2026-11-07T23:50:47.856962Z",
+ "_seconds": 6.0
+}

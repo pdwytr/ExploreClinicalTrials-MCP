@@ -1,0 +1,435 @@
+{
+ "task_id": "24daa044-d5b2-4e00-b501-5171f62c6c2a",
+ "status": "succeeded",
+ "progress": {
+  "stage": "done",
+  "message": "Saved 7,203 trials",
+  "trials_fetched": 7203,
+  "trials_total": 7203
+ },
+ "output_dir": "data/queries/24daa044-d5b2-4e00-b501-5171f62c6c2a",
+ "result": {
+  "visualization": {
+   "type": "grouped_bar_chart",
+   "intent": "magnitude",
+   "title": "Industry vs academic sponsorship in Alzheimer's vs Parkinson's trials",
+   "encoding": {
+    "x": {
+     "field": "sponsor_class",
+     "type": "nominal",
+     "title": "Sponsor class"
+    },
+    "y": {
+     "field": "trial_count",
+     "type": "quantitative",
+     "title": "Trials"
+    },
+    "color": {
+     "field": "group",
+     "type": "nominal",
+     "title": "Group"
+    },
+    "xOffset": {
+     "field": "group",
+     "type": "nominal",
+     "title": "Group"
+    }
+   },
+   "data": [
+    {
+     "citations": [
+      {
+       "nct_id": "NCT00004760",
+       "excerpt": "OTHER",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.class"
+      },
+      {
+       "nct_id": "NCT00004826",
+       "excerpt": "OTHER",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.class"
+      },
+      {
+       "nct_id": "NCT00037830",
+       "excerpt": "OTHER",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.class"
+      },
+      {
+       "nct_id": "NCT00038116",
+       "excerpt": "OTHER",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.class"
+      },
+      {
+       "nct_id": "NCT00053625",
+       "excerpt": "OTHER",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.class"
+      }
+     ],
+     "sponsor_class": "OTHER",
+     "group": "Parkinson's",
+     "trial_count": 2557
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT00007189",
+       "excerpt": "OTHER",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.class"
+      },
+      {
+       "nct_id": "NCT00009191",
+       "excerpt": "OTHER",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.class"
+      },
+      {
+       "nct_id": "NCT00009204",
+       "excerpt": "OTHER",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.class"
+      },
+      {
+       "nct_id": "NCT00009217",
+       "excerpt": "OTHER",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.class"
+      },
+      {
+       "nct_id": "NCT00017940",
+       "excerpt": "OTHER",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.class"
+      }
+     ],
+     "sponsor_class": "OTHER",
+     "group": "Alzheimer's",
+     "trial_count": 1989
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT00036205",
+       "excerpt": "INDUSTRY",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.class"
+      },
+      {
+       "nct_id": "NCT00036218",
+       "excerpt": "INDUSTRY",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.class"
+      },
+      {
+       "nct_id": "NCT00036296",
+       "excerpt": "INDUSTRY",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.class"
+      },
+      {
+       "nct_id": "NCT00040404",
+       "excerpt": "INDUSTRY",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.class"
+      },
+      {
+       "nct_id": "NCT00056524",
+       "excerpt": "INDUSTRY",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.class"
+      }
+     ],
+     "sponsor_class": "INDUSTRY",
+     "group": "Parkinson's",
+     "trial_count": 1102
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT00000172",
+       "excerpt": "INDUSTRY",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.class"
+      },
+      {
+       "nct_id": "NCT00000174",
+       "excerpt": "INDUSTRY",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.class"
+      },
+      {
+       "nct_id": "NCT00006187",
+       "excerpt": "INDUSTRY",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.class"
+      },
+      {
+       "nct_id": "NCT00021723",
+       "excerpt": "INDUSTRY",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.class"
+      },
+      {
+       "nct_id": "NCT00034762",
+       "excerpt": "INDUSTRY",
+       "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.class"
+      }
+     ],
+     "sponsor_class": "INDUSTRY",
+     "group": "Alzheimer's",
+     "trial_count": 1232
+    }
+   ]
+  },
+  "meta": {
+   "source": "clinicaltrials.gov",
+   "interpretation": "Interventional Alzheimer's disease and Parkinson disease trials, one search per condition, so the chart can compare sponsor class between the two diseases.",
+   "filters_applied": {
+    "steps": [
+     {
+      "label": "Alzheimer's",
+      "endpoint": "studies",
+      "params": {
+       "query.cond": "\"Alzheimer's disease\"",
+       "filter.advanced": "AREA[StudyType]INTERVENTIONAL"
+      }
+     },
+     {
+      "label": "Parkinson's",
+      "endpoint": "studies",
+      "params": {
+       "query.cond": "\"Parkinson disease\"",
+       "filter.advanced": "AREA[StudyType]INTERVENTIONAL"
+      }
+     }
+    ]
+   },
+   "assumptions": [
+    "Counts are distinct trials.",
+    "Compared sides are separate searches; a trial matching several sides is counted in each."
+   ],
+   "warnings": [
+    "Showing the top 2 values of sponsor_class; 6 smaller categories are left out."
+   ],
+   "total_trials_matched": 7203,
+   "trials_analyzed": 7203,
+   "units": {
+    "trial_count": "trials"
+   },
+   "data_as_of": "2026-11-06T10:00:05",
+   "api_version": "2.0.5",
+   "chain": [
+    {
+     "fetch": 1,
+     "rationale": "Interventional Alzheimer's disease and Parkinson disease trials, one search per condition, so the chart can compare sponsor class between the two diseases.",
+     "searches": [
+      {
+       "label": "Alzheimer's",
+       "endpoint": "studies",
+       "params": {
+        "query.cond": "\"Alzheimer's disease\"",
+        "filter.advanced": "AREA[StudyType]INTERVENTIONAL"
+       }
+      },
+      {
+       "label": "Parkinson's",
+       "endpoint": "studies",
+       "params": {
+        "query.cond": "\"Parkinson disease\"",
+        "filter.advanced": "AREA[StudyType]INTERVENTIONAL"
+       }
+      }
+     ],
+     "status": "ok",
+     "total_trials_matched": 7203,
+     "error": null,
+     "charted": true,
+     "output_dir": "fetch-1"
+    }
+   ],
+   "metrics": {
+    "seconds_total": 7.61,
+    "seconds_model": 4.83,
+    "seconds_fetching": 2.77,
+    "seconds_building": 0.01,
+    "model_turns": 4,
+    "input_tokens": 23036,
+    "output_tokens": 214,
+    "tool_calls": {
+     "fetch_data": 1,
+     "describe_data": 1,
+     "load_skill": 1,
+     "final_result_ChartPlan": 1
+    },
+    "sent_back": 0,
+    "fetches": 1,
+    "failed_fetches": 0
+   },
+   "generated_at": "2026-11-07T23:50:47.221331Z"
+  },
+  "vega_lite": {
+   "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+   "title": "Industry vs academic sponsorship in Alzheimer's vs Parkinson's trials",
+   "width": "container",
+   "data": {
+    "values": [
+     {
+      "citations": [
+       {
+        "nct_id": "NCT00004760",
+        "excerpt": "OTHER",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.class"
+       },
+       {
+        "nct_id": "NCT00004826",
+        "excerpt": "OTHER",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.class"
+       },
+       {
+        "nct_id": "NCT00037830",
+        "excerpt": "OTHER",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.class"
+       },
+       {
+        "nct_id": "NCT00038116",
+        "excerpt": "OTHER",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.class"
+       },
+       {
+        "nct_id": "NCT00053625",
+        "excerpt": "OTHER",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.class"
+       }
+      ],
+      "sponsor_class": "OTHER",
+      "group": "Parkinson's",
+      "trial_count": 2557
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT00007189",
+        "excerpt": "OTHER",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.class"
+       },
+       {
+        "nct_id": "NCT00009191",
+        "excerpt": "OTHER",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.class"
+       },
+       {
+        "nct_id": "NCT00009204",
+        "excerpt": "OTHER",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.class"
+       },
+       {
+        "nct_id": "NCT00009217",
+        "excerpt": "OTHER",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.class"
+       },
+       {
+        "nct_id": "NCT00017940",
+        "excerpt": "OTHER",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.class"
+       }
+      ],
+      "sponsor_class": "OTHER",
+      "group": "Alzheimer's",
+      "trial_count": 1989
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT00036205",
+        "excerpt": "INDUSTRY",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.class"
+       },
+       {
+        "nct_id": "NCT00036218",
+        "excerpt": "INDUSTRY",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.class"
+       },
+       {
+        "nct_id": "NCT00036296",
+        "excerpt": "INDUSTRY",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.class"
+       },
+       {
+        "nct_id": "NCT00040404",
+        "excerpt": "INDUSTRY",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.class"
+       },
+       {
+        "nct_id": "NCT00056524",
+        "excerpt": "INDUSTRY",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.class"
+       }
+      ],
+      "sponsor_class": "INDUSTRY",
+      "group": "Parkinson's",
+      "trial_count": 1102
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT00000172",
+        "excerpt": "INDUSTRY",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.class"
+       },
+       {
+        "nct_id": "NCT00000174",
+        "excerpt": "INDUSTRY",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.class"
+       },
+       {
+        "nct_id": "NCT00006187",
+        "excerpt": "INDUSTRY",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.class"
+       },
+       {
+        "nct_id": "NCT00021723",
+        "excerpt": "INDUSTRY",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.class"
+       },
+       {
+        "nct_id": "NCT00034762",
+        "excerpt": "INDUSTRY",
+        "field": "protocolSection.sponsorCollaboratorsModule.leadSponsor.class"
+       }
+      ],
+      "sponsor_class": "INDUSTRY",
+      "group": "Alzheimer's",
+      "trial_count": 1232
+     }
+    ]
+   },
+   "mark": "bar",
+   "encoding": {
+    "x": {
+     "field": "sponsor_class",
+     "type": "nominal",
+     "title": "Sponsor class"
+    },
+    "y": {
+     "field": "trial_count",
+     "type": "quantitative",
+     "title": "Trials",
+     "stack": null
+    },
+    "color": {
+     "field": "group",
+     "type": "nominal",
+     "title": "Group"
+    },
+    "xOffset": {
+     "field": "group",
+     "type": "nominal",
+     "title": "Group"
+    },
+    "tooltip": [
+     {
+      "field": "sponsor_class",
+      "type": "nominal"
+     },
+     {
+      "field": "trial_count",
+      "type": "quantitative"
+     },
+     {
+      "field": "group",
+      "type": "nominal"
+     }
+    ]
+   }
+  }
+ },
+ "error": null,
+ "created_at": "2026-11-07T23:50:39.613381Z",
+ "updated_at": "2026-11-07T23:50:47.375793Z",
+ "_seconds": 9.0
+}

@@ -1,0 +1,762 @@
+{
+ "task_id": "db66d6bb-6e84-4fa2-a06e-f111807fc09f",
+ "status": "succeeded",
+ "progress": {
+  "stage": "done",
+  "message": "Saved 2,201 trials",
+  "trials_fetched": 2201,
+  "trials_total": 2201
+ },
+ "output_dir": "data/queries/db66d6bb-6e84-4fa2-a06e-f111807fc09f",
+ "result": {
+  "visualization": {
+   "type": "bar_chart",
+   "intent": "ranking",
+   "title": "Countries with the most actively recruiting NSCLC trials",
+   "encoding": {
+    "x": {
+     "field": "country",
+     "type": "nominal",
+     "title": "Country",
+     "sort": "-y"
+    },
+    "y": {
+     "field": "trial_count",
+     "type": "quantitative",
+     "title": "Trials"
+    }
+   },
+   "data": [
+    {
+     "citations": [
+      {
+       "nct_id": "NCT02152631",
+       "excerpt": "China",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      },
+      {
+       "nct_id": "NCT02511106",
+       "excerpt": "China",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      },
+      {
+       "nct_id": "NCT02542293",
+       "excerpt": "China",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      },
+      {
+       "nct_id": "NCT02568267",
+       "excerpt": "China",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      },
+      {
+       "nct_id": "NCT02609776",
+       "excerpt": "China",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      }
+     ],
+     "country": "China",
+     "trial_count": 904
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT00334815",
+       "excerpt": "United States",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      },
+      {
+       "nct_id": "NCT00499330",
+       "excerpt": "United States",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      },
+      {
+       "nct_id": "NCT00682032",
+       "excerpt": "United States",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      },
+      {
+       "nct_id": "NCT00977470",
+       "excerpt": "United States",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      },
+      {
+       "nct_id": "NCT01345851",
+       "excerpt": "United States",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      }
+     ],
+     "country": "United States",
+     "trial_count": 904
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT01933932",
+       "excerpt": "Spain",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      },
+      {
+       "nct_id": "NCT02152631",
+       "excerpt": "Spain",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      },
+      {
+       "nct_id": "NCT02393625",
+       "excerpt": "Spain",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      },
+      {
+       "nct_id": "NCT02411448",
+       "excerpt": "Spain",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      },
+      {
+       "nct_id": "NCT02453282",
+       "excerpt": "Spain",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      }
+     ],
+     "country": "Spain",
+     "trial_count": 347
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT01817192",
+       "excerpt": "France",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      },
+      {
+       "nct_id": "NCT01933932",
+       "excerpt": "France",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      },
+      {
+       "nct_id": "NCT02152631",
+       "excerpt": "France",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      },
+      {
+       "nct_id": "NCT02264678",
+       "excerpt": "France",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      },
+      {
+       "nct_id": "NCT02411448",
+       "excerpt": "France",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      }
+     ],
+     "country": "France",
+     "trial_count": 313
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT02143466",
+       "excerpt": "South Korea",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      },
+      {
+       "nct_id": "NCT02152631",
+       "excerpt": "South Korea",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      },
+      {
+       "nct_id": "NCT02264678",
+       "excerpt": "South Korea",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      },
+      {
+       "nct_id": "NCT02411448",
+       "excerpt": "South Korea",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      },
+      {
+       "nct_id": "NCT02453282",
+       "excerpt": "South Korea",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      }
+     ],
+     "country": "South Korea",
+     "trial_count": 272
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT01933932",
+       "excerpt": "Italy",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      },
+      {
+       "nct_id": "NCT02152631",
+       "excerpt": "Italy",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      },
+      {
+       "nct_id": "NCT02393625",
+       "excerpt": "Italy",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      },
+      {
+       "nct_id": "NCT02411448",
+       "excerpt": "Italy",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      },
+      {
+       "nct_id": "NCT02453282",
+       "excerpt": "Italy",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      }
+     ],
+     "country": "Italy",
+     "trial_count": 263
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT00499330",
+       "excerpt": "Canada",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      },
+      {
+       "nct_id": "NCT01786590",
+       "excerpt": "Canada",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      },
+      {
+       "nct_id": "NCT01803542",
+       "excerpt": "Canada",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      },
+      {
+       "nct_id": "NCT01933932",
+       "excerpt": "Canada",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      },
+      {
+       "nct_id": "NCT02143466",
+       "excerpt": "Canada",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      }
+     ],
+     "country": "Canada",
+     "trial_count": 244
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT00499330",
+       "excerpt": "Australia",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      },
+      {
+       "nct_id": "NCT01933932",
+       "excerpt": "Australia",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      },
+      {
+       "nct_id": "NCT02393625",
+       "excerpt": "Australia",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      },
+      {
+       "nct_id": "NCT02453282",
+       "excerpt": "Australia",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      },
+      {
+       "nct_id": "NCT02468024",
+       "excerpt": "Australia",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      }
+     ],
+     "country": "Australia",
+     "trial_count": 233
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT02143466",
+       "excerpt": "Japan",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      },
+      {
+       "nct_id": "NCT02152631",
+       "excerpt": "Japan",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      },
+      {
+       "nct_id": "NCT02411448",
+       "excerpt": "Japan",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      },
+      {
+       "nct_id": "NCT02453282",
+       "excerpt": "Japan",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      },
+      {
+       "nct_id": "NCT02511106",
+       "excerpt": "Japan",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      }
+     ],
+     "country": "Japan",
+     "trial_count": 230
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT02143466",
+       "excerpt": "Taiwan",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      },
+      {
+       "nct_id": "NCT02152631",
+       "excerpt": "Taiwan",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      },
+      {
+       "nct_id": "NCT02411448",
+       "excerpt": "Taiwan",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      },
+      {
+       "nct_id": "NCT02448992",
+       "excerpt": "Taiwan",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      },
+      {
+       "nct_id": "NCT02453282",
+       "excerpt": "Taiwan",
+       "field": "protocolSection.contactsLocationsModule.locations.country"
+      }
+     ],
+     "country": "Taiwan",
+     "trial_count": 215
+    }
+   ]
+  },
+  "meta": {
+   "source": "clinicaltrials.gov",
+   "interpretation": "Actively recruiting interventional NSCLC trials worldwide; countries will be compared in the chart.",
+   "filters_applied": {
+    "steps": [
+     {
+      "label": "NSCLC",
+      "endpoint": "studies",
+      "params": {
+       "query.cond": "\"NSCLC\"",
+       "filter.overallStatus": "NOT_YET_RECRUITING|RECRUITING|ENROLLING_BY_INVITATION|ACTIVE_NOT_RECRUITING",
+       "filter.advanced": "AREA[StudyType]INTERVENTIONAL"
+      }
+     }
+    ]
+   },
+   "assumptions": [
+    "Counts are distinct trials.",
+    "A trial can have several values of country, so counts can sum to more than the trials."
+   ],
+   "warnings": [
+    "Showing the top 10 values of country; 68 smaller categories are left out."
+   ],
+   "total_trials_matched": 2201,
+   "trials_analyzed": 2201,
+   "units": {
+    "trial_count": "trials"
+   },
+   "data_as_of": "2026-11-06T10:00:05",
+   "api_version": "2.0.5",
+   "chain": [
+    {
+     "fetch": 1,
+     "rationale": "Actively recruiting interventional NSCLC trials worldwide; countries will be compared in the chart.",
+     "searches": [
+      {
+       "label": "NSCLC",
+       "endpoint": "studies",
+       "params": {
+        "query.cond": "\"NSCLC\"",
+        "filter.overallStatus": "NOT_YET_RECRUITING|RECRUITING|ENROLLING_BY_INVITATION|ACTIVE_NOT_RECRUITING",
+        "filter.advanced": "AREA[StudyType]INTERVENTIONAL"
+       }
+      }
+     ],
+     "status": "ok",
+     "total_trials_matched": 2201,
+     "error": null,
+     "charted": true,
+     "output_dir": "fetch-1"
+    }
+   ],
+   "metrics": {
+    "seconds_total": 6.91,
+    "seconds_model": 4.91,
+    "seconds_fetching": 2.0,
+    "seconds_building": 0.0,
+    "model_turns": 4,
+    "input_tokens": 22498,
+    "output_tokens": 189,
+    "tool_calls": {
+     "fetch_data": 1,
+     "describe_data": 1,
+     "load_skill": 1,
+     "final_result_ChartPlan": 1
+    },
+    "sent_back": 0,
+    "fetches": 1,
+    "failed_fetches": 0
+   },
+   "generated_at": "2026-11-07T23:50:36.741949Z"
+  },
+  "vega_lite": {
+   "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+   "title": "Countries with the most actively recruiting NSCLC trials",
+   "width": "container",
+   "data": {
+    "values": [
+     {
+      "citations": [
+       {
+        "nct_id": "NCT02152631",
+        "excerpt": "China",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       },
+       {
+        "nct_id": "NCT02511106",
+        "excerpt": "China",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       },
+       {
+        "nct_id": "NCT02542293",
+        "excerpt": "China",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       },
+       {
+        "nct_id": "NCT02568267",
+        "excerpt": "China",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       },
+       {
+        "nct_id": "NCT02609776",
+        "excerpt": "China",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       }
+      ],
+      "country": "China",
+      "trial_count": 904
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT00334815",
+        "excerpt": "United States",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       },
+       {
+        "nct_id": "NCT00499330",
+        "excerpt": "United States",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       },
+       {
+        "nct_id": "NCT00682032",
+        "excerpt": "United States",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       },
+       {
+        "nct_id": "NCT00977470",
+        "excerpt": "United States",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       },
+       {
+        "nct_id": "NCT01345851",
+        "excerpt": "United States",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       }
+      ],
+      "country": "United States",
+      "trial_count": 904
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT01933932",
+        "excerpt": "Spain",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       },
+       {
+        "nct_id": "NCT02152631",
+        "excerpt": "Spain",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       },
+       {
+        "nct_id": "NCT02393625",
+        "excerpt": "Spain",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       },
+       {
+        "nct_id": "NCT02411448",
+        "excerpt": "Spain",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       },
+       {
+        "nct_id": "NCT02453282",
+        "excerpt": "Spain",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       }
+      ],
+      "country": "Spain",
+      "trial_count": 347
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT01817192",
+        "excerpt": "France",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       },
+       {
+        "nct_id": "NCT01933932",
+        "excerpt": "France",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       },
+       {
+        "nct_id": "NCT02152631",
+        "excerpt": "France",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       },
+       {
+        "nct_id": "NCT02264678",
+        "excerpt": "France",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       },
+       {
+        "nct_id": "NCT02411448",
+        "excerpt": "France",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       }
+      ],
+      "country": "France",
+      "trial_count": 313
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT02143466",
+        "excerpt": "South Korea",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       },
+       {
+        "nct_id": "NCT02152631",
+        "excerpt": "South Korea",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       },
+       {
+        "nct_id": "NCT02264678",
+        "excerpt": "South Korea",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       },
+       {
+        "nct_id": "NCT02411448",
+        "excerpt": "South Korea",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       },
+       {
+        "nct_id": "NCT02453282",
+        "excerpt": "South Korea",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       }
+      ],
+      "country": "South Korea",
+      "trial_count": 272
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT01933932",
+        "excerpt": "Italy",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       },
+       {
+        "nct_id": "NCT02152631",
+        "excerpt": "Italy",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       },
+       {
+        "nct_id": "NCT02393625",
+        "excerpt": "Italy",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       },
+       {
+        "nct_id": "NCT02411448",
+        "excerpt": "Italy",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       },
+       {
+        "nct_id": "NCT02453282",
+        "excerpt": "Italy",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       }
+      ],
+      "country": "Italy",
+      "trial_count": 263
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT00499330",
+        "excerpt": "Canada",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       },
+       {
+        "nct_id": "NCT01786590",
+        "excerpt": "Canada",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       },
+       {
+        "nct_id": "NCT01803542",
+        "excerpt": "Canada",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       },
+       {
+        "nct_id": "NCT01933932",
+        "excerpt": "Canada",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       },
+       {
+        "nct_id": "NCT02143466",
+        "excerpt": "Canada",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       }
+      ],
+      "country": "Canada",
+      "trial_count": 244
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT00499330",
+        "excerpt": "Australia",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       },
+       {
+        "nct_id": "NCT01933932",
+        "excerpt": "Australia",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       },
+       {
+        "nct_id": "NCT02393625",
+        "excerpt": "Australia",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       },
+       {
+        "nct_id": "NCT02453282",
+        "excerpt": "Australia",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       },
+       {
+        "nct_id": "NCT02468024",
+        "excerpt": "Australia",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       }
+      ],
+      "country": "Australia",
+      "trial_count": 233
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT02143466",
+        "excerpt": "Japan",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       },
+       {
+        "nct_id": "NCT02152631",
+        "excerpt": "Japan",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       },
+       {
+        "nct_id": "NCT02411448",
+        "excerpt": "Japan",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       },
+       {
+        "nct_id": "NCT02453282",
+        "excerpt": "Japan",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       },
+       {
+        "nct_id": "NCT02511106",
+        "excerpt": "Japan",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       }
+      ],
+      "country": "Japan",
+      "trial_count": 230
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT02143466",
+        "excerpt": "Taiwan",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       },
+       {
+        "nct_id": "NCT02152631",
+        "excerpt": "Taiwan",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       },
+       {
+        "nct_id": "NCT02411448",
+        "excerpt": "Taiwan",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       },
+       {
+        "nct_id": "NCT02448992",
+        "excerpt": "Taiwan",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       },
+       {
+        "nct_id": "NCT02453282",
+        "excerpt": "Taiwan",
+        "field": "protocolSection.contactsLocationsModule.locations.country"
+       }
+      ],
+      "country": "Taiwan",
+      "trial_count": 215
+     }
+    ]
+   },
+   "mark": "bar",
+   "encoding": {
+    "x": {
+     "field": "country",
+     "type": "nominal",
+     "title": "Country",
+     "sort": "-y"
+    },
+    "y": {
+     "field": "trial_count",
+     "type": "quantitative",
+     "title": "Trials"
+    },
+    "tooltip": [
+     {
+      "field": "country",
+      "type": "nominal"
+     },
+     {
+      "field": "trial_count",
+      "type": "quantitative"
+     }
+    ]
+   }
+  }
+ },
+ "error": null,
+ "created_at": "2026-11-07T23:50:29.828099Z",
+ "updated_at": "2026-11-07T23:50:36.771889Z",
+ "_seconds": 9.0
+}

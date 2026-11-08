@@ -1,0 +1,20 @@
+{
+ "task_id": "b107393e-1b4f-4185-9f40-9fe1772aeb7d",
+ "status": "failed",
+ "progress": {
+  "stage": "failed",
+  "message": "ClinicalTrials.gov records do not predict stock prices or market reactions to future trial readouts; they only describe trial registrations and results.",
+  "trials_fetched": null,
+  "trials_total": null
+ },
+ "output_dir": "data/queries/b107393e-1b4f-4185-9f40-9fe1772aeb7d",
+ "result": null,
+ "error": {
+  "error": "unsupported_query",
+  "message": "ClinicalTrials.gov records do not predict stock prices or market reactions to future trial readouts; they only describe trial registrations and results.",
+  "details": {}
+ },
+ "created_at": "2026-11-07T23:51:15.670146Z",
+ "updated_at": "2026-11-07T23:51:17.078733Z",
+ "_seconds": 3.0
+}

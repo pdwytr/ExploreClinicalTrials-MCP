@@ -1,0 +1,524 @@
+{
+ "task_id": "4cc7ccd0-082c-4c36-a580-5098d8b53949",
+ "status": "succeeded",
+ "progress": {
+  "stage": "done",
+  "message": "Saved 1,020 trials",
+  "trials_fetched": 1020,
+  "trials_total": 1020
+ },
+ "output_dir": "data/queries/4cc7ccd0-082c-4c36-a580-5098d8b53949",
+ "result": {
+  "visualization": {
+   "type": "bar_chart",
+   "intent": "magnitude",
+   "title": "Phase breakdown of ALS trials",
+   "encoding": {
+    "x": {
+     "field": "phase",
+     "type": "ordinal",
+     "title": "Phase",
+     "sort": [
+      "EARLY_PHASE1",
+      "PHASE1",
+      "PHASE2",
+      "PHASE3",
+      "PHASE4",
+      "NA"
+     ]
+    },
+    "y": {
+     "field": "trial_count",
+     "type": "quantitative",
+     "title": "Trials"
+    }
+   },
+   "data": [
+    {
+     "citations": [
+      {
+       "nct_id": "NCT02405403",
+       "excerpt": "EARLY_PHASE1",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT02710110",
+       "excerpt": "EARLY_PHASE1",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT02710162",
+       "excerpt": "EARLY_PHASE1",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT02851914",
+       "excerpt": "EARLY_PHASE1",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT02969759",
+       "excerpt": "EARLY_PHASE1",
+       "field": "protocolSection.designModule.phases"
+      }
+     ],
+     "phase": "EARLY_PHASE1",
+     "trial_count": 21
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT00107770",
+       "excerpt": "PHASE1",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00140218",
+       "excerpt": "PHASE1",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00160004",
+       "excerpt": "PHASE1",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00563537",
+       "excerpt": "PHASE1",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00580593",
+       "excerpt": "PHASE1",
+       "field": "protocolSection.designModule.phases"
+      }
+     ],
+     "phase": "PHASE1",
+     "trial_count": 180
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT00004771",
+       "excerpt": "PHASE2",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00005674",
+       "excerpt": "PHASE2",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00005766",
+       "excerpt": "PHASE2",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00036413",
+       "excerpt": "PHASE2",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00070993",
+       "excerpt": "PHASE2",
+       "field": "protocolSection.designModule.phases"
+      }
+     ],
+     "phase": "PHASE2",
+     "trial_count": 282
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT00021697",
+       "excerpt": "PHASE3",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00035815",
+       "excerpt": "PHASE3",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00047723",
+       "excerpt": "PHASE3",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00069186",
+       "excerpt": "PHASE3",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00125203",
+       "excerpt": "PHASE3",
+       "field": "protocolSection.designModule.phases"
+      }
+     ],
+     "phase": "PHASE3",
+     "trial_count": 95
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT00542412",
+       "excerpt": "PHASE4",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00560287",
+       "excerpt": "PHASE4",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00613899",
+       "excerpt": "PHASE4",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT01811355",
+       "excerpt": "PHASE4",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT04997954",
+       "excerpt": "PHASE4",
+       "field": "protocolSection.designModule.phases"
+      }
+     ],
+     "phase": "PHASE4",
+     "trial_count": 8
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT00116558",
+       "excerpt": "NA",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00420719",
+       "excerpt": "NA",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00537446",
+       "excerpt": "NA",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00812851",
+       "excerpt": "NA",
+       "field": "protocolSection.designModule.phases"
+      },
+      {
+       "nct_id": "NCT00847847",
+       "excerpt": "NA",
+       "field": "protocolSection.designModule.phases"
+      }
+     ],
+     "phase": "NA",
+     "trial_count": 244
+    }
+   ]
+  },
+  "meta": {
+   "source": "clinicaltrials.gov",
+   "interpretation": "ALS studies fetched so the phase breakdown can be profiled from the matched trial set.",
+   "filters_applied": {
+    "steps": [
+     {
+      "label": "ALS trials",
+      "endpoint": "studies",
+      "params": {
+       "query.cond": "\"amyotrophic lateral sclerosis\""
+      }
+     }
+    ]
+   },
+   "assumptions": [
+    "Counts are distinct trials.",
+    "A trial can have several values of phase, so counts can sum to more than the trials."
+   ],
+   "warnings": [
+    "299 of 1020 trials have no phase and are excluded."
+   ],
+   "total_trials_matched": 1020,
+   "trials_analyzed": 1020,
+   "units": {
+    "trial_count": "trials"
+   },
+   "data_as_of": "2026-11-06T10:00:05",
+   "api_version": "2.0.5",
+   "chain": [
+    {
+     "fetch": 1,
+     "rationale": "ALS studies fetched so the phase breakdown can be profiled from the matched trial set.",
+     "searches": [
+      {
+       "label": "ALS trials",
+       "endpoint": "studies",
+       "params": {
+        "query.cond": "\"amyotrophic lateral sclerosis\""
+       }
+      }
+     ],
+     "status": "ok",
+     "total_trials_matched": 1020,
+     "error": null,
+     "charted": true,
+     "output_dir": "fetch-1"
+    }
+   ],
+   "metrics": {
+    "seconds_total": 5.18,
+    "seconds_model": 4.37,
+    "seconds_fetching": 0.82,
+    "seconds_building": 0.0,
+    "model_turns": 4,
+    "input_tokens": 22424,
+    "output_tokens": 137,
+    "tool_calls": {
+     "fetch_data": 1,
+     "describe_data": 1,
+     "load_skill": 1,
+     "final_result_ChartPlan": 1
+    },
+    "sent_back": 0,
+    "fetches": 1,
+    "failed_fetches": 0
+   },
+   "generated_at": "2026-11-07T23:50:44.706884Z"
+  },
+  "vega_lite": {
+   "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+   "title": "Phase breakdown of ALS trials",
+   "width": "container",
+   "data": {
+    "values": [
+     {
+      "citations": [
+       {
+        "nct_id": "NCT02405403",
+        "excerpt": "EARLY_PHASE1",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT02710110",
+        "excerpt": "EARLY_PHASE1",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT02710162",
+        "excerpt": "EARLY_PHASE1",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT02851914",
+        "excerpt": "EARLY_PHASE1",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT02969759",
+        "excerpt": "EARLY_PHASE1",
+        "field": "protocolSection.designModule.phases"
+       }
+      ],
+      "phase": "EARLY_PHASE1",
+      "trial_count": 21
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT00107770",
+        "excerpt": "PHASE1",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00140218",
+        "excerpt": "PHASE1",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00160004",
+        "excerpt": "PHASE1",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00563537",
+        "excerpt": "PHASE1",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00580593",
+        "excerpt": "PHASE1",
+        "field": "protocolSection.designModule.phases"
+       }
+      ],
+      "phase": "PHASE1",
+      "trial_count": 180
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT00004771",
+        "excerpt": "PHASE2",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00005674",
+        "excerpt": "PHASE2",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00005766",
+        "excerpt": "PHASE2",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00036413",
+        "excerpt": "PHASE2",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00070993",
+        "excerpt": "PHASE2",
+        "field": "protocolSection.designModule.phases"
+       }
+      ],
+      "phase": "PHASE2",
+      "trial_count": 282
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT00021697",
+        "excerpt": "PHASE3",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00035815",
+        "excerpt": "PHASE3",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00047723",
+        "excerpt": "PHASE3",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00069186",
+        "excerpt": "PHASE3",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00125203",
+        "excerpt": "PHASE3",
+        "field": "protocolSection.designModule.phases"
+       }
+      ],
+      "phase": "PHASE3",
+      "trial_count": 95
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT00542412",
+        "excerpt": "PHASE4",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00560287",
+        "excerpt": "PHASE4",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00613899",
+        "excerpt": "PHASE4",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT01811355",
+        "excerpt": "PHASE4",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT04997954",
+        "excerpt": "PHASE4",
+        "field": "protocolSection.designModule.phases"
+       }
+      ],
+      "phase": "PHASE4",
+      "trial_count": 8
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT00116558",
+        "excerpt": "NA",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00420719",
+        "excerpt": "NA",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00537446",
+        "excerpt": "NA",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00812851",
+        "excerpt": "NA",
+        "field": "protocolSection.designModule.phases"
+       },
+       {
+        "nct_id": "NCT00847847",
+        "excerpt": "NA",
+        "field": "protocolSection.designModule.phases"
+       }
+      ],
+      "phase": "NA",
+      "trial_count": 244
+     }
+    ]
+   },
+   "mark": "bar",
+   "encoding": {
+    "x": {
+     "field": "phase",
+     "type": "ordinal",
+     "title": "Phase",
+     "sort": [
+      "EARLY_PHASE1",
+      "PHASE1",
+      "PHASE2",
+      "PHASE3",
+      "PHASE4",
+      "NA"
+     ]
+    },
+    "y": {
+     "field": "trial_count",
+     "type": "quantitative",
+     "title": "Trials"
+    },
+    "tooltip": [
+     {
+      "field": "phase",
+      "type": "ordinal"
+     },
+     {
+      "field": "trial_count",
+      "type": "quantitative"
+     }
+    ]
+   }
+  }
+ },
+ "error": null,
+ "created_at": "2026-11-07T23:50:39.521686Z",
+ "updated_at": "2026-11-07T23:50:44.718956Z",
+ "_seconds": 6.0
+}

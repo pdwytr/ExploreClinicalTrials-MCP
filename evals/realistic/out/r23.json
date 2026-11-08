@@ -1,0 +1,1864 @@
+{
+ "task_id": "8976e3dd-f834-41a2-aa49-7e244dc7939e",
+ "status": "succeeded",
+ "progress": {
+  "stage": "done",
+  "message": "Saved 298 trials",
+  "trials_fetched": 298,
+  "trials_total": 298
+ },
+ "output_dir": "data/queries/8976e3dd-f834-41a2-aa49-7e244dc7939e",
+ "result": {
+  "visualization": {
+   "type": "time_series",
+   "intent": "change_over_time",
+   "title": "Phase 3 migraine trials started per year",
+   "encoding": {
+    "x": {
+     "field": "start_year",
+     "type": "temporal",
+     "title": "Start year",
+     "timeUnit": "utcyear"
+    },
+    "y": {
+     "field": "trial_count",
+     "type": "quantitative",
+     "title": "Trials"
+    }
+   },
+   "data": [
+    {
+     "citations": [
+      {
+       "nct_id": "NCT00897104",
+       "excerpt": "1995-08-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT00897949",
+       "excerpt": "1995-03-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT00898677",
+       "excerpt": "1995-09-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT00899379",
+       "excerpt": "1995-04-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT01286207",
+       "excerpt": "1995-03-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      }
+     ],
+     "start_year": "1995-01-01",
+     "trial_count": 5
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT01978496",
+       "excerpt": "1996-07-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT01986088",
+       "excerpt": "1996-11-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT01986270",
+       "excerpt": "1996-12-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      }
+     ],
+     "start_year": "1996-01-01",
+     "trial_count": 3
+    },
+    {
+     "citations": [],
+     "start_year": "1997-01-01",
+     "trial_count": 0
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT02183220",
+       "excerpt": "1998-10-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT02183688",
+       "excerpt": "1998-09-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      }
+     ],
+     "start_year": "1998-01-01",
+     "trial_count": 2
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT01989936",
+       "excerpt": "1999-01-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      }
+     ],
+     "start_year": "1999-01-01",
+     "trial_count": 1
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT00253175",
+       "excerpt": "2000-10-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT01859481",
+       "excerpt": "2000-03-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      }
+     ],
+     "start_year": "2000-01-01",
+     "trial_count": 2
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT00204074",
+       "excerpt": "2001-10-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT00231595",
+       "excerpt": "2001-03-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT00236509",
+       "excerpt": "2001-02-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT00236561",
+       "excerpt": "2001-04-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT00237302",
+       "excerpt": "2001-07-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      }
+     ],
+     "start_year": "2001-01-01",
+     "trial_count": 6
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT00617747",
+       "excerpt": "2002-09-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      }
+     ],
+     "start_year": "2002-01-01",
+     "trial_count": 1
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT00135122",
+       "excerpt": "2003-09-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT00195741",
+       "excerpt": "2003-05-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT00210483",
+       "excerpt": "2003-07-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT00210912",
+       "excerpt": "2003-09-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT00216606",
+       "excerpt": "2003-12-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      }
+     ],
+     "start_year": "2003-01-01",
+     "trial_count": 9
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT00092963",
+       "excerpt": "2004-08-17",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT00095004",
+       "excerpt": "2004-10-21",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT00131443",
+       "excerpt": "2004-02-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT00195754",
+       "excerpt": "2004-07-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT00210821",
+       "excerpt": "2004-02-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      }
+     ],
+     "start_year": "2004-01-01",
+     "trial_count": 13
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT00111709",
+       "excerpt": "2005-05-27",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT00111722",
+       "excerpt": "2005-05-27",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT00122278",
+       "excerpt": "2005-07-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT00195806",
+       "excerpt": "2005-02-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT00210535",
+       "excerpt": "2005-06-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      }
+     ],
+     "start_year": "2005-01-01",
+     "trial_count": 10
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT00156910",
+       "excerpt": "2006-02-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT00168428",
+       "excerpt": "2006-03-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT00250458",
+       "excerpt": "2006-03-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT00283738",
+       "excerpt": "2006-02-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT00300924",
+       "excerpt": "2006-03-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      }
+     ],
+     "start_year": "2006-01-01",
+     "trial_count": 15
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT00432237",
+       "excerpt": "2007-03-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT00442936",
+       "excerpt": "2007-02-15",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT00443209",
+       "excerpt": "2007-02-21",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT00447369",
+       "excerpt": "2007-05-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT00471952",
+       "excerpt": "2007-04-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      }
+     ],
+     "start_year": "2007-01-01",
+     "trial_count": 10
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT00483704",
+       "excerpt": "2008-08-14",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT00573170",
+       "excerpt": "2008-02-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT00623636",
+       "excerpt": "2008-07-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT00660192",
+       "excerpt": "2008-01-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT00662818",
+       "excerpt": "2008-03-17",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      }
+     ],
+     "start_year": "2008-01-01",
+     "trial_count": 8
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT00557544",
+       "excerpt": "2009-06-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT00724815",
+       "excerpt": "2009-01-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT00792103",
+       "excerpt": "2009-01-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT00806546",
+       "excerpt": "2009-02-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT00812006",
+       "excerpt": "2009-03-24",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      }
+     ],
+     "start_year": "2009-01-01",
+     "trial_count": 12
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT01016678",
+       "excerpt": "2010-03-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT01125774",
+       "excerpt": "2010-06-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT01151787",
+       "excerpt": "2010-07-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT01172405",
+       "excerpt": "2010-10-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT01357031",
+       "excerpt": "2010-05-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      }
+     ],
+     "start_year": "2010-01-01",
+     "trial_count": 6
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT01228552",
+       "excerpt": "2011-12-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT01390324",
+       "excerpt": "2011-12-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT01462812",
+       "excerpt": "2011-01-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      }
+     ],
+     "start_year": "2011-01-01",
+     "trial_count": 3
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT01426971",
+       "excerpt": "2012-12-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT01509326",
+       "excerpt": "2012-01-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT01581281",
+       "excerpt": "2012-06-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT01604785",
+       "excerpt": "2012-11-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT01662492",
+       "excerpt": "2012-10-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      }
+     ],
+     "start_year": "2012-01-01",
+     "trial_count": 10
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT01814189",
+       "excerpt": "2013-01-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT01973205",
+       "excerpt": "2013-10-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT02122237",
+       "excerpt": "2013-09-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      }
+     ],
+     "start_year": "2013-01-01",
+     "trial_count": 3
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT01726920",
+       "excerpt": "2014-07-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT02279082",
+       "excerpt": "2014-09-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT02291380",
+       "excerpt": "2014-09-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT02447991",
+       "excerpt": "2014-12-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      }
+     ],
+     "start_year": "2014-01-01",
+     "trial_count": 4
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT02322333",
+       "excerpt": "2015-03-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT02358681",
+       "excerpt": "2015-06-16",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT02439320",
+       "excerpt": "2015-04-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT02456740",
+       "excerpt": "2015-07-17",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT02483585",
+       "excerpt": "2015-07-20",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      }
+     ],
+     "start_year": "2015-01-01",
+     "trial_count": 13
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT02593097",
+       "excerpt": "2016-02-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT02605174",
+       "excerpt": "2016-05-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT02621931",
+       "excerpt": "2016-03-22",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT02629536",
+       "excerpt": "2016-03-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT02629861",
+       "excerpt": "2016-03-23",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      }
+     ],
+     "start_year": "2016-01-01",
+     "trial_count": 17
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT02933060",
+       "excerpt": "2017-01-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT02959190",
+       "excerpt": "2017-02-07",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT03022838",
+       "excerpt": "2017-02-28",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT03096834",
+       "excerpt": "2017-03-20",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT03185143",
+       "excerpt": "2017-06-27",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      }
+     ],
+     "start_year": "2017-01-01",
+     "trial_count": 18
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT03193359",
+       "excerpt": "2018-01-15",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT03333109",
+       "excerpt": "2018-02-08",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT03432286",
+       "excerpt": "2018-03-14",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT03461757",
+       "excerpt": "2018-02-27",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT03557333",
+       "excerpt": "2018-07-13",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      }
+     ],
+     "start_year": "2018-01-01",
+     "trial_count": 11
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT03526874",
+       "excerpt": "2019-04-03",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT03670810",
+       "excerpt": "2019-06-24",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT03812224",
+       "excerpt": "2019-04-12",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT03832998",
+       "excerpt": "2019-09-05",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT03836040",
+       "excerpt": "2019-07-19",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      }
+     ],
+     "start_year": "2019-01-01",
+     "trial_count": 21
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT02582996",
+       "excerpt": "2020-04-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT02706015",
+       "excerpt": "2020-10-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT04218162",
+       "excerpt": "2020-03-24",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT04355117",
+       "excerpt": "2020-06-17",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT04396236",
+       "excerpt": "2020-06-15",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      }
+     ],
+     "start_year": "2020-01-01",
+     "trial_count": 17
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT04151472",
+       "excerpt": "2021-12-08",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT04649242",
+       "excerpt": "2021-01-15",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT04686136",
+       "excerpt": "2021-02-19",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT04726592",
+       "excerpt": "2021-07-08",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT04740827",
+       "excerpt": "2021-03-05",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      }
+     ],
+     "start_year": "2021-01-01",
+     "trial_count": 17
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT04384367",
+       "excerpt": "2022-12-30",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT04989413",
+       "excerpt": "2022-10-18",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT05102591",
+       "excerpt": "2022-02-22",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT05125302",
+       "excerpt": "2022-01-13",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT05127954",
+       "excerpt": "2022-01-14",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      }
+     ],
+     "start_year": "2022-01-01",
+     "trial_count": 18
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT05416476",
+       "excerpt": "2023-10-30",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT05484349",
+       "excerpt": "2023-06-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT05598723",
+       "excerpt": "2023-02-24",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT05641363",
+       "excerpt": "2023-06-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT05707949",
+       "excerpt": "2023-06-05",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      }
+     ],
+     "start_year": "2023-01-01",
+     "trial_count": 14
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT06241313",
+       "excerpt": "2024-03-25",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT06243692",
+       "excerpt": "2024-02-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT06347497",
+       "excerpt": "2024-04-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT06361446",
+       "excerpt": "2024-03-29",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT06417775",
+       "excerpt": "2024-09-10",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      }
+     ],
+     "start_year": "2024-01-01",
+     "trial_count": 6
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT02725554",
+       "excerpt": "2025-05-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT06103734",
+       "excerpt": "2025-09-15",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT06428838",
+       "excerpt": "2025-05-05",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT06641466",
+       "excerpt": "2025-03-11",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT06806293",
+       "excerpt": "2025-02-10",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      }
+     ],
+     "start_year": "2025-01-01",
+     "trial_count": 13
+    },
+    {
+     "citations": [
+      {
+       "nct_id": "NCT07191145",
+       "excerpt": "2026-11-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT07629635",
+       "excerpt": "2026-10-15",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT07645924",
+       "excerpt": "2026-07-01",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT07674654",
+       "excerpt": "2026-08-03",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      },
+      {
+       "nct_id": "NCT07729462",
+       "excerpt": "2026-08-26",
+       "field": "protocolSection.statusModule.startDateStruct.date"
+      }
+     ],
+     "start_year": "2026-01-01",
+     "trial_count": 9
+    }
+   ]
+  },
+  "meta": {
+   "source": "clinicaltrials.gov",
+   "interpretation": "Phase 3 migraine trials; the chart will show how many trials started each year.",
+   "filters_applied": {
+    "steps": [
+     {
+      "label": "Migraine phase 3",
+      "endpoint": "studies",
+      "params": {
+       "query.cond": "\"migraine\"",
+       "filter.advanced": "AREA[Phase]PHASE3"
+      }
+     }
+    ]
+   },
+   "assumptions": [
+    "Counts are distinct trials."
+   ],
+   "warnings": [
+    "2026 is partial: data as of 2026-11-06."
+   ],
+   "total_trials_matched": 298,
+   "trials_analyzed": 298,
+   "units": {
+    "trial_count": "trials"
+   },
+   "data_as_of": "2026-11-06T10:00:05",
+   "api_version": "2.0.5",
+   "chain": [
+    {
+     "fetch": 1,
+     "rationale": "Phase 3 migraine trials; the chart will show how many trials started each year.",
+     "searches": [
+      {
+       "label": "Migraine phase 3",
+       "endpoint": "studies",
+       "params": {
+        "query.cond": "\"migraine\"",
+        "filter.advanced": "AREA[Phase]PHASE3"
+       }
+      }
+     ],
+     "status": "ok",
+     "total_trials_matched": 298,
+     "error": null,
+     "charted": true,
+     "output_dir": "fetch-1"
+    }
+   ],
+   "metrics": {
+    "seconds_total": 4.53,
+    "seconds_model": 3.99,
+    "seconds_fetching": 0.54,
+    "seconds_building": 0.0,
+    "model_turns": 4,
+    "input_tokens": 22326,
+    "output_tokens": 154,
+    "tool_calls": {
+     "fetch_data": 1,
+     "describe_data": 1,
+     "load_skill": 1,
+     "final_result_ChartPlan": 1
+    },
+    "sent_back": 0,
+    "fetches": 1,
+    "failed_fetches": 0
+   },
+   "generated_at": "2026-11-07T23:51:15.578665Z"
+  },
+  "vega_lite": {
+   "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+   "title": "Phase 3 migraine trials started per year",
+   "width": "container",
+   "data": {
+    "values": [
+     {
+      "citations": [
+       {
+        "nct_id": "NCT00897104",
+        "excerpt": "1995-08-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT00897949",
+        "excerpt": "1995-03-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT00898677",
+        "excerpt": "1995-09-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT00899379",
+        "excerpt": "1995-04-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT01286207",
+        "excerpt": "1995-03-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       }
+      ],
+      "start_year": "1995-01-01",
+      "trial_count": 5
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT01978496",
+        "excerpt": "1996-07-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT01986088",
+        "excerpt": "1996-11-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT01986270",
+        "excerpt": "1996-12-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       }
+      ],
+      "start_year": "1996-01-01",
+      "trial_count": 3
+     },
+     {
+      "citations": [],
+      "start_year": "1997-01-01",
+      "trial_count": 0
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT02183220",
+        "excerpt": "1998-10-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT02183688",
+        "excerpt": "1998-09-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       }
+      ],
+      "start_year": "1998-01-01",
+      "trial_count": 2
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT01989936",
+        "excerpt": "1999-01-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       }
+      ],
+      "start_year": "1999-01-01",
+      "trial_count": 1
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT00253175",
+        "excerpt": "2000-10-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT01859481",
+        "excerpt": "2000-03-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       }
+      ],
+      "start_year": "2000-01-01",
+      "trial_count": 2
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT00204074",
+        "excerpt": "2001-10-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT00231595",
+        "excerpt": "2001-03-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT00236509",
+        "excerpt": "2001-02-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT00236561",
+        "excerpt": "2001-04-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT00237302",
+        "excerpt": "2001-07-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       }
+      ],
+      "start_year": "2001-01-01",
+      "trial_count": 6
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT00617747",
+        "excerpt": "2002-09-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       }
+      ],
+      "start_year": "2002-01-01",
+      "trial_count": 1
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT00135122",
+        "excerpt": "2003-09-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT00195741",
+        "excerpt": "2003-05-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT00210483",
+        "excerpt": "2003-07-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT00210912",
+        "excerpt": "2003-09-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT00216606",
+        "excerpt": "2003-12-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       }
+      ],
+      "start_year": "2003-01-01",
+      "trial_count": 9
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT00092963",
+        "excerpt": "2004-08-17",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT00095004",
+        "excerpt": "2004-10-21",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT00131443",
+        "excerpt": "2004-02-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT00195754",
+        "excerpt": "2004-07-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT00210821",
+        "excerpt": "2004-02-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       }
+      ],
+      "start_year": "2004-01-01",
+      "trial_count": 13
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT00111709",
+        "excerpt": "2005-05-27",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT00111722",
+        "excerpt": "2005-05-27",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT00122278",
+        "excerpt": "2005-07-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT00195806",
+        "excerpt": "2005-02-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT00210535",
+        "excerpt": "2005-06-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       }
+      ],
+      "start_year": "2005-01-01",
+      "trial_count": 10
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT00156910",
+        "excerpt": "2006-02-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT00168428",
+        "excerpt": "2006-03-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT00250458",
+        "excerpt": "2006-03-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT00283738",
+        "excerpt": "2006-02-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT00300924",
+        "excerpt": "2006-03-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       }
+      ],
+      "start_year": "2006-01-01",
+      "trial_count": 15
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT00432237",
+        "excerpt": "2007-03-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT00442936",
+        "excerpt": "2007-02-15",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT00443209",
+        "excerpt": "2007-02-21",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT00447369",
+        "excerpt": "2007-05-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT00471952",
+        "excerpt": "2007-04-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       }
+      ],
+      "start_year": "2007-01-01",
+      "trial_count": 10
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT00483704",
+        "excerpt": "2008-08-14",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT00573170",
+        "excerpt": "2008-02-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT00623636",
+        "excerpt": "2008-07-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT00660192",
+        "excerpt": "2008-01-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT00662818",
+        "excerpt": "2008-03-17",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       }
+      ],
+      "start_year": "2008-01-01",
+      "trial_count": 8
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT00557544",
+        "excerpt": "2009-06-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT00724815",
+        "excerpt": "2009-01-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT00792103",
+        "excerpt": "2009-01-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT00806546",
+        "excerpt": "2009-02-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT00812006",
+        "excerpt": "2009-03-24",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       }
+      ],
+      "start_year": "2009-01-01",
+      "trial_count": 12
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT01016678",
+        "excerpt": "2010-03-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT01125774",
+        "excerpt": "2010-06-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT01151787",
+        "excerpt": "2010-07-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT01172405",
+        "excerpt": "2010-10-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT01357031",
+        "excerpt": "2010-05-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       }
+      ],
+      "start_year": "2010-01-01",
+      "trial_count": 6
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT01228552",
+        "excerpt": "2011-12-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT01390324",
+        "excerpt": "2011-12-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT01462812",
+        "excerpt": "2011-01-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       }
+      ],
+      "start_year": "2011-01-01",
+      "trial_count": 3
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT01426971",
+        "excerpt": "2012-12-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT01509326",
+        "excerpt": "2012-01-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT01581281",
+        "excerpt": "2012-06-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT01604785",
+        "excerpt": "2012-11-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT01662492",
+        "excerpt": "2012-10-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       }
+      ],
+      "start_year": "2012-01-01",
+      "trial_count": 10
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT01814189",
+        "excerpt": "2013-01-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT01973205",
+        "excerpt": "2013-10-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT02122237",
+        "excerpt": "2013-09-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       }
+      ],
+      "start_year": "2013-01-01",
+      "trial_count": 3
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT01726920",
+        "excerpt": "2014-07-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT02279082",
+        "excerpt": "2014-09-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT02291380",
+        "excerpt": "2014-09-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT02447991",
+        "excerpt": "2014-12-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       }
+      ],
+      "start_year": "2014-01-01",
+      "trial_count": 4
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT02322333",
+        "excerpt": "2015-03-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT02358681",
+        "excerpt": "2015-06-16",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT02439320",
+        "excerpt": "2015-04-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT02456740",
+        "excerpt": "2015-07-17",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT02483585",
+        "excerpt": "2015-07-20",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       }
+      ],
+      "start_year": "2015-01-01",
+      "trial_count": 13
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT02593097",
+        "excerpt": "2016-02-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT02605174",
+        "excerpt": "2016-05-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT02621931",
+        "excerpt": "2016-03-22",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT02629536",
+        "excerpt": "2016-03-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT02629861",
+        "excerpt": "2016-03-23",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       }
+      ],
+      "start_year": "2016-01-01",
+      "trial_count": 17
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT02933060",
+        "excerpt": "2017-01-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT02959190",
+        "excerpt": "2017-02-07",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT03022838",
+        "excerpt": "2017-02-28",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT03096834",
+        "excerpt": "2017-03-20",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT03185143",
+        "excerpt": "2017-06-27",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       }
+      ],
+      "start_year": "2017-01-01",
+      "trial_count": 18
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT03193359",
+        "excerpt": "2018-01-15",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT03333109",
+        "excerpt": "2018-02-08",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT03432286",
+        "excerpt": "2018-03-14",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT03461757",
+        "excerpt": "2018-02-27",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT03557333",
+        "excerpt": "2018-07-13",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       }
+      ],
+      "start_year": "2018-01-01",
+      "trial_count": 11
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT03526874",
+        "excerpt": "2019-04-03",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT03670810",
+        "excerpt": "2019-06-24",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT03812224",
+        "excerpt": "2019-04-12",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT03832998",
+        "excerpt": "2019-09-05",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT03836040",
+        "excerpt": "2019-07-19",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       }
+      ],
+      "start_year": "2019-01-01",
+      "trial_count": 21
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT02582996",
+        "excerpt": "2020-04-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT02706015",
+        "excerpt": "2020-10-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT04218162",
+        "excerpt": "2020-03-24",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT04355117",
+        "excerpt": "2020-06-17",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT04396236",
+        "excerpt": "2020-06-15",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       }
+      ],
+      "start_year": "2020-01-01",
+      "trial_count": 17
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT04151472",
+        "excerpt": "2021-12-08",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT04649242",
+        "excerpt": "2021-01-15",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT04686136",
+        "excerpt": "2021-02-19",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT04726592",
+        "excerpt": "2021-07-08",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT04740827",
+        "excerpt": "2021-03-05",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       }
+      ],
+      "start_year": "2021-01-01",
+      "trial_count": 17
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT04384367",
+        "excerpt": "2022-12-30",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT04989413",
+        "excerpt": "2022-10-18",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT05102591",
+        "excerpt": "2022-02-22",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT05125302",
+        "excerpt": "2022-01-13",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT05127954",
+        "excerpt": "2022-01-14",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       }
+      ],
+      "start_year": "2022-01-01",
+      "trial_count": 18
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT05416476",
+        "excerpt": "2023-10-30",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT05484349",
+        "excerpt": "2023-06-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT05598723",
+        "excerpt": "2023-02-24",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT05641363",
+        "excerpt": "2023-06-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT05707949",
+        "excerpt": "2023-06-05",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       }
+      ],
+      "start_year": "2023-01-01",
+      "trial_count": 14
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT06241313",
+        "excerpt": "2024-03-25",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT06243692",
+        "excerpt": "2024-02-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT06347497",
+        "excerpt": "2024-04-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT06361446",
+        "excerpt": "2024-03-29",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT06417775",
+        "excerpt": "2024-09-10",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       }
+      ],
+      "start_year": "2024-01-01",
+      "trial_count": 6
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT02725554",
+        "excerpt": "2025-05-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT06103734",
+        "excerpt": "2025-09-15",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT06428838",
+        "excerpt": "2025-05-05",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT06641466",
+        "excerpt": "2025-03-11",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT06806293",
+        "excerpt": "2025-02-10",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       }
+      ],
+      "start_year": "2025-01-01",
+      "trial_count": 13
+     },
+     {
+      "citations": [
+       {
+        "nct_id": "NCT07191145",
+        "excerpt": "2026-11-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT07629635",
+        "excerpt": "2026-10-15",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT07645924",
+        "excerpt": "2026-07-01",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT07674654",
+        "excerpt": "2026-08-03",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       },
+       {
+        "nct_id": "NCT07729462",
+        "excerpt": "2026-08-26",
+        "field": "protocolSection.statusModule.startDateStruct.date"
+       }
+      ],
+      "start_year": "2026-01-01",
+      "trial_count": 9
+     }
+    ]
+   },
+   "mark": {
+    "type": "line",
+    "point": true
+   },
+   "encoding": {
+    "x": {
+     "field": "start_year",
+     "type": "temporal",
+     "title": "Start year",
+     "timeUnit": "utcyear"
+    },
+    "y": {
+     "field": "trial_count",
+     "type": "quantitative",
+     "title": "Trials"
+    },
+    "tooltip": [
+     {
+      "field": "start_year",
+      "type": "temporal"
+     },
+     {
+      "field": "trial_count",
+      "type": "quantitative"
+     }
+    ]
+   }
+  }
+ },
+ "error": null,
+ "created_at": "2026-11-07T23:51:11.046016Z",
+ "updated_at": "2026-11-07T23:51:15.586785Z",
+ "_seconds": 6.0
+}

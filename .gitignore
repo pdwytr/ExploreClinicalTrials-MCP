@@ -16,4 +16,6 @@ data/
 
 # OS
 .DS_Store
+evals/results/
 evals/report.json
+evals/__pycache__/
