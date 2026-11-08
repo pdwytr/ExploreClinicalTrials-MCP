@@ -382,24 +382,38 @@ _live_cache: dict[str, dict] = {}
 
 
 def check_citations_live(case, status) -> list[str]:
-    """A sample of citations against the live registry record: is the quoted text really there?"""
+    """A sample of citations against the live registry record: is the quoted text really there?
+    A cited trial the registry does not have (404) is wrong; a registry that cannot be reached
+    (throttling, network) says nothing about the answer, so those citations are left unchecked."""
     if not answered(status):
         return []
     sample = [c for r in rows(status["result"]["visualization"])[:3] for c in r.get("citations", [])[:2]]
-    problems = []
-    for c in sample[:LIVE_CITATION_SAMPLE]:
+    sample = sample[:LIVE_CITATION_SAMPLE]
+    wrong, unreachable = [], 0
+    for c in sample:
         if c["nct_id"] not in _live_cache:
             try:
                 _live_cache[c["nct_id"]] = http_json(f"{CTGOV}/{c['nct_id']}")
-            except (urllib.error.URLError, TimeoutError, ValueError) as exc:  # missing trial, network
-                _live_cache[c["nct_id"]] = {"_error": str(exc)}
+            except urllib.error.HTTPError as exc:
+                _live_cache[c["nct_id"]] = {"_missing" if exc.code == 404 else "_unreachable": str(exc)}
+            except (urllib.error.URLError, TimeoutError, ValueError) as exc:  # network
+                _live_cache[c["nct_id"]] = {"_unreachable": str(exc)}
         record = _live_cache[c["nct_id"]]
+        if "_unreachable" in record:
+            unreachable += 1
+            continue
+        if "_missing" in record:
+            wrong.append(f"{c['nct_id']}: not in the registry")
+            continue
         value = record
         for part in c["field"].split("."):
             value = [v.get(part) for v in value if isinstance(v, dict)] if isinstance(value, list) else (value or {}).get(part)
         if c["excerpt"].lower() not in json.dumps(value, ensure_ascii=False).lower():
-            problems.append(f"{c['nct_id']}: {c['excerpt']!r} is not in {c['field']}")
-    return [f"{len(problems)}/{min(len(sample), LIVE_CITATION_SAMPLE)} live citations wrong: " + "; ".join(problems[:2])] if problems else []
+            wrong.append(f"{c['nct_id']}: {c['excerpt']!r} is not in {c['field']}")
+    problems = [f"{len(wrong)}/{len(sample) - unreachable} live citations wrong: " + "; ".join(wrong[:2])] if wrong else []
+    if sample and unreachable == len(sample):
+        problems.append("could not check any citation: the registry was unreachable (rerun to retry)")
+    return problems
 
 
 def check_recount(case, status) -> list[str]:
