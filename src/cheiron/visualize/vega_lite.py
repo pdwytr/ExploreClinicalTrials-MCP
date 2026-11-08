@@ -24,7 +24,9 @@ MARKS: dict[str, Any] = {
 def _channel(channel: Channel, guide: str | None = "axis") -> dict[str, Any]:
     """A Vega-Lite channel. `labels` is ours, not Vega-Lite's: it becomes a labelExpr on the
     channel's axis or legend, so the chart shows display names while the data keeps the codes."""
-    spec = channel.model_dump(by_alias=True, exclude_none=True, mode="json", exclude={"labels"})
+    spec = channel.model_dump(by_alias=True, exclude_none=True, mode="json", exclude={"labels", "scale"})
+    if channel.scale:
+        spec["scale"] = {"type": channel.scale}
     if channel.labels and guide:  # xOffset has no axis or legend of its own
         lookup = json.dumps(channel.labels, ensure_ascii=False)
         spec[guide] = {"labelExpr": f"{lookup}[datum.label] || datum.label"}

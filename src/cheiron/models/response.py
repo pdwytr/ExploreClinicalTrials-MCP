@@ -112,6 +112,9 @@ class Channel(_VegaLiteNames):
     bin: bool | Literal["binned"] | None = Field(
         default=None, description="'binned' = rows are already bins; give the bin end in encoding.x2."
     )
+    scale: Literal["linear", "log"] | None = Field(
+        default=None, description="Axis scale for a quantitative field; 'log' for heavily skewed values (enrollment)."
+    )
     labels: dict[str, str] | None = Field(
         default=None,
         description="Display name for each coded value in this field (e.g. PHASE1 -> 'Phase 1'). "

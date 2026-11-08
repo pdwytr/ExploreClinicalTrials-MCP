@@ -49,6 +49,7 @@
   #citations ul { list-style: none; padding: 0; margin: 8px 0 0; max-height: 420px; overflow: auto; }
   #citations li { border-top: 1px solid var(--line); padding: 6px 0; font-size: 13px; }
   #citations a { color: var(--accent); font-weight: 600; }
+  #citations .trial-title { color: var(--text); margin: 2px 0; }
   .hidden { display: none !important; }
   label.file { display: inline-block; margin: 0; font-size: 14px; color: var(--accent); cursor: pointer; }
   label.file input { display: none; }
@@ -258,7 +259,7 @@ async function render(result) {
     const view = await vegaEmbed("#chart", result.vega_lite, { actions: { export: true, source: false, compiled: false, editor: true } });
     view.view.addEventListener("click", (_event, item) => {
       const datum = item && item.datum;
-      if (datum && datum.citations) showCitations(labelFor(datum, result.visualization.encoding), datum.citations);
+      if (datum && datum.citations) showCitations(labelFor(datum, result.visualization.encoding), datum.citations, datum.trial_count ?? 1);
     });
   }
 }
@@ -270,28 +271,41 @@ function labelFor(datum, encoding) {
     .map((c) => {
       let v = datum[c.field];
       if (c.type === "temporal" && v != null) v = String(v).slice(0, 10);
+      if (c.labels && c.labels[v]) v = c.labels[v];  // display name for a coded value
       return `${c.title || c.field}: ${v}`;
     })
     .join(" · ");
 }
 
-function showCitations(title, citations) {
+// One entry per cited trial: its title and every value quoted from it (an edge or a scatter
+// point quotes several). `total` is how many trials the data point counts (citations sample it).
+function showCitations(title, citations, total) {
   $("citations").classList.remove("hidden");
-  $("cite-title").textContent = `${title} (${citations.length} trial${citations.length === 1 ? "" : "s"})`;
+  const byTrial = new Map();
+  for (const c of citations) {
+    if (!byTrial.has(c.nct_id)) byTrial.set(c.nct_id, { title: c.title, quotes: [] });
+    byTrial.get(c.nct_id).quotes.push(c);
+  }
+  const shown = byTrial.size;
+  const all = Math.max(total || 0, shown);
+  $("cite-title").textContent = `${title} (${shown === all ? "" : `${shown} of `}${all.toLocaleString()} trial${all === 1 ? "" : "s"}${shown === all ? "" : " shown"})`;
   const list = $("cite-list");
   list.replaceChildren();
   if (!citations.length) {
     list.append(Object.assign(document.createElement("li"), { textContent: "No trial-level sources for this value (registry-wide statistic)." }));
   }
-  for (const c of citations) {
+  for (const [nct, { title: trialTitle, quotes }] of byTrial) {
     const li = document.createElement("li");
     const a = Object.assign(document.createElement("a"), {
-      href: `https://clinicaltrials.gov/study/${c.nct_id}`, target: "_blank", rel: "noopener", textContent: c.nct_id,
+      href: `https://clinicaltrials.gov/study/${nct}`, target: "_blank", rel: "noopener", textContent: nct,
     });
-    li.append(a, ` — ${c.excerpt}`);
-    if (c.field) {
-      const code = Object.assign(document.createElement("code"), { textContent: c.field });
-      li.append(document.createElement("br"), code);
+    li.append(a);
+    if (trialTitle) li.append(Object.assign(document.createElement("div"), { className: "trial-title", textContent: trialTitle }));
+    for (const q of quotes) {
+      const line = document.createElement("div");
+      line.append(`“${q.excerpt}”`);
+      if (q.field) line.append(" ", Object.assign(document.createElement("code"), { textContent: q.field }));
+      li.append(line);
     }
     list.append(li);
   }
@@ -361,8 +375,15 @@ function renderMeta(meta, viz) {
   add("What was computed", meta.interpretation);
   add("Trials", `${meta.trials_analyzed.toLocaleString()} analyzed of ${meta.total_trials_matched.toLocaleString()} matched`);
   add("Chart", `${viz.type.replaceAll("_", " ")} · ${viz.intent.replaceAll("_", " ")}`);
+  const yours = Object.entries(meta.request_filters || {});
+  if (yours.length) {
+    const ul = document.createElement("ul");
+    ul.style.cssText = "margin:0;padding-left:18px";
+    for (const [k, v] of yours) ul.append(Object.assign(document.createElement("li"), { textContent: `${k}: ${Array.isArray(v) ? v.join(", ") : v}` }));
+    add("Your filters", ul);
+  }
   const filters = renderFilters(meta.filters_applied || {});
-  if (filters) add("Filters applied", filters);
+  if (filters) add("Searches run", filters);
   if ((meta.assumptions || []).length) {
     const ul = document.createElement("ul");
     ul.style.cssText = "margin:0;padding-left:18px";
@@ -463,14 +484,14 @@ function renderNetwork(viz) {
       "stroke-width": 0.8 + 5 * ((e.weight || 1) / maxWeight) });
     line.style.cursor = "pointer";
     tooltip(line, `${p.n.label} — ${q.n.label}: ${e.weight} trial${e.weight === 1 ? "" : "s"}`);
-    line.addEventListener("click", () => showCitations(`${p.n.label} — ${q.n.label}`, e.citations || []));
+    line.addEventListener("click", () => showCitations(`${p.n.label} — ${q.n.label}`, e.citations || [], e.weight));
   }
   for (const p of [...pts].sort((a, b) => a.r - b.r)) { // big nodes on top
     const g = el("g", {});
     g.style.cursor = "pointer";
     el("circle", { cx: p.x, cy: p.y, r: p.r, fill: color(p.n.group), stroke: "#fff", "stroke-width": 1.5 }, g);
     tooltip(g, `${labelOf(p)}${p.n.size != null ? `: ${p.n.size} trial${p.n.size === 1 ? "" : "s"}` : ""}`);
-    g.addEventListener("click", () => showCitations(p.n.label, p.n.citations || []));
+    g.addEventListener("click", () => showCitations(p.n.label, p.n.citations || [], p.n.size));
   }
   // Labels for the 12 largest nodes: try right, left, above, below; keep the spot that overlaps
   // other labels and nodes least.
@@ -498,7 +519,7 @@ function renderNetwork(viz) {
     t.textContent = text;
     t.style.cursor = "pointer";
     tooltip(t, labelOf(p));
-    t.addEventListener("click", () => showCitations(p.n.label, p.n.citations || []));
+    t.addEventListener("click", () => showCitations(p.n.label, p.n.citations || [], p.n.size));
   }
   $("network").replaceChildren(svg);
 }

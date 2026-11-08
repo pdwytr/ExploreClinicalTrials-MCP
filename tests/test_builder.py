@@ -345,7 +345,8 @@ def test_scatter_plots_one_cited_point_per_trial():
     assert [(r.enrollment, r.duration_months, r.nct_ids) for r in viz.data] == [(100, 12.0, ["NCT00000001"]), (900, 48.0, ["NCT00000002"])]
     assert {c.excerpt for c in viz.data[0].citations} == {"100", "2020-01", "2021-01"}  # both values, exactly as written
     assert "1 trial without both values is left out" in warnings[0]
-    assert as_response(viz).vega_lite["mark"] == "point"
+    spec = as_response(viz).vega_lite
+    assert spec["mark"] == "point" and spec["encoding"]["x"]["scale"] == {"type": "log"}  # enrollment is skewed
 
 
 def test_scatter_needs_two_numeric_axes_and_numbers_stay_out_of_other_charts():

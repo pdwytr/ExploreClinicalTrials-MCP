@@ -339,7 +339,7 @@ _NUMBER: dict[Dimension, Callable[[Trial], float | None]] = {
     Dimension.ENROLLMENT: lambda t: t.enrollment,
     Dimension.DURATION: lambda t: t.duration_months,
 }
-_AXIS_TITLES = {Dimension.ENROLLMENT: "Enrollment (participants)", Dimension.DURATION: "Duration (months, start to primary completion)"}
+_AXIS_TITLES = {Dimension.ENROLLMENT: "Enrollment (participants, log scale)", Dimension.DURATION: "Duration (months, start to primary completion)"}
 
 
 def _number_citations(dim: Dimension, t: Trial) -> list[Citation]:
@@ -388,10 +388,13 @@ def _scatter(pairs: list[Pair], plan: ChartPlan) -> tuple[ChartVisualization, li
             row[plan.series.value] = s
         row["citations"] = _number_citations(plan.x, t) + _number_citations(plan.y, t)
         rows.append(row)
-    encoding = {
-        "x": {"field": plan.x.value, "type": "quantitative", "title": _AXIS_TITLES[plan.x]},
-        "y": {"field": plan.y.value, "type": "quantitative", "title": _AXIS_TITLES[plan.y]},
-    }
+    def axis(dim: Dimension) -> dict:
+        # enrollment spans 1 to tens of millions (registries): on a linear axis every trial is a dot at 0
+        return {"field": dim.value, "type": "quantitative", "title": _AXIS_TITLES[dim]} | (
+            {"scale": "log"} if dim is Dimension.ENROLLMENT else {}
+        )
+
+    encoding = {"x": axis(plan.x), "y": axis(plan.y)}
     if plan.series:
         encoding["color"] = _channel(plan.series)
     viz = ChartVisualization(type="scatter_plot", intent=plan.intent, title=plan.title, encoding=encoding, data=rows)
