@@ -177,16 +177,21 @@ async def load_skill(ctx: RunContext[RunState], name: str) -> str:
     return skill_body(name)
 
 
-async def read_reference(ctx: RunContext[RunState], path: str) -> str:
-    """Read one reference file of the ctgov-search skill, e.g. 'references/enums.md' or
-    'references/data-structure/protocol.design.md'. Only when the skill's references table
-    (or the data-structure index) says you need it."""
-    root = SKILLS_DIR / SEARCH_SKILL
+async def read_reference(ctx: RunContext[RunState], path: str, skill: str = SEARCH_SKILL) -> str:
+    """Read one reference file of a skill, e.g. 'references/enums.md' (ctgov-search, the default) or
+    skill='chart-planning', path='references/networks.md'. Only when that skill's references table
+    says you need it."""
+    skills = sorted(p.parent.name for p in SKILLS_DIR.glob("*/SKILL.md"))
+    if skill not in skills:
+        raise ModelRetry(f"Unknown skill {skill!r}. Available: {', '.join(skills)}")
+    root = SKILLS_DIR / skill
     available = sorted(p.relative_to(root).as_posix() for p in (root / "references").rglob("*.md"))
     if path not in available:
-        top_level = [a for a in available if a.count("/") == 1] + ["references/data-structure/index.md"]
-        raise ModelRetry(f"Unknown reference {path!r}. Start from: {', '.join(top_level)}")
-    ctx.deps.references_read.append(path)
+        top_level = [a for a in available if a.count("/") == 1]
+        if skill == SEARCH_SKILL:
+            top_level.append("references/data-structure/index.md")
+        raise ModelRetry(f"Unknown reference {path!r} in {skill}. Start from: {', '.join(top_level)}")
+    ctx.deps.references_read.append(path if skill == SEARCH_SKILL else f"{skill}/{path}")
     return (root / path).read_text()
 
 

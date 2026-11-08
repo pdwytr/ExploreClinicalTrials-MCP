@@ -1,23 +1,53 @@
 ---
 name: chart-planning
-description: Chooses the chart that answers a clinical-trials question from a profile of the fetched data - chart type, which field goes on x and on the series, how many categories to show, and a title. Use after data has been fetched and described, to write the ChartPlan that code turns into a visualization.
+description: >-
+  Use this skill when the data for a clinical-trials question has been fetched and profiled with
+  describe_data and you must choose the chart that answers it: the chart type, the field on x and on
+  the series, how many categories to keep, and a title, written as the ChartPlan that code turns into
+  a visualization. Use it for trends over time, rankings, distributions, comparisons between drugs,
+  conditions or sponsors, geography, and relationships between sponsors, drugs and conditions, even
+  when the question never says "chart" or "plot".
 metadata:
-  answers: one visualization per question
+  version: "2"
+  output: "ChartPlan: one visualization per question"
 ---
 
 # Choosing the chart
 
-You see a **profile** of the fetched data (from `describe_data`), never the records.
-Code draws the chart from your plan: it counts **distinct trials** per value and attaches
-citations. You never compute or write numbers, including in the title.
+You see a **profile** of the fetched data, never the records. Code draws the chart from your plan:
+it counts **distinct trials** per value and attaches citations. You never compute or write numbers,
+including in the title. Code checks every plan against the profile; a plan that does not fit comes
+back with the reason, so fix the plan and answer again.
 
-## Read the profile first
+## Procedure
 
-For each field: `distinct` values, `missing` trials, `top_values` (with trial counts),
-`multi_valued` (a trial can have several values), `missing_by_group` per comparison side,
-and for enrollment `numeric` min/median/max. `group_sizes` lists the comparison sides.
-Pick fields the question is about **and** the data supports: a field missing for most
-trials gives a misleading chart (code warns above 10% missing, refuses at 100%).
+1. **Read the profile.** Per field: `distinct` values, `missing` trials, `top_values` (with trial
+   counts), `multi_valued` (a trial can have several values), `missing_by_group` per comparison side,
+   and for enrollment `numeric` min/median/max. `group_sizes` lists the comparison sides; fields
+   marked `from_registry_stats` came from registry-wide statistics.
+2. **Classify the question** and start from its row in the default table below. Leave the default
+   only when a Gotcha says so.
+3. **Pick the fields.** `x` is the field the question is about; `series` is the comparison side
+   (`group`) or a second breakdown. Skip a field missing for most trials: code warns above 10%
+   missing and refuses a field no trial has.
+4. **Set `top_n`** only when the question asks for a number of items ("top 10 sponsors").
+5. **Write the title**: what is shown, in the question's words, with no numbers.
+6. **Check the plan against the Gotchas**, then answer with it.
+
+## Default chart per question
+
+| The question asks for | Example wording | `intent` | Default plan |
+| --- | --- | --- | --- |
+| Change over time | "per year since 2015", "completed each year" | `change_over_time` | `time_series`, `x: start_year` (or `completion_year`) |
+| A ranking | "which countries have the most", "top sponsors" | `ranking` | `bar_chart`, `x` = that field, `top_n` if a number is asked |
+| Spread across categories | "distributed across phases", "intervention types" | `distribution` | `bar_chart`, `x` = that field |
+| Spread of a number | "enrollment sizes" | `distribution` | `histogram`, `x: enrollment` |
+| Sides compared | "A vs B by phase", "across asthma and COPD" | `magnitude` | `grouped_bar_chart`, `x` = field, `series: group` |
+| Parts of a whole | "share of industry trials per phase" | `part_to_whole` | `stacked_bar_chart`, `x` + single-valued `series` |
+| Where trials run | "by country" | `spatial` | `bar_chart`, `x: country` |
+| Links between things | "sponsors and their drugs", "drugs used together" | `relationship` | `network_graph`: read `references/networks.md` |
+
+Profile has fields marked `from_registry_stats`: read `references/registry-stats.md` first.
 
 ## Fields you can chart
 
@@ -25,64 +55,45 @@ trials gives a misleading chart (code warns above 10% missing, refuses at 100%).
 `intervention`, `intervention_type`, `country`, `enrollment` (numeric), and `group`
 (the comparison side: the label of each fetched step).
 
-## Chart types and what each needs
+## Output
 
-| `chart_type` | Use for | Needs (checked by code) |
-| --- | --- | --- |
-| `bar_chart` | Counts per category, rankings ("most common", "which countries") | `x` = a category field |
-| `grouped_bar_chart` | Comparing sides or categories side by side ("A vs B by phase") | `x` + `series` (different fields; `series: group` for comparisons) |
-| `stacked_bar_chart` | Parts of a whole ("share of industry trials per phase") | `x` + `series`; **neither may be multi-valued** (parts would not add up) |
-| `time_series` | Change over time ("per year since 2015", "completed each year") | `x: start_year` or `completion_year`, matching the searched period's field; optional `series` |
-| `histogram` | Spread of a number ("enrollment sizes") | `x: enrollment` |
-| `network_graph` | Relationships ("sponsors <-> drugs", "drugs used together") | `x` and `series` = the two node kinds; the **same field twice** = co-occurrence within a trial |
+A ChartPlan: `intent`, `chart_type`, `title` (at most 120 characters), `x`, and optionally `series`
+and `top_n` (1–50). For a comparison of two fetched sides by phase:
 
-`scatter_plot` is not available: only one numeric field (enrollment) exists per trial.
-
-**Registry-wide statistics** (fields marked `from_registry_stats` in the profile, from a
-`stats/field/values` fetch): only a `bar_chart` of one field (`x`, no `series`) is possible; the
-counts cover all registered studies and carry no per-trial citations.
-
-## Rules
-
-- **Comparisons:** when several steps were fetched (`group_sizes` has several sides),
-  the chart must show them: `series: group` (or `x: group`).
-- **Multi-valued fields** (phase, condition, intervention, intervention_type, country) count
-  a trial once per value, so bars can sum to more than the trials. Fine for bars and
-  grouped bars; never stack them.
-- **Many categories:** code shows at most 25 (largest first). Set `top_n` lower for
-  rankings ("top 10 sponsors"); leave it unset for phases and years.
-- **Phases** keep clinical order and **years** run continuously with empty years as 0.
-  Year axes cover the searched period and stop at the data date (later dates are estimates
-  for trials not started or finished yet): code handles all of this and notes it in meta.
-- **Ties:** when the profile shows `tied_for_top`, the chart and title must show every tied
-  value (e.g. a comparison of the tied sponsors), never a single one presented as the leader.
-- **Too little data:** a time series needs at least 2 years with data (code rejects one-point
-  lines: use a bar chart). With fewer than 10 trials code adds a warning; say "few trials" in
-  the title when the question asks for a ranking or a trend.
-- **Started vs completed:** "trials completed each year" needs `completion_year`; a chart
-  counting by a different date than the search period is rejected.
-- `intent` is a label for the reader: `change_over_time`, `ranking`, `distribution`,
-  `magnitude`, `part_to_whole`, `correlation`, `spatial` or `relationship`.
-- **Title:** says what is shown, in the question's terms, with no numbers.
-
-## Examples
-
-Comparison of two fetched sides by phase:
 ```json
 {"intent": "magnitude", "chart_type": "grouped_bar_chart", "title": "Trial phases: nivolumab vs pembrolizumab", "x": "phase", "series": "group"}
 ```
 
-Trend for one search:
-```json
-{"intent": "change_over_time", "chart_type": "time_series", "title": "Pembrolizumab trials started per year", "x": "start_year"}
-```
+## Gotchas
 
-Ranking:
-```json
-{"intent": "ranking", "chart_type": "bar_chart", "title": "Countries with the most recruiting multiple sclerosis trials", "x": "country", "top_n": 15}
-```
+- **Comparisons must show every side.** When several steps were fetched (`group_sizes` has more
+  than one side), use `series: group` (or `x: group`). With one search, `group` is rejected.
+- **Never stack a multi-valued field** (phase, condition, intervention, intervention_type, country).
+  A trial counts once per value, so the parts would not add up; grouped bars are fine.
+- **Named values must all be visible.** If the question names the values it wants ("recruiting vs
+  completed vs terminated"), leave `top_n` unset: code keeps only the largest categories, and a small
+  `top_n` silently drops a named value in favour of an unnamed one.
+- **Many categories:** code shows at most 25, largest first. Set `top_n` lower for rankings; leave
+  it unset for phases and years, which code orders (phases clinically, years continuously with empty
+  years as 0, stopping at the data date).
+- **Started vs completed:** "trials completed each year" needs `completion_year`. A time series must
+  count by the same date as the searched period, or it is rejected.
+- **A time series needs at least 2 years with data**; with one year use a `bar_chart`.
+- **Few trials:** under 10 trials code adds a warning; say "few trials" in the title of a ranking or
+  trend.
+- **Ties:** when the profile shows `tied_for_top`, the chart and title show every tied value, never
+  one presented as the leader.
+- **Numbers:** `enrollment` is the only numeric field, so it is charted only as a `histogram`, and
+  `scatter_plot` is not available (it needs two numeric fields per trial). `x` and `series` must
+  differ except in a network.
 
-Drugs used together:
-```json
-{"intent": "relationship", "chart_type": "network_graph", "title": "Drugs combined in colorectal cancer trials", "x": "intervention", "series": "intervention"}
-```
+## References
+
+Read a file only when its row applies: `read_reference(skill="chart-planning", path="<file>")`.
+
+| File | Read when |
+| --- | --- |
+| `references/networks.md` | The question is about links between sponsors, drugs, conditions or countries |
+| `references/registry-stats.md` | The profile has fields marked `from_registry_stats` |
+| `references/chart-types.md` | A plan was rejected and you need each chart type's exact requirements, or you are unsure between grouped and stacked bars |
+| `references/examples.md` | The question fits no row of the default table, or you want a worked example for ties, completion years, multi-step questions or rankings |

@@ -178,6 +178,17 @@ def test_references_are_read_on_demand_and_paths_are_restricted():
     assert result.references_read == ["references/data-structure/protocol.design.md"]
 
 
+def test_chart_planning_references_are_readable_by_skill_name():
+    model, seen = scripted(
+        ("read_reference", {"skill": "chart-planning", "path": "references/networks.md"}),
+        ("read_reference", {"skill": "nope", "path": "references/networks.md"}),
+        *HAPPY,
+    )
+    result = decide(model)
+    assert "Unknown skill 'nope'" in seen_text(seen["messages"])
+    assert result.references_read == ["chart-planning/references/networks.md"]
+
+
 def test_prompt_lists_user_filters():
     prompt = build_prompt(QueryRequest(query="Trials per year", drug_name="Pembrolizumab", trial_phase=["PHASE3"]))
     assert "Question: Trials per year" in prompt
