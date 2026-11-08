@@ -238,10 +238,9 @@ With more time:
 
 ## Use of AI tools
 
-- **Building it:** developed with Claude Code (Anthropic) as a pair programmer: code, tests,
-  skills, eval cases and documentation were written with it, in small reviewed steps. Design
-  decisions (the typed search intent, name resolution, the user's fields winning, complete
-  sources on every value, the eval checks) were discussed and chosen before they were built.
+- **Building it:** developed with Claude Code (Anthropic) as a pair programmer. It wrote most of
+  the code, tests, skills, eval cases and documentation, in small steps I reviewed. The
+  decisions below were mine: I either proposed them or chose them from options it laid out.
 - **Reviewing it:** two adversarial agents (one questioning, one defending the evals) reviewed
   the eval suite against the brief; their findings became the recall, label and filter checks
   and the `grilled` eval suite.
@@ -252,6 +251,51 @@ With more time:
     cases each change affected were rerun live after it (a single full rerun is still to do);
   - every number quoted in a skill or this README was checked against the live API;
   - the web UI was checked with screenshots of real responses.
+
+### Decisions I made, and why
+
+**Frontend demo**
+- A minimal web page shaped around the brief, not a full app: the brief makes a frontend optional
+  and puts the structured output first, so the page exists to *show* the output (response JSON,
+  citations, opening saved example runs without an API key).
+
+**Evals: from "does it pass?" to "is it right?"**
+- Standardise the evals so each check states what it measures and passes or fails on its own:
+  results have to be trackable, not a single opaque score.
+- Review the evals with two agents holding a real conversation (one questioning, one defending)
+  instead of one-shot answers, which stay shallow. They could run subsets of cases and add new
+  ones, but not change the eval structure or the code they were judging.
+- Fix the evals before the bugs: a pass has to mean the answer is right before a fix can be
+  trusted. This moved the score from 60/62 (mostly checking shape) to 53/72 with real checks,
+  then back up through actual fixes.
+
+**Validation and guarantees**
+- No hooks: checks in the tool code and output validator already run on every call and the agent
+  cannot skip them, so hooks would add structure, not safety.
+- Guard against overfitting: skill examples must not contain eval questions (a test enforces it),
+  fixes must be general contracts rather than rules for one case, and brittle checks (such as "no
+  digits in titles") were dropped.
+
+**Searching: the design change**
+- Resolve drug and condition names through the registry's own vocabulary (MeSH) before searching,
+  instead of relying on the model's knowledge: look up how the registry indexes a name, search
+  under both, consolidate, and keep the user's name as the label.
+- Then step back: the string-level fixes were patching one design flaw, the agent writing raw API
+  queries. The agent now states what the question means in typed slots and code builds the query
+  ([design note](docs/design/search-intent.md)).
+- The country list for regions is read from the registry at run time, because it changes.
+- Mine the API for unused fields, and add only those that close real gaps (study design, duration
+  for scatter plots); shares came from a missing feature, not missing data.
+
+**Output**
+- Check the output against the brief's own examples, change the format first, document it after.
+- Include the complete list of trials behind every value, after measuring the overhead (median
+  +27 KB per response): the deep-citations bonus asks for references to the underlying records.
+- Commit the OpenAPI schema as well as serving `/docs`, since a reader may not run the server.
+
+**Working method**
+- Isolated worktrees for parallel or risky work, merged into `main` and then removed.
+- Pause or stop work when the direction was unclear; close open items one at a time.
 
 ## Evals
 
