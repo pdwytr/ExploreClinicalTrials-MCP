@@ -25,6 +25,7 @@ from datetime import date
 
 from cheiron.fetch.models import Trial
 from cheiron.models.response import ChartVisualization, Citation, NetworkVisualization
+from cheiron.visualize.labels import labels_for
 from cheiron.workflow.plans import YEAR_DIMENSIONS, ChartPlan, Dimension
 from cheiron.workflow.profile import FIELD_VALUES, merged_reader, stats_fields, value_key
 
@@ -78,8 +79,15 @@ def _citations(dims: list[tuple[Dimension, str]], trials: list[Trial]) -> list[C
         for dim, value in dims:
             if dim is Dimension.GROUP:
                 continue
-            cited.append(Citation(nct_id=trial.nct_id, excerpt=_excerpt(dim, value, trial), field=FIELD_PATHS[dim]))
+            cited.append(
+                Citation(nct_id=trial.nct_id, excerpt=_excerpt(dim, value, trial), field=FIELD_PATHS[dim], title=trial.title)
+            )
     return cited
+
+
+def _ids(trials: list[Trial]) -> list[str]:
+    """Every trial behind a data point: the complete reference list (citations sample it)."""
+    return sorted({t.nct_id for t in trials})
 
 
 def _order(
@@ -108,6 +116,37 @@ def _channel(dim: Dimension) -> dict:
     if dim is Dimension.PHASE:
         return {"field": "phase", "type": "ordinal", "sort": PHASE_ORDER, "title": "Phase"}
     return {"field": dim.value, "type": "nominal", "title": dim.value.replace("_", " ").capitalize()}
+
+
+def build_visualization(
+    trials_by_group: dict[str, list[Trial]],
+    plan: ChartPlan,
+    bounds: dict[str, tuple[int | None, int | None]] | None = None,
+    as_of: date | None = None,
+    stats: list | None = None,
+) -> tuple[ChartVisualization | NetworkVisualization, list[str]]:
+    """Trials + chart plan -> visualization with citations, and display names for coded values."""
+    viz, warnings = _build(trials_by_group, plan, bounds, as_of, stats)
+    return _with_labels(viz), warnings
+
+
+def _with_labels(viz: ChartVisualization | NetworkVisualization) -> ChartVisualization | NetworkVisualization:
+    """Attach display names: per coded channel for charts, per node group for networks."""
+    if isinstance(viz, NetworkVisualization):
+        groups = {n.group for n in viz.data.nodes if n.group}
+        names = {g: g.replace("_", " ").capitalize() for g in sorted(groups)}
+        return viz.model_copy(update={"encoding": viz.encoding.model_copy(update={"group_labels": names or None})})
+    enc = viz.encoding
+    updates = {}
+    for name in ("x", "color", "x_offset"):
+        channel = getattr(enc, name)
+        if channel is None:
+            continue
+        shown = {str((row.model_extra or {}).get(channel.field)) for row in viz.data}
+        labels = labels_for(channel.field, shown)
+        if labels:
+            updates[name] = channel.model_copy(update={"labels": labels})
+    return viz.model_copy(update={"encoding": enc.model_copy(update=updates)}) if updates else viz
 
 
 def _row_value(dim: Dimension, value: str) -> str:
@@ -141,7 +180,7 @@ def _within(dim: Dimension, read, window):
     return lambda group, trial: {v for v in read(group, trial) if (lo is None or int(v) >= lo) and (hi is None or int(v) <= hi)}
 
 
-def build_visualization(
+def _build(
     trials_by_group: dict[str, list[Trial]],
     plan: ChartPlan,
     bounds: dict[str, tuple[int | None, int | None]] | None = None,
@@ -182,6 +221,7 @@ def build_visualization(
                 plan.x.value: _row_value(plan.x, v),
                 "trial_count": len(buckets.get(v, [])),
                 "citations": _citations([(plan.x, v)], buckets.get(v, [])),
+                "nct_ids": _ids(buckets.get(v, [])),
             }
             for v in order
         ]
@@ -211,6 +251,7 @@ def build_visualization(
                 plan.series.value: s,
                 "trial_count": len(cells.get((x, s), [])),
                 "citations": _citations([(plan.x, x), (plan.series, s)], cells.get((x, s), [])),
+                "nct_ids": _ids(cells.get((x, s), [])),
             }
             for x in order
             for s in series_order
@@ -246,9 +287,10 @@ def _histogram(pairs: list[Pair], plan: ChartPlan) -> ChartVisualization:
                 "enrollment_to": hi,
                 "trial_count": len(trials),
                 "citations": [
-                    Citation(nct_id=t.nct_id, excerpt=str(t.enrollment), field=FIELD_PATHS[Dimension.ENROLLMENT])
+                    Citation(nct_id=t.nct_id, excerpt=str(t.enrollment), field=FIELD_PATHS[Dimension.ENROLLMENT], title=t.title)
                     for t in sorted(trials, key=lambda t: t.nct_id)[:CITATIONS_PER_DATUM]
                 ],
+                "nct_ids": _ids(trials),
             }
         )
     encoding = {
@@ -297,11 +339,11 @@ def _network(pairs: list[Pair], plan: ChartPlan) -> tuple[NetworkVisualization, 
 
     nodes = [
         {"id": node_id(n), "label": n[1], "group": n[0].value, "size": len(node_trials[n]),
-         "citations": _citations([n], node_trials[n])}
+         "citations": _citations([n], node_trials[n]), "nct_ids": _ids(node_trials[n])}
         for n in sorted(kept, key=lambda n: (-len(node_trials[n]), n[1]))
     ]  # fmt: skip
     links = [
-        {"source": node_id(a), "target": node_id(b), "weight": len(ts), "citations": _citations([a, b], ts)}
+        {"source": node_id(a), "target": node_id(b), "weight": len(ts), "citations": _citations([a, b], ts), "nct_ids": _ids(ts)}
         for (a, b), ts in edges
     ]
     warnings = []

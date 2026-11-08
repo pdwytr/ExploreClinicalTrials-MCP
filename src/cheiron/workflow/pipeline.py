@@ -118,12 +118,13 @@ class QueryWorkflow:
         )
         meta = Meta(
             interpretation=_interpretation(result, log.fetches),
+            request_filters=request.filters(),
             filters_applied=filters_summary(outcome.prepared),
             assumptions=outcome.notes + _assumptions(chart, result.profile),
             warnings=outcome.warnings + result.chart_warnings + viz_warnings,
             total_trials_matched=outcome.total_matched,
             trials_analyzed=outcome.trials_fetched,
-            units={"trial_count": "trials"},
+            units=_units(visualization),
             data_as_of=outcome.version.data_timestamp,
             api_version=outcome.version.api_version,
             chain=_chain(result, log.fetches),
@@ -308,6 +309,16 @@ def _chain(result: AgentResult, fetches: list[FetchRecord]) -> list[ChainStep]:
             )
         )
     return chain
+
+
+def _units(visualization) -> dict[str, str]:
+    """What each number in the data counts, by the key it appears under."""
+    if visualization.type == "network_graph":
+        return {"size": "trials with this value", "weight": "trials that have both values"}
+    units = {"trial_count": "trials"}
+    if visualization.type == "histogram":
+        units |= {"enrollment_from": "participants", "enrollment_to": "participants (exclusive; null = no upper bound)"}
+    return units
 
 
 def _within_countries(target, result: StepResult) -> StepResult:

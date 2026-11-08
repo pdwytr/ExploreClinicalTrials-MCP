@@ -62,6 +62,10 @@ class Citation(BaseModel):
         description="API field path the excerpt came from.",
         examples=["protocolSection.designModule.phases"],
     )
+    title: str | None = Field(
+        default=None,
+        description="The trial's brief title, exactly as in the API (protocolSection.identificationModule.briefTitle).",
+    )
 
 
 # --- Encoding: field -> visual channel (Vega-Lite vocabulary) -----------------
@@ -108,6 +112,11 @@ class Channel(_VegaLiteNames):
     bin: bool | Literal["binned"] | None = Field(
         default=None, description="'binned' = rows are already bins; give the bin end in encoding.x2."
     )
+    labels: dict[str, str] | None = Field(
+        default=None,
+        description="Display name for each coded value in this field (e.g. PHASE1 -> 'Phase 1'). "
+        "Rows keep the codes; show the label when present, else the value as is.",
+    )
 
 
 class SecondaryChannel(_VegaLiteNames):
@@ -136,6 +145,9 @@ class NetworkEncoding(BaseModel):
     node_group: str | None = Field(default="group", description="Node key used for color, e.g. 'drug' vs 'sponsor'.")
     node_size: str | None = Field(default="size", description="Node key used for size.")
     edge_weight: str | None = Field(default="weight", description="Edge key used for thickness.")
+    group_labels: dict[str, str] | None = Field(
+        default=None, description="Display name for each node group, e.g. lead_sponsor -> 'Lead sponsor'."
+    )
 
 
 # --- Data ---------------------------------------------------------------------
@@ -147,6 +159,10 @@ class DataRow(BaseModel):
     model_config = ConfigDict(extra="allow")
 
     citations: list[Citation] = Field(default_factory=list)
+    nct_ids: list[str] = Field(
+        default_factory=list,
+        description="Every trial counted in this data point (complete, sorted); `citations` detail the first few.",
+    )
 
 
 class Node(BaseModel):
@@ -155,6 +171,10 @@ class Node(BaseModel):
     group: str | None = None
     size: float | None = None
     citations: list[Citation] = Field(default_factory=list)
+    nct_ids: list[str] = Field(
+        default_factory=list,
+        description="Every trial counted in this data point (complete, sorted); `citations` detail the first few.",
+    )
 
 
 class Edge(BaseModel):
@@ -162,6 +182,10 @@ class Edge(BaseModel):
     target: str = Field(description="Node id.")
     weight: float = 1.0
     citations: list[Citation] = Field(default_factory=list)
+    nct_ids: list[str] = Field(
+        default_factory=list,
+        description="Every trial counted in this data point (complete, sorted); `citations` detail the first few.",
+    )
 
 
 class NetworkData(BaseModel):
@@ -266,6 +290,9 @@ class ChainStep(BaseModel):
 class Meta(BaseModel):
     source: Literal["clinicaltrials.gov"] = "clinicaltrials.gov"
     interpretation: str = Field(description="Plain-English restatement of what was computed.")
+    request_filters: dict[str, Any] = Field(
+        default_factory=dict, description="The structured fields the user sent, exactly as sent (empty if none)."
+    )
     filters_applied: dict[str, Any] = Field(
         default_factory=dict, description="Filters actually sent to the API (from the request and the question)."
     )

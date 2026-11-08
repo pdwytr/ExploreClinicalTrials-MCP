@@ -4,6 +4,7 @@ Deterministic, no AI: the same ChartVisualization always gives the same spec.
 Docs: https://vega.github.io/vega-lite/docs/
 """
 
+import json
 from typing import Any
 
 from cheiron.models.response import Channel, ChartVisualization
@@ -20,8 +21,14 @@ MARKS: dict[str, Any] = {
 }
 
 
-def _channel(channel: Channel) -> dict[str, Any]:
-    return channel.model_dump(by_alias=True, exclude_none=True, mode="json")
+def _channel(channel: Channel, guide: str | None = "axis") -> dict[str, Any]:
+    """A Vega-Lite channel. `labels` is ours, not Vega-Lite's: it becomes a labelExpr on the
+    channel's axis or legend, so the chart shows display names while the data keeps the codes."""
+    spec = channel.model_dump(by_alias=True, exclude_none=True, mode="json", exclude={"labels"})
+    if channel.labels and guide:  # xOffset has no axis or legend of its own
+        lookup = json.dumps(channel.labels, ensure_ascii=False)
+        spec[guide] = {"labelExpr": f"{lookup}[datum.label] || datum.label"}
+    return spec
 
 
 def to_vega_lite(viz: ChartVisualization) -> dict[str, Any]:
@@ -30,9 +37,9 @@ def to_vega_lite(viz: ChartVisualization) -> dict[str, Any]:
     if enc.x2 is not None:
         encoding["x2"] = enc.x2.model_dump(exclude_none=True)
     if enc.color is not None:
-        encoding["color"] = _channel(enc.color)
+        encoding["color"] = _channel(enc.color, "legend")
     if enc.x_offset is not None:
-        encoding["xOffset"] = _channel(enc.x_offset)
+        encoding["xOffset"] = _channel(enc.x_offset, None)
 
     if viz.type == "stacked_bar_chart":
         encoding["y"]["stack"] = "zero"
@@ -47,7 +54,8 @@ def to_vega_lite(viz: ChartVisualization) -> dict[str, Any]:
         "$schema": SCHEMA,
         "title": viz.title,
         "width": "container",
-        "data": {"values": [row.model_dump(mode="json") for row in viz.data]},  # citations ride along
+        # citations ride along for tooltips; the complete nct_ids stay in visualization.data only
+        "data": {"values": [row.model_dump(mode="json", exclude={"nct_ids"}) for row in viz.data]},
         "mark": MARKS[viz.type],
         "encoding": encoding,
     }

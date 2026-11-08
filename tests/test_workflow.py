@@ -257,3 +257,12 @@ def test_placebo_and_sham_are_not_interventions():
     t = Trial(nct_id="NCT00000001", interventions=[Intervention(name="Metformin"), Intervention(name="Placebo Oral Tablet"), Intervention(name="Sham procedure")])
     assert FIELD_VALUES[Dimension.INTERVENTION](t) == ["Metformin"]
 
+
+
+def test_meta_echoes_the_users_fields_and_states_units():
+    wf, _ = make_workflow(search_plan("pembrolizumab"), {"pembrolizumab": FOUND})
+    response, _ = run(wf, drug_name="Pembrolizumab", trial_phase=["PHASE2", "PHASE3"])
+    assert response.meta.request_filters == {"drug_name": "Pembrolizumab", "trial_phase": ["PHASE2", "PHASE3"]}
+    assert response.meta.units == {"trial_count": "trials"}
+    assert response.visualization.encoding.x.labels == {"PHASE2": "Phase 2", "PHASE3": "Phase 3"}
+    assert sorted(i for r in response.visualization.data for i in r.nct_ids) == ["NCT00000001", "NCT00000002"]

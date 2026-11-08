@@ -45,7 +45,7 @@ def test_bar_by_phase_counts_distinct_trials_in_clinical_order():
 
 
 def test_each_datum_cites_its_trials_with_exact_field_and_value():
-    trials = [trial(n, lead_sponsor="Merck") for n in range(8)]
+    trials = [trial(n, lead_sponsor="Merck", title=f"Study {n} of drug X") for n in range(8)]
     viz, _ = build_visualization({"All": trials}, plan(intent="ranking", chart_type="bar_chart", x=Dimension.SPONSOR))
 
     row = viz.data[0]
@@ -54,7 +54,9 @@ def test_each_datum_cites_its_trials_with_exact_field_and_value():
         "nct_id": "NCT00000000",
         "excerpt": "Merck",
         "field": FIELD_PATHS[Dimension.SPONSOR],
+        "title": "Study 0 of drug X",  # the trial's title, exactly as the API gave it
     }
+    assert row.nct_ids == [f"NCT{n:08d}" for n in range(8)]  # every trial behind the bar, not just the cited 5
 
 
 def test_many_categories_are_cut_to_the_top_with_a_warning():
@@ -218,3 +220,45 @@ def test_stacking_a_multi_valued_field_is_rejected():
     search = SearchPlan(steps=[{"endpoint": "studies", "label": "All", "conditions": ["x"]}], rationale="r")
     with pytest.raises(UnsupportedQuery, match="several values per trial"):
         check_chart_plan(chart, search, profile)
+
+
+# --- Display names for coded values ---------------------------------------------------------------
+
+
+def test_coded_values_get_the_registrys_display_names():
+    trials = [trial(1, phases=["PHASE2"], overall_status="ACTIVE_NOT_RECRUITING"), trial(2, phases=["EARLY_PHASE1"], overall_status="RECRUITING")]
+    viz, _ = build_visualization({"All": trials}, plan(intent="distribution", chart_type="bar_chart", x=Dimension.PHASE))
+    assert viz.encoding.x.labels == {"EARLY_PHASE1": "Early Phase 1", "PHASE2": "Phase 2"}  # only values shown
+    assert {r.phase for r in viz.data} == {"EARLY_PHASE1", "PHASE2"}  # rows keep the codes
+    spec = as_response(viz).vega_lite
+    assert "labels" not in spec["encoding"]["x"]  # not a Vega-Lite property
+    assert spec["encoding"]["x"]["axis"]["labelExpr"].startswith('{"EARLY_PHASE1": "Early Phase 1"')
+    status, _ = build_visualization({"All": trials}, plan(intent="distribution", chart_type="bar_chart", x=Dimension.STATUS))
+    assert status.encoding.x.labels["ACTIVE_NOT_RECRUITING"] == "Active, not recruiting"
+
+
+def test_free_text_fields_get_no_labels():
+    viz, _ = build_visualization(
+        {"All": [trial(1, lead_sponsor="Pfizer")]}, plan(intent="ranking", chart_type="bar_chart", x=Dimension.SPONSOR)
+    )
+    assert viz.encoding.x.labels is None
+
+
+def test_a_coded_series_is_labelled_in_the_legend():
+    trials = [trial(1, phases=["PHASE3"], sponsor_class="INDUSTRY"), trial(2, phases=["PHASE2"], sponsor_class="OTHER_GOV")]
+    viz, _ = build_visualization(
+        {"All": trials},
+        plan(intent="part_to_whole", chart_type="stacked_bar_chart", x=Dimension.STATUS, series=Dimension.SPONSOR_CLASS),
+    ) if False else build_visualization(
+        {"All": trials}, plan(intent="magnitude", chart_type="grouped_bar_chart", x=Dimension.PHASE, series=Dimension.SPONSOR_CLASS)
+    )
+    assert viz.encoding.color.labels == {"INDUSTRY": "Industry", "OTHER_GOV": "Other government"}  # registry gives only codes
+    assert "labelExpr" in as_response(viz).vega_lite["encoding"]["color"]["legend"]
+
+
+def test_network_groups_get_display_names():
+    trials = [trial(1, lead_sponsor="Pfizer", interventions=[Intervention(name="Drug A")])]
+    viz, _ = build_visualization(
+        {"All": trials}, plan(intent="relationship", chart_type="network_graph", x=Dimension.SPONSOR, series=Dimension.INTERVENTION)
+    )
+    assert viz.encoding.group_labels == {"intervention": "Intervention", "lead_sponsor": "Lead sponsor"}
