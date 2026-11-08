@@ -12,6 +12,12 @@ standards (Agent Skills, Pydantic, the Financial Times Visual Vocabulary, Vega-L
 private formats. The rest of this README explains where the line between model and code sits, why,
 and how the evals were used to move it.
 
+**Live demo:** the service is deployed at **https://cheiron-e7vsuq.fly.dev/**. Open it to ask a
+question in the web page, or see the API reference at
+[`/docs`](https://cheiron-e7vsuq.fly.dev/docs) (interactive, Swagger UI) and
+[`/redoc`](https://cheiron-e7vsuq.fly.dev/redoc) (ReDoc). It runs on one Fly.io machine, so tasks
+and saved outputs are lost when it restarts or is redeployed.
+
 Contents: [Running it](#running-it) · [What happens to a question](#what-happens-to-a-question) ·
 [Design decisions and trade-offs](#design-decisions-and-trade-offs) · [How it is tested](#how-it-is-tested) ·
 [Limitations and next steps](#limitations-and-next-steps) ·
