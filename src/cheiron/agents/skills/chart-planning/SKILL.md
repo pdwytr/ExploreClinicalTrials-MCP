@@ -44,6 +44,7 @@ back with the reason, so fix the plan and answer again.
 | Spread of a number | "enrollment sizes" | `distribution` | `histogram`, `x: enrollment` |
 | Sides compared | "A vs B by phase", "across two conditions" | `magnitude` | `grouped_bar_chart`, `x` = field, `series: group` |
 | Parts of a whole | "what part of each status is industry-run" | `part_to_whole` | `stacked_bar_chart`, `x` + single-valued `series` |
+| A share or percentage | "what percentage are …", "what share of each …" | `part_to_whole` | the same chart with `measure: "share"` (see Gotchas) |
 | Where trials run | "by country" | `spatial` | `bar_chart`, `x: country` |
 | Links between things | "sponsors and their drugs", "drugs used together" | `relationship` | `network_graph`: read `references/networks.md` |
 
@@ -57,8 +58,8 @@ Profile has fields marked `from_registry_stats`: read `references/registry-stats
 
 ## Output
 
-A ChartPlan: `intent`, `chart_type`, `title` (at most 120 characters), `x`, and optionally `series`
-and `top_n` (1–50). For a comparison of two fetched sides by phase:
+A ChartPlan: `intent`, `chart_type`, `title` (at most 120 characters), `x`, and optionally `series`,
+`top_n` (1–50) and `measure` (`count`, the default, or `share`). For a comparison of two fetched sides by phase:
 
 ```json
 {"intent": "magnitude", "chart_type": "grouped_bar_chart", "title": "Trial phases: durvalumab vs atezolizumab", "x": "phase", "series": "group"}
@@ -83,6 +84,11 @@ and `top_n` (1–50). For a comparison of two fetched sides by phase:
   trend.
 - **Ties:** when the profile shows `tied_for_top`, the chart and title show every tied value, never
   one presented as the leader.
+- **Shares:** when the question asks for a percentage, share or proportion, set `measure: "share"`;
+  code computes the percentages, never you. The denominator follows from the chart: no series =
+  share of all charted trials; with a series = share within each x category ("in each phase, what
+  share is industry-run": `x: phase`, `series: sponsor_class`); `series: group` = share within each
+  compared side. Bars and time series only; not registry-wide statistics.
 - **Numbers:** `enrollment` is the only numeric field, so it is charted only as a `histogram`, and
   `scatter_plot` is not available (it needs two numeric fields per trial). `x` and `series` must
   differ except in a network.

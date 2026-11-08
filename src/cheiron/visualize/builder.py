@@ -154,6 +154,15 @@ def _row_value(dim: Dimension, value: str) -> str:
 
 
 Y = {"field": "trial_count", "type": "quantitative", "title": "Trials"}
+Y_SHARE = {"field": "percent", "type": "quantitative", "title": "% of trials"}
+
+
+def _add_shares(rows: list[dict], denominator: Callable[[dict], int]) -> None:
+    """percent = trial_count / denominator, with the denominator kept on the row (of_trials)."""
+    for row in rows:
+        total = denominator(row)
+        row["of_trials"] = total
+        row["percent"] = round(100 * row["trial_count"] / total, 1) if total else 0.0
 
 
 def _year_windows(
@@ -227,6 +236,10 @@ def _build(
         ]
         ordered_axis = plan.x is Dimension.PHASE or plan.x in YEAR_DIMENSIONS
         encoding = {"x": _channel(plan.x) | ({} if ordered_axis else {"sort": "-y"}), "y": Y}
+        if plan.measure == "share":  # of every trial with a value for x
+            everyone = len({t.nct_id for ts in buckets.values() for t in ts})
+            _add_shares(rows, lambda row: everyone)
+            encoding["y"] = Y_SHARE
     else:
         read_s = _reader(plan.series, pairs)
         if plan.series in windows:
@@ -258,6 +271,15 @@ def _build(
         ]
         series_channel = _channel(plan.series)
         encoding = {"x": _channel(plan.x), "y": Y, "color": series_channel}
+        if plan.measure == "share":
+            if plan.series is Dimension.GROUP:  # of each compared side (its trials that have an x value)
+                side = {s: len({t.nct_id for (x, s2), ts in cells.items() if s2 == s for t in ts}) for s in series_order}
+                _add_shares(rows, lambda row: side[row[plan.series.value]])
+            else:  # of the trials in each x category
+                per_x = {x: len({t.nct_id for t in ts}) for x, ts in x_totals.items()}
+                key = {_row_value(plan.x, x): x for x in order}
+                _add_shares(rows, lambda row: per_x[key[row[plan.x.value]]])
+            encoding["y"] = Y_SHARE
         if plan.chart_type == "grouped_bar_chart":
             encoding["xOffset"] = series_channel
 

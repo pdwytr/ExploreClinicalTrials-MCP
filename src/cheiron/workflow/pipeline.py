@@ -250,6 +250,8 @@ def check_chart_plan(
     if any(f.from_registry_stats for f in profile.fields.values()):
         if chart.chart_type != "bar_chart" or chart.series is not None:
             raise UnsupportedQuery("Registry-wide statistics give counts for one field: use a bar_chart with x only.")
+        if chart.measure == "share":
+            raise UnsupportedQuery("Registry-wide statistics give counts only; a share needs a studies search.")
         if chart.x not in profile.fields:
             raise UnsupportedQuery(f"No registry statistics were fetched for {chart.x.value}; add it to the stats step's fields.")
         return []
@@ -288,6 +290,13 @@ def _assumptions(chart: ChartPlan, profile: DataProfile) -> list[str]:
         notes.append(f"A trial can have several values of {', '.join(sorted(set(multi)))}, so counts can sum to more than the trials.")
     if len(profile.group_sizes) > 1:
         notes.append("Compared sides are separate searches; a trial matching several sides is counted in each.")
+    if chart.measure == "share":
+        of = (
+            "each compared side" if chart.series is Dimension.GROUP
+            else f"the trials in each {chart.x.value.replace('_', ' ')}" if chart.series
+            else f"all charted trials with a {chart.x.value.replace('_', ' ')}"
+        )  # fmt: skip
+        notes.append(f"Percentages are shares of {of} (of_trials on each row).")
     return notes
 
 
@@ -316,6 +325,8 @@ def _units(visualization) -> dict[str, str]:
     if visualization.type == "network_graph":
         return {"size": "trials with this value", "weight": "trials that have both values"}
     units = {"trial_count": "trials"}
+    if visualization.encoding.y.field == "percent":
+        units |= {"percent": "percent of the trials in of_trials", "of_trials": "trials (the share's denominator)"}
     if visualization.type == "histogram":
         units |= {"enrollment_from": "participants", "enrollment_to": "participants (exclusive; null = no upper bound)"}
     return units

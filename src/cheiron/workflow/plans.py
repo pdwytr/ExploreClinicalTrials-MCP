@@ -200,6 +200,11 @@ class ChartPlan(BaseModel):
     x: Dimension
     series: Dimension | None = None
     top_n: int | None = Field(default=None, ge=1, le=50, description="Keep only the N largest categories.")
+    measure: Literal["count", "share"] = Field(
+        default="count",
+        description="'share' = percent of trials: of all charted trials (no series), of the trials in "
+        "each x category (with a series), or of each compared side (series = group).",
+    )
 
     @model_validator(mode="after")
     def renderable(self) -> "ChartPlan":
@@ -216,6 +221,8 @@ class ChartPlan(BaseModel):
             raise ValueError("scatter_plot needs two numeric fields per trial; only enrollment is numeric")
         if Dimension.ENROLLMENT in (self.x, self.series) and self.chart_type != "histogram":
             raise ValueError("enrollment is numeric: chart it as a histogram")
+        if self.measure == "share" and self.chart_type not in ("bar_chart", "grouped_bar_chart", "stacked_bar_chart", "time_series"):
+            raise ValueError("a share (percent of trials) needs a bar chart or a time series")
         if self.series is not None and self.series == self.x and self.chart_type != "network_graph":
             raise ValueError("series must differ from x (the same field twice only makes sense in a network)")
         return self

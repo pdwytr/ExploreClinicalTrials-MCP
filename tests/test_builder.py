@@ -262,3 +262,49 @@ def test_network_groups_get_display_names():
         {"All": trials}, plan(intent="relationship", chart_type="network_graph", x=Dimension.SPONSOR, series=Dimension.INTERVENTION)
     )
     assert viz.encoding.group_labels == {"intervention": "Intervention", "lead_sponsor": "Lead sponsor"}
+
+
+# --- Shares (percent of trials) --------------------------------------------------------------------
+
+
+def test_share_without_series_is_a_share_of_all_charted_trials():
+    # g08: "What percentage of Alzheimer's trials are industry-sponsored?"
+    trials = [trial(1, sponsor_class="INDUSTRY"), trial(2, sponsor_class="INDUSTRY"), trial(3, sponsor_class="OTHER"), trial(4, sponsor_class="NIH")]
+    viz, _ = build_visualization({"All": trials}, plan(intent="part_to_whole", chart_type="bar_chart", x=Dimension.SPONSOR_CLASS, measure="share"))
+    rows = {r.sponsor_class: (r.percent, r.trial_count, r.of_trials) for r in viz.data}
+    assert rows["INDUSTRY"] == (50.0, 2, 4) and rows["OTHER"] == (25.0, 1, 4)
+    assert viz.encoding.y.field == "percent"
+    as_response(viz)
+
+
+def test_share_with_a_series_is_within_each_x_category():
+    # x2: "What share of lung cancer trials in each phase are industry-sponsored?"
+    trials = [
+        trial(1, phases=["PHASE1"], sponsor_class="INDUSTRY"), trial(2, phases=["PHASE1"], sponsor_class="OTHER"),
+        trial(3, phases=["PHASE3"], sponsor_class="INDUSTRY"), trial(4, phases=["PHASE3"], sponsor_class="INDUSTRY"),
+        trial(5, phases=["PHASE3"], sponsor_class="NIH"), trial(6, phases=["PHASE3"], sponsor_class="OTHER"),
+    ]  # fmt: skip
+    viz, _ = build_visualization(
+        {"All": trials},
+        plan(intent="part_to_whole", chart_type="stacked_bar_chart", x=Dimension.PHASE, series=Dimension.SPONSOR_CLASS, measure="share"),
+    )
+    cell = {(r.phase, r.sponsor_class): (r.percent, r.of_trials) for r in viz.data}
+    assert cell[("PHASE1", "INDUSTRY")] == (50.0, 2) and cell[("PHASE3", "INDUSTRY")] == (50.0, 4)
+    as_response(viz)
+
+
+def test_share_in_a_comparison_is_within_each_side():
+    a = [trial(1, phases=["PHASE2"]), trial(2, phases=["PHASE3"])]
+    b = [trial(3, phases=["PHASE3"]), trial(4, phases=["PHASE3"]), trial(5, phases=["PHASE3"]), trial(6, phases=["PHASE1"])]
+    viz, _ = build_visualization(
+        {"A": a, "B": b},
+        plan(intent="magnitude", chart_type="grouped_bar_chart", x=Dimension.PHASE, series=Dimension.GROUP, measure="share"),
+    )
+    cell = {(r.phase, r.group): r.percent for r in viz.data}
+    assert cell[("PHASE3", "A")] == 50.0 and cell[("PHASE3", "B")] == 75.0  # phase mix of each side
+
+
+@pytest.mark.parametrize("chart_type, x", [("histogram", Dimension.ENROLLMENT), ("network_graph", Dimension.CONDITION)])
+def test_share_needs_a_bar_or_trend_chart(chart_type, x):
+    with pytest.raises(ValidationError, match="share"):
+        plan(intent="distribution", chart_type=chart_type, x=x, series=x if chart_type == "network_graph" else None, measure="share")
