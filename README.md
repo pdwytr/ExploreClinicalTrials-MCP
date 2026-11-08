@@ -427,6 +427,30 @@ query after each daily refresh that is no faster than today. A later step would 
 cached search for narrower questions by filtering the cached trials locally, but only for filters
 code can apply exactly (phase, status, years), so counts stay identical to the API's.
 
+### Richer chart planning
+
+The chart-planning skill maps ten question classes to seven chart types, and each class has one
+default. That covers the brief's examples, but some questions still get a weaker chart than they
+deserve, because the right chart type does not exist yet or the skill gives no rule for choosing
+between two acceptable ones:
+
+- **"Where" questions get a bar chart**, though the `spatial` intent exists: a world map
+  (choropleth) of trials per country would read faster. The data is already there; the builder and
+  the response schema would need a geographic chart type.
+- **Two categories over time** ("phases per year") are drawn as a time series with a series per
+  phase, which tangles beyond four or five lines. A heatmap (year × phase, colour = trials) or small
+  multiples (one panel per phase) would stay readable.
+- **A number across categories** ("enrollment by phase") has no chart: a histogram shows one
+  distribution, not several. A box plot per category would answer it from the per-trial values the
+  builder already holds.
+
+New chart types need the same work as the existing ones: a builder that counts and cites, schema
+rules, and a section in the skill. The skill would also replace judgement with thresholds read from
+the profile wherever a threshold is honest: more than five series on a time axis means small
+multiples; a numeric field whose maximum is a hundred times its median gets a log scale; a ranking
+with ties at the cut-off shows every tied value. Each new rule would come with an eval case that
+fails without it, measured on the held-out set like any other skill change.
+
 ### Leaner skills, measured
 
 The skills were written rule by rule as failures appeared. The traces already record which
