@@ -26,17 +26,16 @@ What code draws:
   (a trial with one intervention cannot link to another).
 - A network needs a single search (or comparison sides you do not need to show): `group` is not a
   node kind.
-- The title names both node kinds and the population ("Sponsors and drugs in Hodgkin lymphoma
-  trials").
+- The title names both node kinds and the population ("Sponsors and drugs in glioblastoma trials").
 
 ## Examples
 
 Sponsors and the drugs they test:
 ```json
-{"intent": "relationship", "chart_type": "network_graph", "title": "Sponsors and drugs in multiple myeloma trials", "x": "lead_sponsor", "series": "intervention"}
+{"intent": "relationship", "chart_type": "network_graph", "title": "Sponsors and drugs in glioblastoma trials", "x": "lead_sponsor", "series": "intervention"}
 ```
 
 Drugs used together:
 ```json
-{"intent": "relationship", "chart_type": "network_graph", "title": "Drugs combined in colorectal cancer trials", "x": "intervention", "series": "intervention"}
+{"intent": "relationship", "chart_type": "network_graph", "title": "Drugs combined in pancreatic cancer trials", "x": "intervention", "series": "intervention"}
 ```

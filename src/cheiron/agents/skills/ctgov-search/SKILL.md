@@ -58,9 +58,9 @@ Rules for the `stats/*` endpoints (checked against the live API):
 | Concept | Parameter | Example value |
 | --- | --- | --- |
 | Disease / condition | `query.cond` | `"multiple sclerosis"` |
-| Drug, biologic, device, procedure | `query.intr` | `"pembrolizumab"` |
+| Drug, biologic, device, procedure | `query.intr` | `"atezolizumab"` |
 | Sponsor or collaborator organisation | `query.spons` | `"Novo Nordisk"` |
-| Lead sponsor only | `query.lead` | `"Pfizer"` |
+| Lead sponsor only | `query.lead` | `"Novartis"` |
 | Country, state, city of a site | `query.locn` | `"Germany" OR "France"` |
 | Anything else (keywords, acronyms) | `query.term` | `"CAR-T"` |
 | Overall status | `filter.overallStatus` | `RECRUITING\|NOT_YET_RECRUITING` |
@@ -73,7 +73,7 @@ Rules for the `stats/*` endpoints (checked against the live API):
   default `Relaxation` expansion, which also matches the words apart
   (unquoted 3,957 trials vs quoted 3,729; the extra ones include tuberous sclerosis).
 - Combine with `OR`, `AND`, `NOT`, and parentheses. Precedence: NOT > AND > OR, so
-  parenthesise mixed expressions: `("asthma" OR "COPD") AND NOT "pediatric"`.
+  parenthesise mixed expressions: `("eczema" OR "atopic dermatitis") AND NOT "pediatric"`.
 - Fixed values: `AREA[Phase]PHASE3`, `AREA[StudyType]INTERVENTIONAL`,
   `AREA[LeadSponsorClass]INDUSTRY`, `AREA[InterventionType]DEVICE`.
 - Number ranges (`MIN`/`MAX` for open ends): `AREA[EnrollmentCount]RANGE[1000,MAX]`.
@@ -89,11 +89,11 @@ Rules for the `stats/*` endpoints (checked against the live API):
 ## Rules learned from the live API
 
 - **Do not add synonyms or brand names** for a single drug: the API already matches
-  them (`"Keytruda"` and `"pembrolizumab"` both return 3,003 trials).
+  them (`"Tecentriq"` and `"atezolizumab"` both return 1,007 trials).
 - **Do expand drug classes into member drugs** and say so in the rationale:
-  `"GLP-1 receptor agonist"` finds 350 trials, `"semaglutide" OR "liraglutide" OR "dulaglutide"` finds 1,378.
-- **Expand regions into countries**: `query.locn="Europe"` matches facility names,
-  not the continent.
+  `"JAK inhibitor"` finds 303 trials, `"tofacitinib" OR "baricitinib" OR "upadacitinib"` finds 645.
+- **Expand regions into countries**: `query.locn="South America"` matches facility names,
+  not the continent (1 trial, against 11,796 for `"Brazil"` alone).
 - **"Trials" usually means interventional studies**; add `AREA[StudyType]INTERVENTIONAL`
   when the question is about testing treatments. Leave it out for "studies" in general.
 - **"Ongoing"** = `NOT_YET_RECRUITING|RECRUITING|ENROLLING_BY_INVITATION|ACTIVE_NOT_RECRUITING`.
@@ -102,19 +102,19 @@ Rules for the `stats/*` endpoints (checked against the live API):
   finishing. "Since 2015" = `from_year: 2015`; "in 2018" = from and to 2018. Code turns it into
   the date filter, and the chart's time axis must use the matching year (start_year or
   completion_year). Dates after the data date are estimates; code leaves them off time axes.
-- **Combination therapy** = `AND` inside `query.intr`: `"pembrolizumab" AND "carboplatin"`.
-- **Exclusions** = `NOT`: `"diabetes" NOT "type 1 diabetes"`.
+- **Combination therapy** = `AND` inside `query.intr`: `"atezolizumab" AND "bevacizumab"`.
+- **Exclusions** = `NOT`: `"hepatitis" NOT "hepatitis B"`.
 - Do not narrow a question beyond what it asks just to get fewer results: large
   result sets are code's problem, not yours.
 
 ## Multi-step questions
 
-When the question depends on a value you must find first ("the sponsor with the most melanoma
-trials", "the three drugs most often combined with X"):
+When the question depends on a value you must find first ("the sponsor with the most glioblastoma
+trials", "the drugs most often tested alongside a named drug"):
 1. fetch the set that reveals it, call describe_data, and read the value from the profile's
    top values (code-computed counts; never guess it);
 2. fetch again with that value, and say in the rationale what you found and how many trials
-   it was based on ("NCI leads melanoma with 205 trials");
+   it was based on ("<sponsor> leads glioblastoma with <N> trials", using the profile's count);
 3. the chart is built from the latest successful fetch, so that fetch must hold everything shown.
 Every fetch is recorded and shown to the reader.
 
@@ -156,28 +156,28 @@ something it never names ("this drug" with no drug given).
 
 ## Examples
 
-"How has the number of pembrolizumab trials changed per year since 2015?"
+"Atezolizumab trials started per year from 2018 on"
 ```json
-{"steps": [{"endpoint": "studies", "label": "Pembrolizumab", "params": {"query.intr": "\"pembrolizumab\""}, "period": {"field": "start", "from_year": 2015}}],
- "rationale": "Trials testing pembrolizumab that started in 2015 or later."}
+{"steps": [{"endpoint": "studies", "label": "Atezolizumab", "params": {"query.intr": "\"atezolizumab\""}, "period": {"field": "start", "from_year": 2018}}],
+ "rationale": "Trials testing atezolizumab that started in 2018 or later."}
 ```
 
-"Compare phases for nivolumab vs pembrolizumab in melanoma"
+"Durvalumab or atezolizumab in bladder cancer: phase mix of each"
 ```json
 {"steps": [
-  {"endpoint": "studies", "label": "Nivolumab", "params": {"query.intr": "\"nivolumab\"", "query.cond": "\"melanoma\""}},
-  {"endpoint": "studies", "label": "Pembrolizumab", "params": {"query.intr": "\"pembrolizumab\"", "query.cond": "\"melanoma\""}}],
- "rationale": "Melanoma trials of each drug; phases are compared in the chart."}
+  {"endpoint": "studies", "label": "Durvalumab", "params": {"query.intr": "\"durvalumab\"", "query.cond": "\"bladder cancer\""}},
+  {"endpoint": "studies", "label": "Atezolizumab", "params": {"query.intr": "\"atezolizumab\"", "query.cond": "\"bladder cancer\""}}],
+ "rationale": "Bladder cancer trials of each drug; phases are compared in the chart."}
 ```
 
-"Which European countries have the most recruiting industry-sponsored asthma trials?"
+"East Asian sites of recruiting, industry-run atopic dermatitis trials"
 ```json
-{"steps": [{"endpoint": "studies", "label": "Asthma", "params": {
-  "query.cond": "\"asthma\"",
-  "query.locn": "\"Germany\" OR \"France\" OR \"Italy\" OR \"Spain\" OR \"United Kingdom\" OR \"Netherlands\" OR \"Poland\" OR \"Belgium\"",
+{"steps": [{"endpoint": "studies", "label": "Atopic dermatitis", "params": {
+  "query.cond": "\"atopic dermatitis\"",
+  "query.locn": "\"Japan\" OR \"China\" OR \"South Korea\" OR \"Taiwan\"",
   "filter.overallStatus": "RECRUITING",
   "filter.advanced": "AREA[LeadSponsorClass]INDUSTRY"}}],
- "rationale": "Recruiting industry-sponsored asthma trials with sites in major European countries (Europe expanded to 8 countries)."}
+ "rationale": "Recruiting industry-sponsored atopic dermatitis trials with sites in East Asian countries (East Asia expanded to 4 countries)."}
 ```
 
 "How are all registered trials split by phase and by overall status?"

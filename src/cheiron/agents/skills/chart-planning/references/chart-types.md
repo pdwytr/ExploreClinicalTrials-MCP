@@ -28,8 +28,8 @@ Use **grouped** to compare sizes across series values (most comparisons, and any
 Use **stacked** only when the question is about shares of a whole and the series is single-valued
 (`sponsor_class`, `overall_status`, `lead_sponsor`, years, `group`).
 
-Example: share of industry-sponsored trials in each phase. Phase is multi-valued, so it can be on
+Example: how much of each phase is industry-run. Phase is multi-valued, so it can be on
 `x` but the series must be single-valued:
 ```json
-{"intent": "part_to_whole", "chart_type": "stacked_bar_chart", "title": "Lung cancer trials per phase by sponsor type", "x": "phase", "series": "sponsor_class"}
+{"intent": "part_to_whole", "chart_type": "stacked_bar_chart", "title": "Ovarian cancer trials in each phase, split by funder type", "x": "phase", "series": "sponsor_class"}
 ```

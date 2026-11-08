@@ -42,8 +42,8 @@ back with the reason, so fix the plan and answer again.
 | A ranking | "which countries have the most", "top sponsors" | `ranking` | `bar_chart`, `x` = that field, `top_n` if a number is asked |
 | Spread across categories | "distributed across phases", "intervention types" | `distribution` | `bar_chart`, `x` = that field |
 | Spread of a number | "enrollment sizes" | `distribution` | `histogram`, `x: enrollment` |
-| Sides compared | "A vs B by phase", "across asthma and COPD" | `magnitude` | `grouped_bar_chart`, `x` = field, `series: group` |
-| Parts of a whole | "share of industry trials per phase" | `part_to_whole` | `stacked_bar_chart`, `x` + single-valued `series` |
+| Sides compared | "A vs B by phase", "across two conditions" | `magnitude` | `grouped_bar_chart`, `x` = field, `series: group` |
+| Parts of a whole | "what part of each status is industry-run" | `part_to_whole` | `stacked_bar_chart`, `x` + single-valued `series` |
 | Where trials run | "by country" | `spatial` | `bar_chart`, `x: country` |
 | Links between things | "sponsors and their drugs", "drugs used together" | `relationship` | `network_graph`: read `references/networks.md` |
 
@@ -61,7 +61,7 @@ A ChartPlan: `intent`, `chart_type`, `title` (at most 120 characters), `x`, and 
 and `top_n` (1–50). For a comparison of two fetched sides by phase:
 
 ```json
-{"intent": "magnitude", "chart_type": "grouped_bar_chart", "title": "Trial phases: nivolumab vs pembrolizumab", "x": "phase", "series": "group"}
+{"intent": "magnitude", "chart_type": "grouped_bar_chart", "title": "Trial phases: durvalumab vs atezolizumab", "x": "phase", "series": "group"}
 ```
 
 ## Gotchas

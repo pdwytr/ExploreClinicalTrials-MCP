@@ -142,3 +142,34 @@ def test_chart_skill_names_exactly_the_chartable_fields():
     text = CHART_SKILL.read_text()
     section = text.split("## Fields you can chart")[1].split("##")[0]
     assert set(re.findall(r"`([a-z_]+)`", section)) == {d.value for d in Dimension}
+
+
+# --- Skills must not contain the eval questions -----------------------------------------------
+
+EVAL_CASES = Path(__file__).resolve().parent.parent / "evals" / "cases"
+_GENERIC = set(
+    "the and for with that this have from what which how many trials trial per each show were are does "
+    "more most into than across their year years since".split()
+)
+
+
+def _words(text: str) -> set[str]:
+    return {w for w in re.findall(r"[a-z0-9]+", text.lower()) if len(w) > 2 and w not in _GENERIC}
+
+
+def test_skill_examples_are_not_eval_questions():
+    """Skills teach the shape of a choice; if an example is (nearly) an eval question, that eval
+    measures copying, not judgment. Every quoted example and title is compared with every eval query."""
+    queries = [(c["id"], c["request"]["query"]) for f in sorted(EVAL_CASES.glob("*.json")) for c in json.loads(f.read_text())]
+    leaks = []
+    for md in sorted(SKILL_DIR.parent.rglob("*.md")):
+        for snippet in re.findall(r'"([^"\n]{20,200})"', md.read_text()):
+            words = _words(snippet)
+            if len(words) < 3:
+                continue
+            for case_id, query in queries:
+                q = _words(query)
+                if len(words & q) / len(words | q) >= 0.4:
+                    leaks.append(f"{md.name}: {snippet!r} ~ {case_id}")
+    assert not leaks, "skill examples copy eval questions:\n" + "\n".join(leaks)
+
