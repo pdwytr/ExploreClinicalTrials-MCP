@@ -237,8 +237,9 @@ class RunMetrics(BaseModel):
     """How the run went: time, cost and agent behaviour. The full trace is in trace.json."""
 
     seconds_total: float = Field(description="Agent run plus building the chart.")
-    seconds_model: float = Field(description="Agent run time not spent fetching (model turns, other tools).")
-    seconds_fetching: float = Field(description="Time in fetch_data calls (ClinicalTrials.gov API).")
+    seconds_fetching: float = Field(
+        description="Sum of fetch_data call durations (ClinicalTrials.gov API); fetches that ran in parallel each count."
+    )
     seconds_building: float = Field(description="Building the visualization from the fetched trials.")
     model_turns: int
     input_tokens: int

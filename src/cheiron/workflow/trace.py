@@ -67,7 +67,6 @@ def run_metrics(
     fetch_seconds = sum(f.seconds or 0.0 for f in fetches)
     return RunMetrics(
         seconds_total=round(agent_seconds + build_seconds, 2),
-        seconds_model=round(max(agent_seconds - fetch_seconds, 0.0), 2),
         seconds_fetching=round(fetch_seconds, 2),
         seconds_building=round(build_seconds, 2),
         model_turns=len(responses),

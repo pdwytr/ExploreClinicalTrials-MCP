@@ -69,7 +69,7 @@ class FakeAgent:
     def __init__(self, plan: SearchPlan, chart: ChartPlan):
         self.plan, self.chart = plan, chart
 
-    async def decide(self, request, fetch):
+    async def decide(self, request, fetch, log):
         outcome = await fetch(self.plan)
         profile = build_profile(outcome.trials_by_group, outcome.total_matched)
         warnings = check_chart_plan(self.chart, outcome.plan, profile)

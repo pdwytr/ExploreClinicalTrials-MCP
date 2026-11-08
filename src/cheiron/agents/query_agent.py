@@ -34,7 +34,7 @@ from cheiron.workflow.pipeline import FetchOutcome, check_chart_plan
 from cheiron.workflow.plans import ChartPlan, DataProfile, SearchPlan, StatsResult, Unanswerable
 from cheiron.workflow.profile import build_profile
 from cheiron.workflow.translate import year_bounds
-from cheiron.workflow.steps import AgentResult, FetchRecord
+from cheiron.workflow.steps import AgentResult, FetchRecord, RunLog
 
 SKILLS_DIR = Path(__file__).parent / "skills"
 SEARCH_SKILL = "ctgov-search"
@@ -104,17 +104,16 @@ class QueryAgent:
             self._agent.tool(tool)
         self._agent.output_validator(validate_output)
 
-    async def decide(self, request: QueryRequest, fetch: Fetch) -> AgentResult:
-        state = RunState(request=request, fetch=fetch)
+    async def decide(self, request: QueryRequest, fetch: Fetch, log: RunLog) -> AgentResult:
+        state = RunState(request=request, fetch=fetch, fetches=log.fetches)  # fetches are recorded straight into the log
         started = time.perf_counter()
         with capture_run_messages() as messages:
             try:
                 result = await self._agent.run(build_prompt(request), deps=state)
-                if isinstance(result.output, Unanswerable):
-                    raise UnsupportedQuery(result.output.reason)
-            except BaseException as exc:  # incl. cancellation: keep what was fetched and the trace
-                exc.fetches, exc.messages, exc.seconds = state.fetches, list(messages), time.perf_counter() - started
-                raise
+            finally:  # also on failure or cancellation, so the caller can save what happened
+                log.messages, log.seconds = list(messages), time.perf_counter() - started
+        if isinstance(result.output, Unanswerable):
+            raise UnsupportedQuery(result.output.reason)
         assert state.outcome is not None and state.profile is not None  # guaranteed by validate_output
         return AgentResult(
             chart=result.output,
@@ -124,9 +123,6 @@ class QueryAgent:
             skills_loaded=state.skills_loaded,
             references_read=state.references_read,
             usage=result.usage,
-            fetches=state.fetches,
-            messages=result.all_messages(),
-            seconds=time.perf_counter() - started,
         )
 
 

@@ -33,7 +33,7 @@ class Agent:
     def __init__(self, plan=COMPARISON, chart=PHASE_BY_DRUG, fail: Exception | None = None):
         self.plan, self.chart, self.fail = plan, chart, fail
 
-    async def decide(self, request, fetch):
+    async def decide(self, request, fetch, log):
         if self.fail:
             raise self.fail
         outcome = await fetch(self.plan)

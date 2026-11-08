@@ -32,7 +32,7 @@ from cheiron.workflow.plans import (
     StepResult,
     YEAR_DIMENSIONS,
 )
-from cheiron.workflow.steps import AgentResult, QueryPlanner, TrialSource
+from cheiron.workflow.steps import AgentResult, FetchRecord, QueryPlanner, RunLog, TrialSource
 from cheiron.workflow.trace import run_metrics
 from cheiron.workflow.translate import PreparedStep, apply_request_filters, filters_summary, year_bounds
 
@@ -84,9 +84,13 @@ class QueryWorkflow:
     max_trials_per_search: int | None = None
 
     async def run(
-        self, request: QueryRequest, progress: ProgressCallback | None = None
+        self, request: QueryRequest, progress: ProgressCallback | None = None, log: RunLog | None = None
     ) -> tuple[QueryResponse, AgentResult]:
-        """Answer one question: the agent plans, fetches and chooses; code builds the response."""
+        """Answer one question: the agent plans, fetches and chooses; code builds the response.
+
+        `log` records what the agent did (fetches, messages, time); pass one in to keep it
+        when the run fails."""
+        log = log if log is not None else RunLog()
         from cheiron.visualize.builder import build_visualization  # visualize depends on workflow
 
         _report(progress, "planning", "Planning API calls")
@@ -94,7 +98,7 @@ class QueryWorkflow:
         async def fetch(plan: SearchPlan) -> FetchOutcome:
             return await self.fetch_plan(plan, request, progress)
 
-        result = await self.agent.decide(request, fetch)
+        result = await self.agent.decide(request, fetch, log)
         outcome, chart = result.outcome, result.chart
 
         _report(progress, "building", "Building the chart")
@@ -105,7 +109,7 @@ class QueryWorkflow:
             outcome.trials_by_group, chart, bounds, outcome.version.data_timestamp.date(), stats
         )
         meta = Meta(
-            interpretation=_interpretation(result),
+            interpretation=_interpretation(result, log.fetches),
             filters_applied=filters_summary(outcome.prepared),
             assumptions=_assumptions(chart, result.profile),
             warnings=outcome.warnings + result.chart_warnings + viz_warnings,
@@ -114,9 +118,9 @@ class QueryWorkflow:
             units={"trial_count": "trials"},
             data_as_of=outcome.version.data_timestamp,
             api_version=outcome.version.api_version,
-            chain=_chain(result),
+            chain=_chain(result, log.fetches),
         )
-        meta.metrics = run_metrics(result.messages, result.fetches, result.seconds, time.perf_counter() - build_started)
+        meta.metrics = run_metrics(log.messages, log.fetches, log.seconds, time.perf_counter() - build_started)
         return QueryResponse(visualization=visualization, meta=meta), result
 
     async def fetch_plan(
@@ -276,10 +280,10 @@ def _assumptions(chart: ChartPlan, profile: DataProfile) -> list[str]:
     return notes
 
 
-def _chain(result: AgentResult) -> list[ChainStep]:
+def _chain(result: AgentResult, fetches: list[FetchRecord]) -> list[ChainStep]:
     """Every fetch the agent made, in order, so a reader can check intermediate findings."""
     chain = []
-    for record in result.fetches:
+    for record in fetches:
         ok = record.outcome is not None
         chain.append(
             ChainStep(
@@ -296,9 +300,9 @@ def _chain(result: AgentResult) -> list[ChainStep]:
     return chain
 
 
-def _interpretation(result: AgentResult) -> str:
+def _interpretation(result: AgentResult, fetches: list[FetchRecord]) -> str:
     """What was done to answer the question: every successful fetch's rationale, in order."""
-    steps = [r.plan.rationale for r in result.fetches if r.outcome is not None]
+    steps = [r.plan.rationale for r in fetches if r.outcome is not None]
     if len(steps) <= 1:
         return result.outcome.plan.rationale
     return " ".join(f"Step {i}: {text}" for i, text in enumerate(steps, start=1))

@@ -17,6 +17,7 @@ from cheiron.models.request import QueryRequest
 from cheiron.settings import Settings
 from cheiron.workflow import FetchResult, QueryWorkflow
 from cheiron.workflow.errors import UnsupportedQuery
+from cheiron.workflow.steps import RunLog
 
 PLAN = {"steps": [{"endpoint": "studies", "label": "Pembrolizumab", "params": {"query.intr": '"pembrolizumab"'}}],
         "rationale": "Pembrolizumab trials."}  # fmt: skip
@@ -53,14 +54,14 @@ def scripted(*steps):
     return FunctionModel(model), seen
 
 
-def decide(model, data=DATA, **request):
+def decide(model, data=DATA, log=None, **request):
     workflow = QueryWorkflow(agent=None, source=FakeSource(data))
     req = QueryRequest(query="test question", **request)
 
     async def fetch(plan):
         return await workflow.fetch_plan(plan, req)
 
-    return asyncio.run(QueryAgent(model).decide(req, fetch))
+    return asyncio.run(QueryAgent(model).decide(req, fetch, log if log is not None else RunLog()))
 
 
 HAPPY = [
@@ -114,18 +115,20 @@ def test_describe_before_fetch_is_sent_back():
 def test_failed_fetch_returns_the_reason_and_allows_one_more():
     bad = {"steps": [{"endpoint": "studies", "label": "Typo", "params": {"query.intr": '"pembrolizmab"'}}], "rationale": "r"}
     model, seen = scripted(("fetch_data", {"plan": bad}), *HAPPY)
-    result = decide(model)
+    log = RunLog()
+    result = decide(model, log=log)
     told = seen_text(seen["messages"])
     assert "Fetch 1 failed: No trials matched" in told and "4 call(s) left" in told
-    assert [r.error is not None for r in result.fetches] == [True, False]  # both fetches recorded
+    assert [r.error is not None for r in log.fetches] == [True, False]  # both fetches recorded
     assert result.outcome.plan.steps[0].label == "Pembrolizumab"
 
 
 def test_fetch_budget_is_enforced():
     fetch = ("fetch_data", {"plan": PLAN})
     model, seen = scripted(*[fetch] * (FETCH_BUDGET + 1), ("describe_data", {}), ("ChartPlan", BY_PHASE))
-    result = decide(model)
-    assert FETCH_BUDGET == 5 and len(result.fetches) == 5
+    log = RunLog()
+    decide(model, log=log)
+    assert FETCH_BUDGET == 5 and len(log.fetches) == 5
     assert "fetch budget (5) is used up" in seen_text(seen["messages"])
 
 
@@ -147,10 +150,12 @@ def test_comparison_chart_is_accepted_for_two_sides():
     assert result.profile.group_sizes == {"Nivolumab": 1, "Pembrolizumab": 2}
 
 
-def test_unanswerable_becomes_unsupported_query():
-    model, _ = scripted(("Unanswerable", {"reason": "Efficacy is not in registry records."}))
+def test_unanswerable_becomes_unsupported_query_and_the_log_is_kept():
+    model, _ = scripted(("fetch_data", {"plan": PLAN}), ("Unanswerable", {"reason": "Efficacy is not in registry records."}))
+    log = RunLog()
     with pytest.raises(UnsupportedQuery, match="Efficacy"):
-        decide(model)
+        decide(model, log=log)
+    assert len(log.fetches) == 1 and log.messages and log.seconds > 0  # the caller can still save what happened
 
 
 # --- Skills and references -----------------------------------------------------------------------
@@ -210,9 +215,10 @@ def test_trace_and_metrics_record_the_run_without_records():
     from cheiron.workflow.trace import build_trace, run_metrics
 
     model, _ = scripted(("ChartPlan", BY_PHASE), *HAPPY)  # one answer sent back, then the normal path
-    result = decide(model)
-    trace = build_trace(result.messages, result.fetches)
-    metrics = run_metrics(result.messages, result.fetches, result.seconds)
+    log = RunLog()
+    decide(model, log=log)
+    trace = build_trace(log.messages, log.fetches)
+    metrics = run_metrics(log.messages, log.fetches, log.seconds)
 
     assert any(e["event"] == "sent_back" and "before choosing a chart" in e["reason"] for e in trace)
     assert next(e for e in trace if e["event"] == "tool_result" and e["tool"] == "fetch_data")["seconds"] is not None

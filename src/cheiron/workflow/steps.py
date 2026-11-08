@@ -56,23 +56,33 @@ class FetchRecord:
 
 
 @dataclass
+class RunLog:
+    """What one agent run did, filled in while it runs. The caller creates it and passes it in,
+    so it still has the fetches and the trace when the run fails or is cancelled."""
+
+    fetches: list[FetchRecord] = field(default_factory=list)  # every fetch_data call, in order
+    messages: list = field(default_factory=list)  # the agent's message history, for the trace
+    seconds: float = 0.0  # the agent run, fetches included
+
+
+@dataclass
 class AgentResult:
     """What the agent hands back: its chart plan and the data it was chosen from."""
 
     chart: ChartPlan
-    outcome: "FetchOutcome"
+    outcome: "FetchOutcome"  # the latest successful fetch: what the chart is built from
     profile: DataProfile
     chart_warnings: list[str]
     skills_loaded: list[str]
     references_read: list[str]
     usage: Any = None
-    fetches: list[FetchRecord] = field(default_factory=list)  # every fetch, in order; the chart uses `outcome`
-    messages: list = field(default_factory=list)  # the agent's message history, for the trace
-    seconds: float = 0.0  # the agent run, fetches included
 
 
 class QueryPlanner(Protocol):
     """The agent. `fetch` executes a plan in code (user filters, every page) and returns the data;
-    raises UnsupportedQuery if the question cannot be answered from registry data."""
+    the agent records what it does in `log`. Raises UnsupportedQuery if the question cannot be
+    answered from registry data."""
 
-    async def decide(self, request: QueryRequest, fetch: Callable[[SearchPlan], Awaitable["FetchOutcome"]]) -> AgentResult: ...
+    async def decide(
+        self, request: QueryRequest, fetch: Callable[[SearchPlan], Awaitable["FetchOutcome"]], log: RunLog
+    ) -> AgentResult: ...

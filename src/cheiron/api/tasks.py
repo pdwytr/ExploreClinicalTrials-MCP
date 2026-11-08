@@ -20,7 +20,7 @@ from cheiron.models.response import ErrorResponse, QueryResponse
 from cheiron.workflow.errors import WorkflowError
 from cheiron.workflow.pipeline import QueryWorkflow
 from cheiron.workflow.plans import Progress
-from cheiron.workflow.steps import FetchRecord
+from cheiron.workflow.steps import FetchRecord, RunLog
 from cheiron.workflow.trace import build_trace, run_metrics
 
 log = logging.getLogger(__name__)
@@ -118,19 +118,22 @@ class TaskStore:
         task.update(status=TaskStatus.RUNNING)
         folder = await asyncio.to_thread(self.outputs.create, task.id, task.request)
         task.update(output_dir=folder)
+        run_log = RunLog()  # filled while the agent runs; kept when the run fails
         try:
-            response, result = await self.workflow.run(task.request, progress=lambda p: task.update(progress=p))
+            response, result = await self.workflow.run(
+                task.request, progress=lambda p: task.update(progress=p), log=run_log
+            )
             outcome = result.outcome
             saved = _saved_summary(outcome.trials_fetched, outcome.stats_fetched)
             task.update(progress=Progress(stage="saving", message=f"Saving {saved}"))
-            records = result.fetches or [FetchRecord(1, outcome.plan, outcome, result.profile)]
+            records = run_log.fetches or [FetchRecord(1, outcome.plan, outcome, result.profile)]
             for record in records:
                 await asyncio.to_thread(
                     self.outputs.save_fetch, folder / f"fetch-{record.number}",
                     record.plan, record.outcome, record.profile, record.error,
                 )  # fmt: skip
             await asyncio.to_thread(self.outputs.save_response, folder, response)
-            await asyncio.to_thread(self.outputs.save_trace, folder, build_trace(result.messages, records))
+            await asyncio.to_thread(self.outputs.save_trace, folder, build_trace(run_log.messages, records))
             meta |= {
                 "metrics": response.meta.metrics.model_dump() if response.meta.metrics else None,
                 "status": TaskStatus.SUCCEEDED.value,
@@ -153,12 +156,12 @@ class TaskStore:
                     trials_total=outcome.total_matched,
                 ),
             )
-        except asyncio.CancelledError as exc:
+        except asyncio.CancelledError:
             meta |= {"status": TaskStatus.FAILED.value, "error": {"error": "internal_error", "message": "Cancelled"}}
-            meta |= self._save_partial(folder, exc)
+            meta |= self._save_partial(folder, run_log)
             raise
         except Exception as exc:
-            meta |= self._save_partial(folder, exc)
+            meta |= self._save_partial(folder, run_log)
             if isinstance(exc, WorkflowError):
                 error = exc.to_response()
             else:
@@ -171,20 +174,19 @@ class TaskStore:
             meta |= {"finished_at": finished.isoformat(), "duration_seconds": round((finished - started).total_seconds(), 2)}
             await asyncio.to_thread(self.outputs.save_meta, folder, meta)
 
-    def _save_partial(self, folder: Path, exc: BaseException) -> dict:
+    def _save_partial(self, folder: Path, run_log: RunLog) -> dict:
         """Save the fetches and trace of a failed or cancelled run; return its metrics for meta.json."""
-        fetches, messages = getattr(exc, "fetches", []), getattr(exc, "messages", [])
-        for record in fetches:
+        for record in run_log.fetches:
             error = record.error or (None if record.outcome else "did not finish")
             try:
                 self.outputs.save_fetch(folder / f"fetch-{record.number}", record.plan, record.outcome, record.profile, error)
             except Exception:  # never let saving hide the original failure
                 log.exception("could not save fetch %s of task folder %s", record.number, folder)
-        if not messages:
+        if not run_log.messages:
             return {}
         try:
-            self.outputs.save_trace(folder, build_trace(messages, fetches))
-            return {"metrics": run_metrics(messages, fetches, getattr(exc, "seconds", 0.0)).model_dump()}
+            self.outputs.save_trace(folder, build_trace(run_log.messages, run_log.fetches))
+            return {"metrics": run_metrics(run_log.messages, run_log.fetches, run_log.seconds).model_dump()}
         except Exception:
             log.exception("could not save the trace of task folder %s", folder)
             return {}
