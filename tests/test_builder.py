@@ -355,3 +355,12 @@ def test_scatter_needs_two_numeric_axes_and_numbers_stay_out_of_other_charts():
         plan(intent="distribution", chart_type="bar_chart", x=Dimension.PHASE, y=Dimension.DURATION)
     with pytest.raises(ValidationError, match="numeric"):
         plan(intent="distribution", chart_type="bar_chart", x=Dimension.DURATION)
+
+
+def test_scatter_leaves_out_trials_that_enrolled_no_one():
+    trials = [finished(1, 0, "2020-01", "2020-01", overall_status="WITHDRAWN"), finished(2, 300, "2019-01", "2021-01")]
+    viz, warnings = build_visualization(
+        {"All": trials}, plan(intent="correlation", chart_type="scatter_plot", x=Dimension.ENROLLMENT, y=Dimension.DURATION)
+    )
+    assert [r.nct_ids for r in viz.data] == [["NCT00000002"]]
+    assert "1 trial that enrolled no one" in warnings[-1]

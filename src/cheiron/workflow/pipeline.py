@@ -277,7 +277,7 @@ def check_chart_plan(
                 f"{dim.value} can have several values per trial, so stacked parts would not add up to the whole; "
                 "use a grouped bar chart instead."
             )
-        if field.missing > MISSING_WARNING_SHARE * profile.trials_fetched:
+        if field.missing > MISSING_WARNING_SHARE * profile.trials_fetched and chart.chart_type != "scatter_plot":  # scatter says it
             warnings.append(f"{field.missing} of {profile.trials_fetched} trials have no {dim.value} and are excluded.")
     return warnings
 

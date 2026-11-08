@@ -31,7 +31,7 @@ TAGS = {
     "chart.time_series": "Counts per year",
     "chart.histogram": "Distribution of a numeric field (enrollment)",
     "chart.network": "Network of linked values (sponsor-drug, drug co-occurrence)",
-    "chart.scatter": "Two numeric fields per trial (not supported yet: only enrollment is numeric, so cases expect a refusal)",
+    "chart.scatter": "Two numeric fields per trial (enrollment against duration)",
     # how the question is asked
     "input.structured": "Uses the structured request fields (drug_name, condition, phase, years...)",
     "input.conflict": "Question text and a structured field disagree",
@@ -63,7 +63,7 @@ TAGS = {
     "refusal.made_up_entity": "A drug or condition that does not exist",
     "safety.prompt_injection": "Tries to make the system output given numbers",
     # known limitations: the honest answer is a refusal that names the missing field
-    "gap.field_not_fetched": "Needs a field the system does not fetch (investigators, design, US state, duration): must refuse and say why",
+    "gap.field_not_fetched": "Needs a field the system does not fetch (investigators, sites, US state): must refuse and say why",
 }
 
 RECOUNT_FIELDS = {"phase": "Phase", "overall_status": "OverallStatus", "sponsor_class": "LeadSponsorClass"}
@@ -339,8 +339,8 @@ def check_recall(case, status) -> list[str]:
 
 def check_counts(case, status) -> list[str]:
     """No bar exceeds the trials analysed; a single-valued field without series sums to at most that."""
-    if not answered(status) or status["result"]["visualization"]["type"] == "network_graph":
-        return []
+    if not answered(status) or status["result"]["visualization"]["type"] in ("network_graph", "scatter_plot"):
+        return []  # networks have sizes and weights; a scatter point is one trial, with no count
     viz, meta = status["result"]["visualization"], status["result"]["meta"]
     if not meta.get("trials_analyzed"):  # whole-registry stats: counts are not from fetched trials
         return []

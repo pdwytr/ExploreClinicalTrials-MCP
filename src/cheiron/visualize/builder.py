@@ -360,11 +360,14 @@ def _scatter(pairs: list[Pair], plan: ChartPlan) -> tuple[ChartVisualization, li
     assert plan.y is not None
     read_x, read_y = _NUMBER[plan.x], _NUMBER[plan.y]
     read_s = _reader(plan.series, pairs) if plan.series else None
-    points, skipped = [], set()
+    points, skipped, empty = [], set(), set()
     for group, t in pairs:
         x, y = read_x(t), read_y(t)
         if x is None or y is None:
             skipped.add(t.nct_id)
+            continue
+        if t.enrollment == 0:  # enrolled no one (mostly withdrawn): says nothing about size vs anything
+            empty.add(t.nct_id)
             continue
         for s in sorted(read_s(group, t)) if read_s else [None]:
             points.append((t, x, y, s))
@@ -373,6 +376,8 @@ def _scatter(pairs: list[Pair], plan: ChartPlan) -> tuple[ChartVisualization, li
         n = len(skipped)
         what = "trial without both values is" if n == 1 else "trials without both values are"
         warnings.append(f"{n} {what} left out (duration needs a start date and an actual primary completion).")
+    if empty:
+        warnings.append(f"{len(empty)} trial{'s' if len(empty) != 1 else ''} that enrolled no one (mostly withdrawn) left out.")
     if len(points) > SCATTER_MAX_POINTS:
         warnings.append(f"Showing an even sample of {SCATTER_MAX_POINTS} of {len(points)} points.")
         points = sorted(points, key=lambda p: hashlib.sha256(p[0].nct_id.encode()).hexdigest())[:SCATTER_MAX_POINTS]
