@@ -19,3 +19,6 @@ data/
 evals/results/
 evals/report.json
 evals/__pycache__/
+
+# Assignment screenshots (kept local)
+problem/
