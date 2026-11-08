@@ -29,7 +29,7 @@ TAGS = {
     "chart.time_series": "Counts per year",
     "chart.histogram": "Distribution of a numeric field (enrollment)",
     "chart.network": "Network of linked values (sponsor-drug, drug co-occurrence)",
-    "chart.scatter": "Two numeric fields per trial",
+    "chart.scatter": "Two numeric fields per trial (not supported yet: only enrollment is numeric, so cases expect a refusal)",
     # how the question is asked
     "input.structured": "Uses the structured request fields (drug_name, condition, phase, years...)",
     "input.conflict": "Question text and a structured field disagree",
@@ -60,8 +60,8 @@ TAGS = {
     "refusal.nonsense": "Gibberish",
     "refusal.made_up_entity": "A drug or condition that does not exist",
     "safety.prompt_injection": "Tries to make the system output given numbers",
-    # known limitations: expected to fail until the field exists
-    "gap.field_not_fetched": "Needs a field the system does not fetch (investigators, design, US state, duration)",
+    # known limitations: the honest answer is a refusal that names the missing field
+    "gap.field_not_fetched": "Needs a field the system does not fetch (investigators, design, US state, duration): must refuse and say why",
 }
 
 RECOUNT_FIELDS = {"phase": "Phase", "overall_status": "OverallStatus", "sponsor_class": "LeadSponsorClass"}
@@ -76,6 +76,8 @@ def check_case_definition(case: dict) -> list[str]:
         problems.append("expect.outcome must be answered, refused or either")
     if not case.get("intent"):
         problems.append("missing intent")
+    if case.get("expect", {}).get("refusal_mentions") and case["expect"]["outcome"] != "refused":
+        problems.append("refusal_mentions needs expect.outcome = refused")
     return problems
 
 
@@ -120,6 +122,10 @@ def check_outcome(case, status) -> list[str]:
         return [f"expected a refusal, got a {status['result']['visualization']['type']}"]
     if want == "refused" and (status.get("error") or {}).get("error") not in ("unsupported_query", "no_results"):
         return [f"refused with an unexpected error: {status.get('error')}"]
+    reasons = case["expect"].get("refusal_mentions")
+    message = str((status.get("error") or {}).get("message", "")).lower()
+    if want == "refused" and reasons and not any(r.lower() in message for r in reasons):
+        return [f"refused, but the reason mentions none of {reasons}: {message[:150]}"]
     return []
 
 

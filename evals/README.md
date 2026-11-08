@@ -31,6 +31,8 @@ evals/
   - `chart`: the allowed chart types.
   - `x`: the field the x axis must use.
   - `meta_mentions`, `filters_exclude`, `data_excludes`: text that must or must not appear.
+  - `refusal_mentions`: for `refused` cases, words of which at least one must be in the refusal
+    message, so refusing for the wrong reason still fails (e.g. `["duration"]`).
 
 ## Suites
 
@@ -46,7 +48,7 @@ evals/
 
 | Check | Fails when |
 |---|---|
-| outcome | answered or refused differently from `expect.outcome` |
+| outcome | answered or refused differently from `expect.outcome`, or a refusal whose reason mentions none of `expect.refusal_mentions` |
 | format | the response does not match the published `QueryResponse` schema, or a chart has no Vega-Lite spec |
 | chart | the chart type or x field is not the expected one |
 | expectations | `meta_mentions` / `filters_exclude` / `data_excludes` are not met |
