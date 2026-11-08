@@ -49,6 +49,8 @@ FIELD_VALUES: dict[Dimension, Callable[[Trial], list[str]]] = {
     Dimension.INTERVENTION_TYPE: lambda t: [i.type for i in t.interventions if i.type],
     Dimension.COUNTRY: lambda t: t.countries,
 }
+
+
 def value_key(value: str) -> str:
     """Values equal under this key are one category: case, hyphens, punctuation and spacing are
     ignored ("Non-small Cell Lung Cancer" = "non small cell lung cancer", "Placebo" = "placebo")."""
