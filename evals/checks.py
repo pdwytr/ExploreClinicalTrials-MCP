@@ -260,7 +260,8 @@ def check_expectations(case, status) -> list[str]:
     if not answered(status):
         return []
     expect, meta, problems = case["expect"], status["result"]["meta"], []
-    filters = json.dumps(meta.get("filters_applied"), ensure_ascii=False).lower()
+    # unescaped, so an expectation can quote a phrase exactly as the API received it
+    filters = json.dumps(meta.get("filters_applied"), ensure_ascii=False).replace('\\"', '"').lower()
     if expect.get("meta_mentions") and expect["meta_mentions"].lower() not in json.dumps(meta).lower():
         problems.append(f"meta never mentions {expect['meta_mentions']!r}")
     for text in as_list(expect.get("filters_include") or []):

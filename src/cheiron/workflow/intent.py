@@ -15,7 +15,7 @@ import re
 import unicodedata
 from collections import Counter
 from collections.abc import Awaitable, Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Literal
 
 from cheiron.fetch.endpoints import FieldValuesStep, Period, StudiesStep
@@ -94,6 +94,17 @@ def contains_term(value: str, term: str) -> bool:
     return re.search(rf"(?<!\w){re.escape(_bare(term))}(?!\w)", _bare(value)) is not None
 
 
+def negated_word(term: str, name: str) -> str | None:
+    """The word of `name` that `term` negates: 'Lymphoma, Non-Hodgkin' negates 'hodgkin' in
+    'Hodgkin lymphoma'. None when the name is itself the negated form ('non-small cell ...')."""
+    words, bare_name = set(_bare(name).split()), _bare(name)
+    tokens = _bare(term).split()
+    for before, word in zip(tokens, tokens[1:]):
+        if before == "non" and word in words and f"non {word}" not in bare_name:
+            return word
+    return None
+
+
 def phrase(text: str) -> str:
     """Quote a value so the API matches it as a phrase and never reads it as syntax.
     Unquoted, 'multiple sclerosis' also matches 'tuberous sclerosis'."""
@@ -119,6 +130,18 @@ class Resolution:
     name: str
     standard: str | None = None  # added registry name (MeSH term or registered lead sponsor)
     evidence: str | None = None  # e.g. "43 of 50 sampled trials are indexed as semaglutide"
+    # A condition whose text search also matches its opposite ("Hodgkin lymphoma" matches
+    # "non-Hodgkin lymphoma"): the opposite's index term, and the name's own if one was sampled.
+    opposite: str | None = None
+    own_term: str | None = None
+    opposite_evidence: str | None = None
+
+    def opposite_filter(self) -> str | None:
+        """Leave out trials indexed as the opposite condition, unless also indexed as this one."""
+        if not self.opposite:
+            return None
+        drop = f"NOT AREA[ConditionMeshTerm]{phrase(self.opposite)} AND NOT AREA[ConditionAncestorTerm]{phrase(self.opposite)}"
+        return f"(AREA[ConditionMeshTerm]{phrase(self.own_term)} OR ({drop}))" if self.own_term else f"({drop})"
 
     @property
     def terms(self) -> list[str]:
@@ -161,15 +184,36 @@ class Resolver:
         counts = Counter(v for t in trials for v in {_bare(x): x for x in _READ[kind](t)}.values())
         if not trials or not counts:
             return Resolution(kind, name)
+        base = Resolution(kind, name)
+        if kind == "condition":
+            base = self._opposite(name, counts, len(trials))
+            if base.opposite:  # the opposite disease is never a name for this one
+                counts = Counter({t: c for t, c in counts.items() if not negated_word(t, name)})
         if any(_bare(v) == _bare(name) for v in counts):
             # the registry already indexes under this very name; the most common other term is a
             # co-intervention or co-condition (nivolumab trials are often ipilimumab combinations)
-            return Resolution(kind, name)
+            return base
+        if not counts:
+            return base
         top, hits = counts.most_common(1)[0]
         if hits < RESOLVE_SHARE * len(trials) or _bare(top) == _bare(name) or contains_term(name, top):
-            return Resolution(kind, name)
+            return base
         evidence = f"{hits} of {len(trials)} sampled trials matching '{name}' are {_INDEXED_AS[kind]} '{top}'"
-        return Resolution(kind, name, standard=top, evidence=evidence)
+        return replace(base, standard=top, evidence=evidence)
+
+    @staticmethod
+    def _opposite(name: str, counts: Counter, sampled: int) -> Resolution:
+        """Detect a text search that also matches the opposite condition, from the sample's index
+        terms: 'Lymphoma, Non-Hodgkin' among trials matching 'Hodgkin lymphoma'."""
+        negated = [(t, c, negated_word(t, name)) for t, c in counts.most_common() if negated_word(t, name)]
+        if not negated:
+            return Resolution("condition", name)
+        opposite, hits, word = negated[0]
+        own = [t for t, _ in counts.most_common() if contains_term(t, word) and not negated_word(t, name)]
+        evidence = f"{hits} of {sampled} sampled trials matching '{name}' are indexed as '{opposite}'"
+        return Resolution(
+            "condition", name, opposite=opposite, own_term=own[0] if own else None, opposite_evidence=evidence
+        )
 
     async def countries(self) -> list[str]:
         """Every site country as the registry spells it today (GET /stats/field/values)."""
@@ -279,6 +323,14 @@ class ResolvedStep:
         r = self.names.get((slot, name))
         return r.terms if r else [name]
 
+    def opposite_filter(self) -> str | None:
+        """The filter that drops the opposite condition. Only for a step with that one condition:
+        with several OR-ed conditions it would also cut trials matching the others."""
+        if len(self.step.conditions) != 1:
+            return None
+        res = self.names.get(("conditions", self.step.conditions[0]))
+        return res.opposite_filter() if res else None
+
 
 async def resolve_plan(plan: SearchPlan, resolver: Resolver) -> tuple[dict[str, ResolvedStep], list[str], list[str]]:
     """Resolve every name in every studies step; then undo resolutions that would make compared
@@ -312,7 +364,7 @@ async def resolve_plan(plan: SearchPlan, resolver: Resolver) -> tuple[dict[str, 
                     std = _bare(res.standard)
                     clash = [o for o in resolved if o != label and (std in own[o] or std in added[o])]
                     if clash:
-                        r.names[(s_slot, name)] = Resolution(res.kind, name)
+                        r.names[(s_slot, name)] = replace(res, standard=None, evidence=None)
                         warnings.append(
                             f"{name} and {', '.join(clash)} are both indexed as {res.standard}: each side counts "
                             f"only trials that name it, so the comparison stays meaningful."
@@ -323,6 +375,21 @@ async def resolve_plan(plan: SearchPlan, resolver: Resolver) -> tuple[dict[str, 
         for res in r.names.values()
         if res.standard
     ]
+    for r in resolved.values():
+        for (slot, name), res in r.names.items():
+            if slot != "conditions" or not res.opposite:
+                continue
+            if r.opposite_filter():
+                kept = f"; trials also indexed as {res.own_term} are kept" if res.own_term else ""
+                notes.append(
+                    f"The text search for {name} also matches trials of the opposite condition, {res.opposite} "
+                    f"({res.opposite_evidence}), so trials indexed as {res.opposite} are left out{kept}."
+                )
+            else:
+                warnings.append(
+                    f"The text search for {name} also matches {res.opposite} ({res.opposite_evidence}); with "
+                    f"several conditions in one search, those trials could not be left out."
+                )
     return resolved, list(dict.fromkeys(warnings)), list(dict.fromkeys(notes))
 
 
@@ -366,7 +433,7 @@ def compile_step(r: ResolvedStep, request: QueryRequest) -> StudySearchParams:
         "query.term": " AND ".join(phrase(k) for k in s.keywords) or None,
         "filter.overallStatus": "|".join(st.value for st in s.statuses) or None,
     }
-    advanced = [build_advanced_filter(s.phases or None)]
+    advanced = [build_advanced_filter(s.phases or None), r.opposite_filter()]
     if s.study_type != "any":
         advanced.append(f"AREA[StudyType]{s.study_type.upper()}")
     if s.min_enrollment is not None or s.max_enrollment is not None:
@@ -406,6 +473,9 @@ def describe(label: str, r: ResolvedStep, request: QueryRequest) -> str:
         parts.append(f"not {', '.join(s.exclude_drugs)}")
     if s.conditions:
         parts.append(f"for {names('conditions', s.conditions)}")
+        res = r.names.get(("conditions", s.conditions[0]))
+        if r.opposite_filter() and res:
+            parts.append(f"not trials indexed only as {res.opposite}")
     if s.exclude_conditions:
         parts.append(f"excluding {', '.join(s.exclude_conditions)}")
     if s.sponsors:

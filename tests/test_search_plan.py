@@ -36,6 +36,14 @@ INDEX = {
     ("query.intr", "nivolumab"): indexed(10, drugs=["nivolumab"]) + indexed(30, drugs=["ipilimumab"]),
     ("query.cond", "type 2 diabetes"): indexed(41, conditions=["Diabetes Mellitus, Type 2"]) + indexed(9),
     ("query.spons", "MSD"): indexed(40, lead="Merck Sharp & Dohme LLC") + indexed(7, lead="Organon"),
+    # the text search for "Hodgkin lymphoma" also matches "non-Hodgkin lymphoma", so the opposite
+    # disease is the most common index term among the matches
+    ("query.cond", "Hodgkin lymphoma"): indexed(29, conditions=["Lymphoma, Non-Hodgkin"])
+    + indexed(12, conditions=["Hodgkin Disease"])
+    + indexed(9),
+    ("query.cond", "small cell lung cancer"): indexed(30, conditions=["Carcinoma, Non-Small-Cell Lung"])
+    + indexed(15, conditions=["Small Cell Lung Carcinoma"]),
+    ("query.cond", "non-small cell lung cancer"): indexed(45, conditions=["Carcinoma, Non-Small-Cell Lung"]),
 }
 
 
@@ -186,6 +194,41 @@ def test_comparison_sides_that_resolve_to_the_same_drug_stay_apart():
 def test_different_drugs_in_a_comparison_each_resolve():
     prepared = prepare(plan(("Ozempic", {"drugs": ["Ozempic"]}), ("Keytruda", {"drugs": ["Keytruda"]})))
     assert [s["query.intr"] for s in searches(prepared)] == ['("Ozempic" OR "semaglutide")', '("Keytruda" OR "pembrolizumab")']
+
+
+NOT_NHL = (
+    '(AREA[ConditionMeshTerm]"Hodgkin Disease" OR (NOT AREA[ConditionMeshTerm]"Lymphoma, Non-Hodgkin" '
+    'AND NOT AREA[ConditionAncestorTerm]"Lymphoma, Non-Hodgkin"))'
+)
+
+
+def test_a_condition_is_never_expanded_to_its_opposite():
+    prepared = prepare(plan(("x", {"conditions": ["Hodgkin lymphoma"]})))
+    assert searches(prepared)[0]["query.cond"] == '"Hodgkin lymphoma"'
+
+
+def test_trials_indexed_only_as_the_opposite_condition_are_left_out():
+    # keep trials indexed as the condition itself (mixed lymphoma trials included) and trials the
+    # registry has not indexed as the opposite one; drop the rest
+    prepared = prepare(plan(("x", {"conditions": ["Hodgkin lymphoma"]})))
+    assert searches(prepared)[0]["filter.advanced"] == NOT_NHL
+    assert any("Lymphoma, Non-Hodgkin" in n and "left out" in n for n in prepared.notes)
+    sclc = prepare(plan(("x", {"conditions": ["small cell lung cancer"]})))
+    assert 'NOT AREA[ConditionMeshTerm]"Carcinoma, Non-Small-Cell Lung"' in searches(sclc)[0]["filter.advanced"]
+    assert 'AREA[ConditionMeshTerm]"Small Cell Lung Carcinoma"' in searches(sclc)[0]["filter.advanced"]
+
+
+def test_a_name_that_is_itself_the_negated_form_resolves_normally():
+    prepared = prepare(plan(("x", {"conditions": ["non-small cell lung cancer"]})))
+    search = searches(prepared)[0]
+    assert search["query.cond"] == '("non-small cell lung cancer" OR "Carcinoma, Non-Small-Cell Lung")'
+    assert "filter.advanced" not in search
+
+
+def test_the_opposite_condition_filter_applies_only_to_a_step_with_that_one_condition():
+    prepared = prepare(plan(("x", {"conditions": ["Hodgkin lymphoma", "type 2 diabetes"]})))
+    assert "filter.advanced" not in searches(prepared)[0]
+    assert any("Lymphoma, Non-Hodgkin" in w for w in prepared.warnings)
 
 
 # --- The user's structured fields win ------------------------------------------------------------
