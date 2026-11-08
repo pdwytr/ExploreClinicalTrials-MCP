@@ -33,6 +33,16 @@ def _norm(expression: str) -> str:
     return re.sub(r"[()\s]", "", expression)
 
 
+def _bare(text: str) -> str:
+    return " ".join(text.replace('"', " ").split()).casefold()
+
+
+def _same_term(planner_value: str, user_value: str) -> bool:
+    """The planner searched exactly the user's term (ignoring quotes, case and spacing). Only then is
+    the user's filter already applied: a value that merely *contains* it (e.g. an OR) is wider."""
+    return _bare(planner_value) == _bare(user_value)
+
+
 def _and(existing: str | None, addition: str) -> str:
     return f"({existing}) AND {addition}" if existing else addition
 
@@ -41,14 +51,15 @@ def apply_request_filters(plan: SearchPlan, request: QueryRequest) -> tuple[list
     """Add every structured field the user sent to every /studies step, so filters are guaranteed.
 
     - Text fields (drug, condition, sponsor, country) are AND-ed onto the matching
-      parameter, unless the planner's value already contains them.
-    - Phases are AND-ed onto filter.advanced.
+      parameter, unless the planner searched exactly that term (an OR containing it is wider).
+    - Phases are AND-ed onto filter.advanced, unless it is exactly that phase filter.
     - Years: each step's period becomes a RANGE on its date field. The user's start_year /
       end_year are authoritative: they replace any start-date period the planner wrote.
     - Statuses replace filter.overallStatus (the user's explicit choice wins).
-    Exception: if the steps compare sides on that very parameter (e.g. two drugs),
-    AND-ing the user's value onto both would change the comparison, so it is skipped
-    with a user-facing warning.
+    Exception: if the steps compare sides on that very parameter and the user's value is one
+    of the sides (e.g. drug_name=X, "compare X with Y"), AND-ing it onto every side would erase
+    the comparison, so it is skipped with a user-facing warning. If the user's value is none of
+    the sides, the comparison cannot replace it: it is AND-ed onto every side, with a warning.
 
     Registry-wide steps (/stats/*) cannot filter, so a plan using them while the user
     sent filters is rejected with InvalidSearch: the planner gets that as feedback.
@@ -77,17 +88,19 @@ def apply_request_filters(plan: SearchPlan, request: QueryRequest) -> tuple[list
             continue
         values = {p.get(api_param, "").casefold() for p in all_params}
         if plan.is_comparison and len(values) > 1:
-            warnings.append(f"Ignored {req_field}={wanted!r}: the question compares searches by {api_param}.")
-            continue
+            if any(_same_term(p.get(api_param, ""), wanted) for p in all_params):
+                warnings.append(f"Ignored {req_field}={wanted!r}: the question compares searches by {api_param}.")
+                continue
+            warnings.append(f"{req_field}={wanted!r} was applied to every compared side.")
         for p in all_params:
-            if wanted.casefold() not in p.get(api_param, "").casefold():
+            if not _same_term(p.get(api_param, ""), wanted):
                 log.info("added user filter: %s += %r", api_param, wanted)
                 p[api_param] = _and(p.get(api_param), phrase(wanted))
 
     advanced = build_advanced_filter(request.trial_phase)
     statuses = "|".join(s.value for s in request.recruitment_status) if request.recruitment_status else None
     for step, p in zip(studies, all_params):
-        if advanced and _norm(advanced) not in _norm(p.get("filter.advanced", "")):
+        if advanced and _norm(advanced) != _norm(p.get("filter.advanced", "")):
             p["filter.advanced"] = _and(p.get("filter.advanced"), advanced)
         for period in effective_periods(step, request):
             p["filter.advanced"] = _and(p.get("filter.advanced"), date_range(period.field, period.from_year, period.to_year))

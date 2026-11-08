@@ -79,11 +79,35 @@ def test_user_statuses_replace_planner_statuses():
     assert prepared[0][1].search["filter.overallStatus"] == "RECRUITING"
 
 
-def test_text_filter_does_not_erase_a_comparison():
-    p = plan(("Nivolumab", {"query.intr": "nivolumab"}), ("Pembrolizumab", {"query.intr": "pembrolizumab"}))
-    prepared, warnings = apply_request_filters(p, request(drug_name="Keytruda"))
-    assert [params.search["query.intr"] for _, params in prepared] == ["nivolumab", "pembrolizumab"]
+def test_text_filter_cannot_be_widened_by_an_or():
+    # "already contains the user's drug" must not count: the OR would bring in other drugs' trials
+    p = plan(("x", {"query.intr": '"pembrolizumab" OR "nivolumab"'}))
+    prepared, _ = apply_request_filters(p, request(drug_name="Pembrolizumab"))
+    assert prepared[0][1].search["query.intr"] == '("pembrolizumab" OR "nivolumab") AND "Pembrolizumab"'
+
+
+def test_phase_filter_cannot_be_widened_by_an_or():
+    p = plan(("x", {"query.cond": "asthma", "filter.advanced": "AREA[Phase](PHASE3) OR AREA[Phase](PHASE2)"}))
+    prepared, _ = apply_request_filters(p, request(trial_phase=["PHASE3"]))
+    assert prepared[0][1].search["filter.advanced"] == "(AREA[Phase](PHASE3) OR AREA[Phase](PHASE2)) AND AREA[Phase](PHASE3)"
+
+
+def test_comparison_may_skip_the_user_value_only_when_it_is_a_compared_side():
+    p = plan(("Nivolumab", {"query.intr": '"nivolumab"'}), ("Pembrolizumab", {"query.intr": '"pembrolizumab"'}))
+    prepared, warnings = apply_request_filters(p, request(drug_name="Pembrolizumab"))
+    assert [params.search["query.intr"] for _, params in prepared] == ['"nivolumab"', '"pembrolizumab"']
     assert "Ignored drug_name" in warnings[0]
+
+
+def test_comparison_cannot_replace_the_user_value_with_other_sides():
+    # the user asked about one drug; a plan comparing two others must still be limited to it
+    p = plan(("Nivolumab", {"query.intr": "nivolumab"}), ("Ipilimumab", {"query.intr": "ipilimumab"}))
+    prepared, warnings = apply_request_filters(p, request(drug_name="Relatlimab"))
+    assert [params.search["query.intr"] for _, params in prepared] == [
+        '(nivolumab) AND "Relatlimab"',
+        '(ipilimumab) AND "Relatlimab"',
+    ]
+    assert "drug_name='Relatlimab' was applied to every compared side" in warnings[0]
 
 
 def test_filters_apply_to_every_search():
