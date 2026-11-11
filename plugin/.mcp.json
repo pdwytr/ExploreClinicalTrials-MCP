@@ -1,8 +1,8 @@
 {
   "mcpServers": {
     "studytrials": {
-      "command": "uvx",
-      "args": ["--from", "${STUDYTRIALS_SOURCE:-studytrials-mcp@latest}", "studytrials-mcp"]
+      "command": "${STUDYTRIALS_LAUNCHER:-uvx}",
+      "args": ["studytrials-mcp@latest"]
     }
   }
 }

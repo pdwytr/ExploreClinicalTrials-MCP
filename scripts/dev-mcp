@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Run the MCP server from this checkout's source, for development:
+#   STUDYTRIALS_LAUNCHER=$PWD/scripts/dev-mcp claude --plugin-dir ./plugin
+# The plugin normally launches `uvx studytrials-mcp@latest` (the release on PyPI). uvx keeps a built copy
+# of a local folder and never rebuilds it, so it cannot run code you are editing. An editable install
+# reads the source files directly: every start has your latest edits. The plugin's arguments (the
+# PyPI spec) are ignored.
+set -euo pipefail
+repo="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+exec uv run --no-project --with-editable "$repo" studytrials-mcp

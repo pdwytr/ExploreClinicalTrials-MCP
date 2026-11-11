@@ -160,7 +160,7 @@ https://cheiron-e7vsuq.fly.dev/.
 
 ```bash
 uv run pytest                                          # unit tests, no API key needed
-STUDYTRIALS_SOURCE=$PWD claude --plugin-dir ./plugin    # try local changes in Claude Code
+STUDYTRIALS_LAUNCHER=$PWD/scripts/dev-mcp claude --plugin-dir ./plugin   # the plugin, on this checkout's source
 uv run python scripts/vendor_web_assets.py             # refresh the pinned chart libraries
 ```
 

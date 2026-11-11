@@ -339,3 +339,16 @@ def test_registry_wide_step_with_user_filters_is_sent_back_to_the_planner():
 def test_filters_on_a_single_study_lookup_only_warn():
     p = SearchPlan.model_validate({"steps": [{"endpoint": "study", "label": "One", "nct_id": "NCT05064059"}], "rationale": "r"})
     assert "lookup of one trial" in prepare(p, condition="asthma").warnings[0]
+
+
+def test_a_drugs_used_together_network_refuses_an_intervention_count_filter():
+    """The filter cannot change the pairs, only each drug's count: allowing it makes the same question
+    give different numbers depending on the planner's choice."""
+    combos = ("Myeloma", {"conditions": ["multiple myeloma"], "advanced": "AREA[NumInterventions]RANGE[2,MAX]"})
+    with pytest.raises(ValidationError, match="remove the NumInterventions filter"):
+        plan(combos, breakdown="intervention x intervention")
+    with pytest.raises(ValidationError, match="NumInterventions"):
+        plan(combos, breakdown=" Intervention X intervention ".replace("X", "x"))
+    plan(("Myeloma", {"conditions": ["multiple myeloma"]}), breakdown="intervention x intervention")
+    plan(combos, breakdown="lead_sponsor x intervention")  # other networks: the question decides
+    plan(combos, breakdown="phase")  # e.g. "phases of combination trials"

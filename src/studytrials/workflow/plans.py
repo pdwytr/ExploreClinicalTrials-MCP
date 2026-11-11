@@ -59,7 +59,24 @@ class SearchPlan(BaseModel):
             identities = {s.model_dump_json(exclude={"label"}) for s in self.steps}
             if len(identities) != len(self.steps):
                 raise ValueError("compared steps must differ")
+        if self.is_cooccurrence and any(
+            "numinterventions" in (getattr(s, "advanced", None) or "").casefold() for s in self.steps
+        ):
+            # A pair needs two interventions in one trial, so the filter cannot change the links; it only
+            # drops single-intervention trials from each node's count. Allowed, the same question would
+            # give different node counts depending on whether the planner happened to add it.
+            raise ValueError(
+                "an 'intervention x intervention' network already links only trials with two or more "
+                "interventions; remove the NumInterventions filter from advanced, it would only shrink "
+                "each intervention's trial count"
+            )
         return self
+
+    @property
+    def is_cooccurrence(self) -> bool:
+        """Interventions used together: both node kinds are interventions."""
+        kinds = [k.strip().casefold() for k in (self.breakdown or "").split(" x ")]
+        return kinds == ["intervention", "intervention"]
 
 
 class Unanswerable(BaseModel):

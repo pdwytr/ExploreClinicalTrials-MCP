@@ -147,3 +147,25 @@ def test_local_page_refuses_other_host_names(tmp_path):
     rebound = TestClient(app, base_url="http://attacker.example:8765")
     for path in ("/", "/health", "/results", "/results/20260101-000000-abcdef", "/vendor/vega.min.js"):
         assert rebound.get(path).status_code == 400, path
+
+
+def test_network_summary_names_the_strongest_pairs():
+    """'Which drugs are tested together' is answered by the pairs, so the model must get them."""
+    import json
+    from types import SimpleNamespace
+
+    from studytrials.models.response import Edge, NetworkData, Node
+
+    nodes = [Node(id=f"n{i}", label=name, group="intervention", size=size) for i, (name, size) in
+             enumerate([("Dexamethasone", 740), ("Lenalidomide", 374), ("Bortezomib", 301)])]
+    edges = [Edge(source="n0", target="n2", weight=150, nct_ids=["NCT1"]), Edge(source="n0", target="n1", weight=200)]
+    viz = SimpleNamespace(type="network_graph", title="Drugs tested together", data=NetworkData(nodes=nodes, edges=edges))
+    meta = SimpleNamespace(interpretation="", total_trials_matched=4074, trials_analyzed=4074, data_as_of=None,
+                           warnings=[], assumptions=[], units={})
+    text = server.summarize(SimpleNamespace(visualization=viz, meta=meta), "r1", "http://127.0.0.1:8765/?result=r1", False)
+    out = json.loads(text.split("\n", 1)[1])
+    assert out["top_pairs"] == [
+        {"pair": ["Dexamethasone", "Lenalidomide"], "trials": 200},
+        {"pair": ["Dexamethasone", "Bortezomib"], "trials": 150},
+    ]
+    assert "NCT1" not in text  # sources stay on the page

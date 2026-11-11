@@ -130,7 +130,8 @@ instructions: |
   ("enrollment against duration") are written like a network: `"enrollment x duration_months"`.
   A relationship question (a network) names **both node kinds** joined by ` x `:
   `"lead_sponsor x intervention"` (which sponsors test which drugs), `"condition x intervention"`,
-  `"intervention x intervention"` (drugs used together). These are supported. If it asks for a breakdown the data cannot chart (US state, city, site, investigator), write `"unsupported: <what>"`: you will then answer unanswerable,
+  `"intervention x intervention"` (drugs used together). These are supported (code rejects a
+  `NumInterventions` filter on drugs used together: pairs already need two drugs). If it asks for a breakdown the data cannot chart (US state, city, site, investigator), write `"unsupported: <what>"`: you will then answer unanswerable,
   never chart the nearest field instead. Leave it out when the question asks for no breakdown.
   The chart planner must show this breakdown.
 

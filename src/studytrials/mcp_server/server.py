@@ -50,6 +50,7 @@ WEB = Path(__file__).parent.parent / "web"
 CHART_UI = "ui://studytrials/chart"
 RESPONSE_META_KEY = "studytrials/response"  # the full answer, for the inline page only (not the model)
 SUMMARY_ROWS = 25
+SUMMARY_PAIRS = 15  # a network's strongest links, quoted back to the model
 SOURCES = {"citations", "nct_ids"}  # for the page; the model gets the counts only  # data rows quoted back to the model, so it can describe the chart
 
 log = logging.getLogger("studytrials.mcp")
@@ -280,6 +281,13 @@ def summarize(response: QueryResponse, result_id: str, url: str | None, inline: 
     if viz.type == "network_graph":
         nodes = sorted(viz.data.nodes, key=lambda n: -(n.size or 0))
         out["top_nodes"] = [{"label": n.label, "group": n.group, "trials": n.size} for n in nodes[:SUMMARY_ROWS]]
+        # The pairs are usually the answer ("which drugs are tested together"), so name the strongest.
+        label = {n.id: n.label for n in viz.data.nodes}
+        edges = sorted(viz.data.edges, key=lambda e: (-e.weight, label.get(e.source, e.source), label.get(e.target, e.target)))
+        out["top_pairs"] = [
+            {"pair": [label.get(e.source, e.source), label.get(e.target, e.target)], "trials": e.weight}
+            for e in edges[:SUMMARY_PAIRS]
+        ]
         out["nodes"], out["edges"] = len(viz.data.nodes), len(viz.data.edges)
     else:
         rows = [{k: v for k, v in row.model_dump(mode="json").items() if k not in SOURCES} for row in viz.data]
