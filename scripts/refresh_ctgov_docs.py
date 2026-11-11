@@ -27,7 +27,7 @@ SNAPSHOTS = {
 
 
 def fetch(url: str) -> bytes:
-    req = urllib.request.Request(url, headers={"User-Agent": "cheiron-docs-refresh"})
+    req = urllib.request.Request(url, headers={"User-Agent": "trialsight-docs-refresh"})
     with urllib.request.urlopen(req, timeout=60) as resp:
         return resp.read()
 

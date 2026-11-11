@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from cheiron.models import Intent, QueryResponse
+from trialsight.models import Intent, QueryResponse
 
 # Request validation lives in test_requests.py; this file covers responses.
 

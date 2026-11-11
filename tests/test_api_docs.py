@@ -7,7 +7,7 @@ import re
 
 import httpx
 
-from cheiron.agents.api_docs import (
+from trialsight.agents.api_docs import (
     SNAPSHOT_DIR,
     SOURCES,
     load_api_docs,

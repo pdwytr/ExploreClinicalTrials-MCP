@@ -13,4 +13,4 @@ RUN uv sync --frozen --no-dev
 ENV PATH="/app/.venv/bin:$PATH"
 EXPOSE 8080
 # 0.0.0.0 so Fly's proxy can reach it; 8080 matches internal_port in fly.toml
-CMD ["uvicorn", "cheiron.api.app:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["uvicorn", "trialsight.api.app:app", "--host", "0.0.0.0", "--port", "8080"]

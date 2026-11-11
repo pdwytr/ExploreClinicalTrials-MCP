@@ -2,7 +2,7 @@ import pytest
 from pydantic import ValidationError
 from request_cases import INVALID_CASES, VALID_CASES
 
-from cheiron.models import Intent, QueryRequest
+from trialsight.models import Intent, QueryRequest
 
 
 @pytest.mark.parametrize("case", VALID_CASES, ids=lambda c: c.name)

@@ -13,16 +13,16 @@ from pydantic_ai.messages import ModelResponse, ToolCallPart
 from pydantic_ai.models.function import AgentInfo, FunctionModel
 from test_workflow import FOUND, FakeSource, trial
 
-from cheiron.agents import query_agent
-from cheiron.agents.api_docs import ApiDocs
-from cheiron.agents.chart_planner import ChartInput, breakdown_problem
-from cheiron.agents.chart_planner import build_prompt as chart_prompt
-from cheiron.agents.query_agent import FETCH_BUDGET, QueryAgent, build_prompt
-from cheiron.models.request import QueryRequest
-from cheiron.settings import Settings
-from cheiron.workflow import ChartPlan, FetchResult, QueryWorkflow, SearchPlan
-from cheiron.workflow.errors import UnsupportedQuery
-from cheiron.workflow.steps import RunLog
+from trialsight.agents import query_agent
+from trialsight.agents.api_docs import ApiDocs
+from trialsight.agents.chart_planner import ChartInput, breakdown_problem
+from trialsight.agents.chart_planner import build_prompt as chart_prompt
+from trialsight.agents.query_agent import FETCH_BUDGET, QueryAgent, build_prompt
+from trialsight.models.request import QueryRequest
+from trialsight.settings import Settings
+from trialsight.workflow import ChartPlan, FetchResult, QueryWorkflow, SearchPlan
+from trialsight.workflow.errors import UnsupportedQuery
+from trialsight.workflow.steps import RunLog
 
 PLAN = {"steps": [{"endpoint": "studies", "label": "Pembrolizumab", "drugs": ["pembrolizumab"]}],
         "rationale": "Pembrolizumab trials."}  # fmt: skip
@@ -228,21 +228,22 @@ def test_prompt_lists_user_filters():
 
 def test_missing_settings_fail_with_a_clear_message(monkeypatch):
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.delenv("TRIALSIGHT_PLANNER_MODEL", raising=False)
     monkeypatch.delenv("CHEIRON_PLANNER_MODEL", raising=False)
     with pytest.raises(ValidationError) as exc:
         Settings(_env_file=None)
-    assert {e["loc"][0] for e in exc.value.errors()} == {"openai_api_key", "cheiron_planner_model"}
+    assert {e["loc"][0] for e in exc.value.errors()} == {"openai_api_key", "TRIALSIGHT_PLANNER_MODEL"}
 
 
 def test_only_openai_models_are_supported(monkeypatch):
-    fake = Settings(_env_file=None, openai_api_key="sk-test", cheiron_planner_model="anthropic:claude")
+    fake = Settings(_env_file=None, openai_api_key="sk-test", trialsight_planner_model="anthropic:claude")
     monkeypatch.setattr(query_agent, "get_settings", lambda: fake)
     with pytest.raises(ValueError, match="use 'openai:<model>'"):
         query_agent.model_from_settings()
 
 
 def test_openai_model_is_built_from_settings(monkeypatch):
-    fake = Settings(_env_file=None, openai_api_key="sk-test", cheiron_planner_model="openai:gpt-5.4")
+    fake = Settings(_env_file=None, openai_api_key="sk-test", trialsight_planner_model="openai:gpt-5.4")
     monkeypatch.setattr(query_agent, "get_settings", lambda: fake)
     assert query_agent.model_from_settings().model_name == "gpt-5.4"
 
@@ -251,7 +252,7 @@ def test_openai_model_is_built_from_settings(monkeypatch):
 
 
 def test_trace_and_metrics_cover_both_agents_without_records():
-    from cheiron.workflow.trace import build_trace, run_metrics
+    from trialsight.workflow.trace import build_trace, run_metrics
 
     model, _ = scripted(PLAN_CHART, FETCH, DESCRIBE, PLAN_CHART, ("chart_plan", BY_DRUG), ("chart_plan", BY_PHASE))
     log = RunLog()
@@ -309,7 +310,7 @@ def test_a_network_breakdown_names_both_node_kinds():
 
 
 def test_chart_prompt_says_when_there_are_no_filters_or_brief():
-    from cheiron.workflow.profile import build_profile
+    from trialsight.workflow.profile import build_profile
 
     profile = build_profile({"Pembrolizumab": FOUND.trials}, 2)
     prompt = chart_prompt(ChartInput(QueryRequest(query="Any question"), SearchPlan.model_validate(PLAN), profile, " "))

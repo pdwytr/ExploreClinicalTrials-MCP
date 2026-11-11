@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "cheiron",
+    "title": "trialsight",
     "summary": "ClinicalTrials.gov question-to-data service",
     "description": "Ask a natural-language question about clinical trials and get one visualization built from\nClinicalTrials.gov data, with every value citing the trials behind it.\n\n**How a question moves through the API**\n\n1. `POST /queries` submits the question (and optional filters) and returns a `task_id` at once.\n2. `GET /queries/{task_id}` is polled until `status` is `succeeded` or `failed`; the answer is in\n   `result`.\n3. `GET /health` only reports that the service is up.\n\nThe web page at `/` uses the first two. Use \"Try it out\" below to call them from the browser.\n",
     "version": "0.1.0"

@@ -12,9 +12,9 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from cheiron.fetch import StudiesPage, StudySearchParams, Trial, build_advanced_filter
-from cheiron.fetch.models import RawStudy, date_range
-from cheiron.models import TrialPhase
+from trialsight.fetch import StudiesPage, StudySearchParams, Trial, build_advanced_filter
+from trialsight.fetch.models import RawStudy, date_range
+from trialsight.models import TrialPhase
 
 FIXTURE = Path(__file__).parent / "fixtures" / "ctgov" / "pembrolizumab_phase3_page1.json"
 

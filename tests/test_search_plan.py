@@ -6,13 +6,13 @@ import asyncio
 import pytest
 from pydantic import ValidationError
 
-from cheiron.fetch.models import Trial
-from cheiron.fetch.stats import FieldValuesResponse
-from cheiron.models.request import QueryRequest
-from cheiron.workflow import FetchResult, SearchPlan, StatsResult
-from cheiron.workflow.errors import InvalidSearch
-from cheiron.workflow.intent import Resolver, phrase
-from cheiron.workflow.translate import filters_summary, prepare_plan
+from trialsight.fetch.models import Trial
+from trialsight.fetch.stats import FieldValuesResponse
+from trialsight.models.request import QueryRequest
+from trialsight.workflow import FetchResult, SearchPlan, StatsResult
+from trialsight.workflow.errors import InvalidSearch
+from trialsight.workflow.intent import Resolver, phrase
+from trialsight.workflow.translate import filters_summary, prepare_plan
 
 # --- A fake registry for name lookups ------------------------------------------------------------
 

@@ -8,10 +8,10 @@ from pathlib import Path
 import pytest
 from pydantic_ai.agent.spec import AgentSpec
 
-from cheiron.agents import chart_planner, query_agent
-from cheiron.agents.api_docs import snapshot_api_docs
-from cheiron.fetch.models import SEARCH_PARAMS, SNAPSHOT_API_VERSION
-from cheiron.workflow import ChartPlan, Dimension, SearchPlan
+from trialsight.agents import chart_planner, query_agent
+from trialsight.agents.api_docs import snapshot_api_docs
+from trialsight.fetch.models import SEARCH_PARAMS, SNAPSHOT_API_VERSION
+from trialsight.workflow import ChartPlan, Dimension, SearchPlan
 
 SPECS = Path(query_agent.__file__).parent / "specs"
 QUERY_SPEC, CHART_SPEC = SPECS / "query-agent.yaml", SPECS / "chart-planner.yaml"

@@ -1,12 +1,12 @@
 {
-  "name": "cheiron",
+  "name": "trialsight",
   "owner": {
     "name": "pdwytr"
   },
-  "description": "cheiron: clinical-trials questions answered with cited charts from ClinicalTrials.gov.",
+  "description": "trialsight: clinical-trials questions answered with cited charts from ClinicalTrials.gov.",
   "plugins": [
     {
-      "name": "cheiron",
+      "name": "trialsight",
       "source": "./plugin",
       "description": "Ask about clinical trials and get a chart from ClinicalTrials.gov, with every value citing its trials."
     }

@@ -4,10 +4,10 @@ import json
 from datetime import date
 from pathlib import Path
 
-from cheiron.fetch.models import StudiesPage, Trial
-from cheiron.fetch.stats import FieldValuesResponse, incomplete_fields
-from cheiron.workflow.plans import Dimension, StatsResult
-from cheiron.workflow.profile import TOP_VALUES, build_profile
+from trialsight.fetch.models import StudiesPage, Trial
+from trialsight.fetch.stats import FieldValuesResponse, incomplete_fields
+from trialsight.workflow.plans import Dimension, StatsResult
+from trialsight.workflow.profile import TOP_VALUES, build_profile
 
 FIXTURES = Path(__file__).parent / "fixtures" / "ctgov"
 

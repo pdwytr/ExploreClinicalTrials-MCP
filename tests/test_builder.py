@@ -6,13 +6,13 @@ import altair as alt
 import pytest
 from pydantic import ValidationError
 
-from cheiron.fetch.models import Intervention, Trial
-from cheiron.models.response import Meta, QueryResponse
-from cheiron.visualize.builder import CITATIONS_PER_DATUM, FIELD_PATHS, build_visualization
-from cheiron.workflow.errors import UnsupportedQuery
-from cheiron.workflow.pipeline import check_chart_plan
-from cheiron.workflow.plans import ChartPlan, Dimension, SearchPlan
-from cheiron.workflow.profile import build_profile
+from trialsight.fetch.models import Intervention, Trial
+from trialsight.models.response import Meta, QueryResponse
+from trialsight.visualize.builder import CITATIONS_PER_DATUM, FIELD_PATHS, build_visualization
+from trialsight.workflow.errors import UnsupportedQuery
+from trialsight.workflow.pipeline import check_chart_plan
+from trialsight.workflow.plans import ChartPlan, Dimension, SearchPlan
+from trialsight.workflow.profile import build_profile
 
 
 def trial(n: int, **fields) -> Trial:

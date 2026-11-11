@@ -15,9 +15,9 @@ import httpx
 import pytest
 import yaml
 
-from cheiron.fetch.client import CtgovClient
-from cheiron.fetch.endpoints import FieldSizesStep, FieldValuesStep, RecordSizeStep, StudyStep
-from cheiron.fetch.stats import (
+from trialsight.fetch.client import CtgovClient
+from trialsight.fetch.endpoints import FieldSizesStep, FieldValuesStep, RecordSizeStep, StudyStep
+from trialsight.fetch.stats import (
     DateStats,
     EnumStats,
     FieldSizesResponse,
@@ -27,7 +27,7 @@ from cheiron.fetch.stats import (
     StringStats,
     incomplete_fields,
 )
-from cheiron.workflow.errors import InvalidSearch, UpstreamError
+from trialsight.workflow.errors import InvalidSearch, UpstreamError
 
 FIXTURES = Path(__file__).parent / "fixtures" / "ctgov"
 SPEC = yaml.safe_load((Path(__file__).resolve().parent.parent / "docs" / "ctgov" / "openapi.yaml").read_text())

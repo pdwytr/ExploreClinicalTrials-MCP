@@ -1,8 +1,8 @@
 {
   "mcpServers": {
-    "cheiron": {
+    "trialsight": {
       "command": "uvx",
-      "args": ["--from", "${CHEIRON_SOURCE:-git+https://github.com/pdwytr/cheiron}", "cheiron-mcp"]
+      "args": ["--from", "${TRIALSIGHT_SOURCE:-git+https://github.com/pdwytr/trialsight}", "trialsight-mcp"]
     }
   }
 }

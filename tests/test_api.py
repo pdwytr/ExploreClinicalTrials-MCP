@@ -5,15 +5,15 @@ import time
 
 from fastapi.testclient import TestClient
 
-from cheiron.api.app import create_app
-from cheiron.api.outputs import QueryOutputs
-from cheiron.api.tasks import TaskStore
-from cheiron.fetch.models import DataVersion, Trial
-from cheiron.fetch.stats import FieldValuesResponse
-from cheiron.workflow import AgentResult, ChartPlan, Dimension, FetchResult, SearchPlan, StatsResult
-from cheiron.workflow.errors import UnsupportedQuery
-from cheiron.workflow.pipeline import QueryWorkflow, check_chart_plan
-from cheiron.workflow.profile import build_profile
+from trialsight.api.app import create_app
+from trialsight.api.outputs import QueryOutputs
+from trialsight.api.tasks import TaskStore
+from trialsight.fetch.models import DataVersion, Trial
+from trialsight.fetch.stats import FieldValuesResponse
+from trialsight.workflow import AgentResult, ChartPlan, Dimension, FetchResult, SearchPlan, StatsResult
+from trialsight.workflow.errors import UnsupportedQuery
+from trialsight.workflow.pipeline import QueryWorkflow, check_chart_plan
+from trialsight.workflow.profile import build_profile
 
 DATA_TS = "2026-11-06T10:00:05"
 

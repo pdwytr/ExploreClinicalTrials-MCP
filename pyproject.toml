@@ -1,12 +1,12 @@
 [project]
-name = "cheiron"
+name = "trialsight"
 version = "0.1.0"
 description = "ClinicalTrials.gov query-to-visualization backend"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.115",
     "httpx>=0.27",
-    "mcp>=2.0",  # MCP server (cheiron-mcp), incl. MCP Apps
+    "mcp>=2.0",  # MCP server (trialsight-mcp), incl. MCP Apps
     "pydantic>=2.7",
     "pydantic-ai-slim[openai]>=2.66.0",
     "pydantic-settings>=2.4",
@@ -15,7 +15,7 @@ dependencies = [
 ]
 
 [project.scripts]
-cheiron-mcp = "cheiron.mcp_server.server:main"
+trialsight-mcp = "trialsight.mcp_server.server:main"
 
 [dependency-groups]
 dev = [
@@ -29,11 +29,11 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/cheiron"]
+packages = ["src/trialsight"]
 
 [tool.hatch.build.targets.wheel.force-include]
-"docs/ctgov" = "cheiron/agents/ctgov-snapshot"  # the API reference fallback, for installs (uvx)
+"docs/ctgov" = "trialsight/agents/ctgov-snapshot"  # the API reference fallback, for installs (uvx)
 
 [tool.pytest.ini_options]
-pythonpath = ["src"]
+pythonpath = ["src", "."]
 testpaths = ["tests"]

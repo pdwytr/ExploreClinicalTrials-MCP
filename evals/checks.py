@@ -15,7 +15,7 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from cheiron.models.response import QueryResponse
+from trialsight.models.response import QueryResponse
 
 ROOT = Path(__file__).resolve().parent.parent
 CTGOV = "https://clinicaltrials.gov/api/v2/studies"
