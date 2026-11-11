@@ -1,6 +1,6 @@
 [project]
 name = "studytrials-mcp"
-version = "0.1.0"
+version = "0.2.0"
 description = "MCP server: ask about clinical trials in any MCP client and get a chart from ClinicalTrials.gov where every value cites its trials"
 readme = "README.md"
 requires-python = ">=3.11"
