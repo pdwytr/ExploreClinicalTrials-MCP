@@ -1,8 +1,8 @@
 """The workflow's two pluggable parts, as interfaces. Tests plug in fakes.
 
     TrialSource   code: talks to ClinicalTrials.gov (implemented by CtgovClient)
-    QueryPlanner  the LLM agent: plans, fetches through the given function, chooses the chart
-                  (implemented by QueryAgent)
+    QueryPlanner  the LLM agents: plan, fetch through the given function, choose the chart
+                  (implemented by QueryAgent, which calls the ChartPlanner sub-agent)
 """
 
 from collections.abc import Awaitable, Callable
@@ -61,8 +61,14 @@ class RunLog:
     so it still has the fetches and the trace when the run fails or is cancelled."""
 
     fetches: list[FetchRecord] = field(default_factory=list)  # every fetch_data call, in order
-    messages: list = field(default_factory=list)  # the agent's message history, for the trace
-    seconds: float = 0.0  # the agent run, fetches included
+    messages: list = field(default_factory=list)  # the query agent's message history, for the trace
+    chart_runs: dict[str, list] = field(default_factory=dict)  # the chart planner's messages, by plan_chart call id
+    seconds: float = 0.0  # the agent run, fetches and chart planner included
+
+    @property
+    def all_messages(self) -> list:
+        """Every model message of the query, both agents: what metrics count."""
+        return self.messages + [m for run in self.chart_runs.values() for m in run]
 
 
 @dataclass
@@ -73,8 +79,8 @@ class AgentResult:
     outcome: "FetchOutcome"  # the latest successful fetch: what the chart is built from
     profile: DataProfile
     chart_warnings: list[str]
-    skills_loaded: list[str]
-    references_read: list[str]
+    docs_read: list[str]  # API reference pages the query agent read
+    references_read: list[str]  # chart planner reference pages read
     usage: Any = None
 
 

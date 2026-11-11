@@ -1,8 +1,8 @@
 """The query workflow: request in, one visualization out.
 
-    1. Query agent (one LLM run)  plans API calls with the ctgov-search skill and calls
+    1. Query agent (LLM)          plans API calls (specs/query-agent.yaml) and calls
                                   fetch_data -> code runs step 2 and 3 -> describe_data
-                                  -> loads the chart-planning skill -> ChartPlan
+                                  -> plan_chart: the chart planner sub-agent -> ChartPlan
     2. Add user filters (code)    structured fields AND-ed onto every /studies step
     3. Fetch (code)               every step in parallel, every page, one data version
     4. Check the chart plan       against the fetched data, before the agent's answer is accepted
@@ -129,7 +129,7 @@ class QueryWorkflow:
             api_version=outcome.version.api_version,
             chain=_chain(result, log.fetches),
         )
-        meta.metrics = run_metrics(log.messages, log.fetches, log.seconds, time.perf_counter() - build_started)
+        meta.metrics = run_metrics(log.all_messages, log.fetches, log.seconds, time.perf_counter() - build_started)
         return QueryResponse(visualization=visualization, meta=meta), result
 
     async def fetch_plan(
@@ -216,13 +216,13 @@ class _FetchTracker:
 
 
 def warn_if_docs_outdated(version: DataVersion) -> None:
-    """Log once if the live API version differs from the one our docs and skill describe."""
+    """Log once if the live API version differs from the one the agent specs and evals were checked on."""
     global _docs_warning_logged
     if version.api_version != SNAPSHOT_API_VERSION and not _docs_warning_logged:
         _docs_warning_logged = True
         log.warning(
-            "ClinicalTrials.gov API is %s but docs/ctgov and the ctgov-search skill describe %s. "
-            "Run scripts/refresh_ctgov_docs.py and scripts/build_ctgov_skill.py, then review the diff.",
+            "ClinicalTrials.gov API is %s but the agent specs and evals were last checked on %s. "
+            "The agent reads the live API reference; rerun the evals, then scripts/refresh_ctgov_docs.py.",
             version.api_version,
             SNAPSHOT_API_VERSION,
         )

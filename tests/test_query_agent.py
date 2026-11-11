@@ -1,7 +1,9 @@
-"""QueryAgent's tool loop with a scripted fake model (Pydantic AI FunctionModel): no API key, no cost.
+"""The query agent and its chart planner sub-agent, with a scripted fake model (Pydantic AI
+FunctionModel): no API key, no cost.
 
-Each test scripts what the model does turn by turn and checks what code allowed, refused or
-sent back to it."""
+One fake model plays both agents: each test scripts the turns in the order they happen. The query
+agent's plan_chart call runs the chart planner, whose turns come next, then the run ends with its
+chart (or plan_chart sends the reason back to the query agent)."""
 
 import asyncio
 
@@ -12,10 +14,13 @@ from pydantic_ai.models.function import AgentInfo, FunctionModel
 from test_workflow import FOUND, FakeSource, trial
 
 from cheiron.agents import query_agent
+from cheiron.agents.api_docs import ApiDocs
+from cheiron.agents.chart_planner import ChartInput, breakdown_problem
+from cheiron.agents.chart_planner import build_prompt as chart_prompt
 from cheiron.agents.query_agent import FETCH_BUDGET, QueryAgent, build_prompt
 from cheiron.models.request import QueryRequest
 from cheiron.settings import Settings
-from cheiron.workflow import FetchResult, QueryWorkflow
+from cheiron.workflow import ChartPlan, FetchResult, QueryWorkflow, SearchPlan
 from cheiron.workflow.errors import UnsupportedQuery
 from cheiron.workflow.steps import RunLog
 
@@ -32,84 +37,97 @@ DATA = {
     "nivolumab": FetchResult(trials=[trial(9, "PHASE3")], total_matched=1),
 }
 
+FETCH = ("fetch_data", {"plan": PLAN})
+DESCRIBE = ("describe_data", {})
+PLAN_CHART = ("plan_chart", {"brief": "Show the phases of the pembrolizumab trials."})
+HAPPY = [FETCH, DESCRIBE, PLAN_CHART, ("chart_plan", BY_PHASE)]
+
 
 def seen_text(messages) -> str:
-    """Everything the model was shown so far (prompt, tool results, retry messages)."""
+    """Everything a model was shown (prompt, tool results, retry messages)."""
     return "\n".join(str(getattr(p, "content", "")) for m in messages for p in getattr(m, "parts", []))
 
 
 def scripted(*steps):
-    """A fake model returning the given (tool, args) steps in order; final-result tools by short name."""
-    seen = {"instructions": None, "messages": []}
+    """A fake model returning the given (tool, args) steps in order, whichever agent asks.
+    `seen` keeps every call: which agent (by its instructions), and what it had been shown."""
+    seen = {"calls": []}
     remaining = list(steps)
 
     def model(messages, info: AgentInfo):
-        seen["instructions"] = info.instructions
-        seen["messages"] = list(messages)
+        agent = "chart_planner" if "# Choosing the chart" in (info.instructions or "") else "query_agent"
+        seen["calls"].append({"agent": agent, "instructions": info.instructions, "messages": list(messages)})
         tool, args = remaining.pop(0)
-        if tool in ("ChartPlan", "Unanswerable"):
-            tool = next(t.name for t in info.output_tools if tool in t.name)
         return ModelResponse(parts=[ToolCallPart(tool, args)])
 
+    def shown(agent: str) -> str:
+        return "\n".join(seen_text(c["messages"]) for c in seen["calls"] if c["agent"] == agent)
+
+    seen["shown"] = shown
     return FunctionModel(model), seen
 
 
-def decide(model, data=DATA, log=None, **request):
+def decide(model, data=DATA, log=None, docs=None, **request):
     workflow = QueryWorkflow(agent=None, source=FakeSource(data))
     req = QueryRequest(query="test question", **request)
 
     async def fetch(plan):
         return await workflow.fetch_plan(plan, req)
 
-    return asyncio.run(QueryAgent(model).decide(req, fetch, log if log is not None else RunLog()))
-
-
-HAPPY = [
-    ("fetch_data", {"plan": PLAN}),
-    ("describe_data", {}),
-    ("load_skill", {"name": "chart-planning"}),
-    ("ChartPlan", BY_PHASE),
-]
+    return asyncio.run(QueryAgent(model, docs=docs).decide(req, fetch, log if log is not None else RunLog()))
 
 
 # --- The normal path ------------------------------------------------------------------------------
 
 
-def test_plan_fetch_describe_load_skill_answer():
+def test_fetch_describe_then_the_chart_planner_answers():
     model, seen = scripted(*HAPPY)
-    result = decide(model)
+    log = RunLog()
+    result = decide(model, log=log)
 
     assert result.chart.x.value == "phase"
     assert result.outcome.trials_fetched == 2 and result.profile.trials_fetched == 2
-    assert result.skills_loaded == ["ctgov-search", "chart-planning"]
-    told = seen_text(seen["messages"])
+    assert [c["agent"] for c in seen["calls"]] == ["query_agent"] * 3 + ["chart_planner"]
+    told = seen["shown"]("query_agent")
     assert '"total_matched":2' in told.replace(" ", "")  # fetch_data returned totals only
     assert '"top_values"' in told  # describe_data returned the profile
-    assert "# Choosing the chart" in told  # load_skill returned the chart-planning skill
-    assert "NCT00000001" not in told  # never records
+    assert "NCT00000001" not in told + seen["shown"]("chart_planner")  # neither agent sees records
+    assert len(log.chart_runs) == 1 and all(log.chart_runs.values())
 
 
-def test_instructions_hold_the_role_and_the_search_skill():
+def test_the_chart_planner_is_told_the_question_plan_brief_and_profile_by_code():
+    model, seen = scripted(*HAPPY)
+    decide(model, drug_name="Pembrolizumab")
+    told = seen["shown"]("chart_planner")
+    assert "Question: test question" in told and "- drug_name: Pembrolizumab" in told
+    assert "Query agent's brief: Show the phases of the pembrolizumab trials." in told
+    assert '"label":"Pembrolizumab"' in told.replace(" ", "")  # the search plan
+    assert '"top_values"' in told  # the profile, without a describe_data call of its own
+
+
+def test_each_agent_gets_only_its_own_instructions():
     model, seen = scripted(*HAPPY)
     decide(model)
-    assert "You answer a question about clinical trials with exactly one chart" in seen["instructions"]
-    assert "# Planning ClinicalTrials.gov searches" in seen["instructions"]
-    assert "# Choosing the chart" not in seen["instructions"]  # loaded only on demand
+    query = next(c["instructions"] for c in seen["calls"] if c["agent"] == "query_agent")
+    chart = next(c["instructions"] for c in seen["calls"] if c["agent"] == "chart_planner")
+    assert "You answer a question about clinical trials with exactly one chart" in query
+    assert "# Planning ClinicalTrials.gov searches" in query and "# Choosing the chart" not in query
+    assert "# Planning ClinicalTrials.gov searches" not in chart
 
 
 # --- Order and budget, enforced by code -----------------------------------------------------------
 
 
-def test_chart_before_any_fetch_is_sent_back():
-    model, seen = scripted(("ChartPlan", BY_PHASE), *HAPPY)
+def test_plan_chart_before_any_fetch_is_sent_back():
+    model, seen = scripted(PLAN_CHART, *HAPPY)
     decide(model)
-    assert "before choosing a chart" in seen_text(seen["messages"])
+    assert "before calling plan_chart" in seen["shown"]("query_agent")
 
 
 def test_describe_before_fetch_is_sent_back():
-    model, seen = scripted(("describe_data", {}), *HAPPY)
+    model, seen = scripted(DESCRIBE, *HAPPY)
     decide(model)
-    assert "Nothing has been fetched yet" in seen_text(seen["messages"])
+    assert "Nothing has been fetched yet" in seen["shown"]("query_agent")
 
 
 def test_failed_fetch_returns_the_reason_and_allows_one_more():
@@ -117,76 +135,86 @@ def test_failed_fetch_returns_the_reason_and_allows_one_more():
     model, seen = scripted(("fetch_data", {"plan": bad}), *HAPPY)
     log = RunLog()
     result = decide(model, log=log)
-    told = seen_text(seen["messages"])
+    told = seen["shown"]("query_agent")
     assert "Fetch 1 failed: No trials matched" in told and "4 call(s) left" in told
     assert [r.error is not None for r in log.fetches] == [True, False]  # both fetches recorded
     assert result.outcome.plan.steps[0].label == "Pembrolizumab"
 
 
 def test_fetch_budget_is_enforced():
-    fetch = ("fetch_data", {"plan": PLAN})
-    model, seen = scripted(*[fetch] * (FETCH_BUDGET + 1), ("describe_data", {}), ("ChartPlan", BY_PHASE))
+    model, seen = scripted(*[FETCH] * (FETCH_BUDGET + 1), DESCRIBE, PLAN_CHART, ("chart_plan", BY_PHASE))
     log = RunLog()
     decide(model, log=log)
     assert FETCH_BUDGET == 5 and len(log.fetches) == 5
-    assert "fetch budget (5) is used up" in seen_text(seen["messages"])
+    assert "fetch budget (5) is used up" in seen["shown"]("query_agent")
 
 
-# --- The answer is checked against the data ---------------------------------------------------------
+# --- The chart is checked against the data ----------------------------------------------------------
 
 
-def test_chart_that_does_not_fit_the_data_is_sent_back_with_the_reason():
-    model, seen = scripted(
-        ("fetch_data", {"plan": PLAN}), ("describe_data", {}), ("ChartPlan", BY_DRUG), ("ChartPlan", BY_PHASE)
-    )
+def test_a_chart_that_does_not_fit_goes_back_to_the_chart_planner():
+    model, seen = scripted(FETCH, DESCRIBE, PLAN_CHART, ("chart_plan", BY_DRUG), ("chart_plan", BY_PHASE))
     result = decide(model)
-    assert "does not fit the fetched data" in seen_text(seen["messages"])
+    assert "does not fit the fetched data" in seen["shown"]("chart_planner")
+    assert "does not fit" not in seen["shown"]("query_agent")  # fixed inside the sub-agent
     assert result.chart.chart_type == "bar_chart"
 
 
 def test_comparison_chart_is_accepted_for_two_sides():
-    model, _ = scripted(("fetch_data", {"plan": TWO_DRUGS}), ("describe_data", {}), ("ChartPlan", BY_DRUG))
+    model, _ = scripted(("fetch_data", {"plan": TWO_DRUGS}), DESCRIBE, PLAN_CHART, ("chart_plan", BY_DRUG))
     result = decide(model)
     assert result.profile.group_sizes == {"Nivolumab": 1, "Pembrolizumab": 2}
 
 
 def test_unanswerable_becomes_unsupported_query_and_the_log_is_kept():
-    model, _ = scripted(("fetch_data", {"plan": PLAN}), ("Unanswerable", {"reason": "Efficacy is not in registry records."}))
+    model, _ = scripted(FETCH, ("unanswerable", {"reason": "Efficacy is not in registry records."}))
     log = RunLog()
     with pytest.raises(UnsupportedQuery, match="Efficacy"):
         decide(model, log=log)
     assert len(log.fetches) == 1 and log.messages and log.seconds > 0  # the caller can still save what happened
 
 
-# --- Skills and references -----------------------------------------------------------------------
-
-
-def test_unknown_skill_is_refused_with_the_list():
-    model, seen = scripted(("fetch_data", {"plan": PLAN}), ("load_skill", {"name": "charts"}), *HAPPY[1:])
-    decide(model)
-    assert "Unknown skill 'charts'. Available: chart-planning, ctgov-search" in seen_text(seen["messages"])
-
-
-def test_references_are_read_on_demand_and_paths_are_restricted():
+def test_when_the_chart_planner_cannot_chart_the_query_agent_decides():
     model, seen = scripted(
-        ("read_reference", {"path": "../../../../etc/passwd"}),
-        ("read_reference", {"path": "references/data-structure/protocol.design.md"}),
-        *HAPPY,
-    )
-    result = decide(model)
-    assert "Unknown reference '../../../../etc/passwd'" in seen_text(seen["messages"])
-    assert result.references_read == ["references/data-structure/protocol.design.md"]
+        FETCH, DESCRIBE, PLAN_CHART,
+        ("unanswerable", {"reason": "No field holds trial sites per city."}),  # the chart planner
+        ("unanswerable", {"reason": "Cities are not in registry records."}),  # the query agent
+    )  # fmt: skip
+    with pytest.raises(UnsupportedQuery, match="Cities"):
+        decide(model)
+    assert "could not chart the latest fetch: No field holds trial sites per city." in seen["shown"]("query_agent")
 
 
-def test_chart_planning_references_are_readable_by_skill_name():
+def test_a_chart_planner_out_of_retries_reports_its_last_problem():
     model, seen = scripted(
-        ("read_reference", {"skill": "chart-planning", "path": "references/networks.md"}),
-        ("read_reference", {"skill": "nope", "path": "references/networks.md"}),
-        *HAPPY,
-    )
+        FETCH, DESCRIBE, PLAN_CHART, *[("chart_plan", BY_DRUG)] * 4,  # 1 try + 3 retries, all rejected
+        ("unanswerable", {"reason": "Gave up."}),
+    )  # fmt: skip
+    with pytest.raises(UnsupportedQuery, match="Gave up"):
+        decide(model)
+    assert "could not chart the latest fetch: This chart does not fit" in seen["shown"]("query_agent")
+
+
+# --- References -----------------------------------------------------------------------------------
+
+
+def test_api_docs_are_read_on_demand_from_what_was_loaded():
+    docs = ApiDocs(pages={"enums": "LIVE ENUMS PAGE"}, api_version="9.9.9")
+    model, seen = scripted(("read_api_docs", {"page": "../etc/passwd"}), ("read_api_docs", {"page": "enums"}), *HAPPY)
+    result = decide(model, docs=docs)
+    told = seen["shown"]("query_agent")
+    assert "Unknown page '../etc/passwd'. Start from: enums" in told
+    assert "LIVE ENUMS PAGE" in told and result.docs_read == ["enums"]
+
+
+def test_the_chart_planner_reads_its_own_references():
+    model, seen = scripted(
+        FETCH, DESCRIBE, PLAN_CHART,
+        ("read_reference", {"page": "nope"}), ("read_reference", {"page": "networks"}), ("chart_plan", BY_PHASE),
+    )  # fmt: skip
     result = decide(model)
-    assert "Unknown skill 'nope'" in seen_text(seen["messages"])
-    assert result.references_read == ["chart-planning/references/networks.md"]
+    assert "Unknown reference 'nope'. Available: chart-types, examples, networks, registry-stats" in seen["shown"]("chart_planner")
+    assert result.references_read == ["networks"]
 
 
 def test_prompt_lists_user_filters():
@@ -222,19 +250,21 @@ def test_openai_model_is_built_from_settings(monkeypatch):
 # --- Trace and metrics ----------------------------------------------------------------------------
 
 
-def test_trace_and_metrics_record_the_run_without_records():
+def test_trace_and_metrics_cover_both_agents_without_records():
     from cheiron.workflow.trace import build_trace, run_metrics
 
-    model, _ = scripted(("ChartPlan", BY_PHASE), *HAPPY)  # one answer sent back, then the normal path
+    model, _ = scripted(PLAN_CHART, FETCH, DESCRIBE, PLAN_CHART, ("chart_plan", BY_DRUG), ("chart_plan", BY_PHASE))
     log = RunLog()
     decide(model, log=log)
-    trace = build_trace(log.messages, log.fetches)
-    metrics = run_metrics(log.messages, log.fetches, log.seconds)
+    trace = build_trace(log.messages, log.fetches, log.chart_runs)
+    metrics = run_metrics(log.all_messages, log.fetches, log.seconds)
 
-    assert any(e["event"] == "sent_back" and "before choosing a chart" in e["reason"] for e in trace)
+    assert any(e["event"] == "sent_back" and "before calling plan_chart" in e["reason"] for e in trace)
     assert next(e for e in trace if e["event"] == "tool_result" and e["tool"] == "fetch_data")["seconds"] is not None
-    assert metrics.model_turns == 5 and metrics.sent_back == 1 and metrics.fetches == 1
-    assert metrics.tool_calls["fetch_data"] == 1 and metrics.tool_calls["describe_data"] == 1
+    agents = [e["agent"] for e in trace if e["event"] == "model_turn"]
+    assert agents == ["query_agent"] * 4 + ["chart_planner"] * 2  # the planner's turns follow its plan_chart call
+    assert metrics.model_turns == 6 and metrics.sent_back == 2 and metrics.fetches == 1
+    assert metrics.tool_calls["fetch_data"] == 1 and metrics.tool_calls["chart_plan"] == 2
     assert "NCT00000001" not in str(trace)
 
 
@@ -247,35 +277,40 @@ BY_COUNTRY_PLAN = {**PLAN, "breakdown": "country"}
 def test_an_unsupported_breakdown_must_be_refused_not_swapped_for_another_field():
     # r05: asked "by state", answered with a country chart
     model, seen = scripted(
-        ("fetch_data", {"plan": BY_STATE}),
-        ("describe_data", {}),
-        ("ChartPlan", BY_PHASE),
-        ("Unanswerable", {"reason": "US state is not available in the fetched data."}),
-    )
+        ("fetch_data", {"plan": BY_STATE}), DESCRIBE, PLAN_CHART,
+        ("chart_plan", BY_PHASE),  # the chart planner tries another field
+        ("unanswerable", {"reason": "US state is not available."}),  # and is told to refuse
+        ("unanswerable", {"reason": "US state is not available in the fetched data."}),
+    )  # fmt: skip
     with pytest.raises(UnsupportedQuery, match="US state"):
         decide(model)
-    assert "Answer Unanswerable" in seen_text(seen["messages"])
+    assert "Answer unanswerable" in seen["shown"]("chart_planner")
 
 
-def test_the_chart_must_show_the_stated_breakdown():
+def test_the_chart_must_show_the_stated_breakdown_or_the_plan_is_fixed():
     model, seen = scripted(
-        ("fetch_data", {"plan": BY_COUNTRY_PLAN}),
-        ("describe_data", {}),
-        ("ChartPlan", BY_PHASE),  # charts phase although the plan said country
-        ("fetch_data", {"plan": {**PLAN, "breakdown": "phase"}}),  # the plan was wrong: corrected
-        ("describe_data", {}),
-        ("ChartPlan", BY_PHASE),
-    )
+        ("fetch_data", {"plan": BY_COUNTRY_PLAN}), DESCRIBE, PLAN_CHART,
+        ("chart_plan", BY_PHASE),  # charts phase although the plan said country
+        ("unanswerable", {"reason": "The plan's breakdown (country) does not match the question (phase)."}),
+        ("fetch_data", {"plan": {**PLAN, "breakdown": "phase"}}),  # the query agent corrects its plan
+        DESCRIBE, PLAN_CHART, ("chart_plan", BY_PHASE),
+    )  # fmt: skip
     result = decide(model)
-    assert "asks for a breakdown by country, but the chart shows ['phase']" in seen_text(seen["messages"])
-    assert result.chart.x.value == "phase"
+    assert "asks for a breakdown by country, but the chart shows ['phase']" in seen["shown"]("chart_planner")
+    assert "corrected breakdown" in seen["shown"]("query_agent")
+    assert result.chart.x.value == "phase" and result.outcome.plan.breakdown == "phase"
 
 
 def test_a_network_breakdown_names_both_node_kinds():
-    from cheiron.agents.query_agent import breakdown_problem
-    from cheiron.workflow import ChartPlan, SearchPlan
-
     plan = SearchPlan.model_validate({**PLAN, "breakdown": "lead_sponsor x intervention"})
     network = ChartPlan(intent="relationship", chart_type="network_graph", title="t", x="lead_sponsor", series="intervention")
     assert breakdown_problem(plan, network) is None
     assert "not a chartable field" in breakdown_problem(SearchPlan.model_validate({**PLAN, "breakdown": "site x sponsor"}), network)
+
+
+def test_chart_prompt_says_when_there_are_no_filters_or_brief():
+    from cheiron.workflow.profile import build_profile
+
+    profile = build_profile({"Pembrolizumab": FOUND.trials}, 2)
+    prompt = chart_prompt(ChartInput(QueryRequest(query="Any question"), SearchPlan.model_validate(PLAN), profile, " "))
+    assert "User-supplied filters: none" in prompt and "Query agent's brief: (none)" in prompt

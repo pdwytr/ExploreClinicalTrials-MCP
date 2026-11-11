@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "cheiron": {
+      "command": "uvx",
+      "args": ["--from", "${CHEIRON_SOURCE:-git+https://github.com/pdwytr/cheiron}", "cheiron-mcp"]
+    }
+  }
+}

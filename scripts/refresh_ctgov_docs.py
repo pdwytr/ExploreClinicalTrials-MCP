@@ -1,8 +1,8 @@
 """Download snapshots of the ClinicalTrials.gov API reference into docs/ctgov/.
 
-The search planner's prompt is built from these files, so the agent always sees
-the same, official reference. The API is versioned and changes rarely; rerun this
-when it does and review the diff.
+The agent reads the live reference, loaded when the service starts (agents/api_docs.py).
+These snapshots are its fallback when the API cannot be reached, and what tests run
+against. Rerun this after the evals pass on a new API version, and review the diff.
 
     uv run python scripts/refresh_ctgov_docs.py           # download fresh snapshots
     uv run python scripts/refresh_ctgov_docs.py --check   # only check: exit 1 if the API version changed
@@ -41,8 +41,8 @@ def check() -> int:
         return 0
     print(
         f"OUTDATED: live API is {live}, docs/ctgov describes {stored}.\n"
-        "Run scripts/refresh_ctgov_docs.py, re-capture essie-syntax.md if the page changed, "
-        "run scripts/build_ctgov_skill.py, update SNAPSHOT_API_VERSION, and review the diff."
+        "Rerun the evals on the new version, then scripts/refresh_ctgov_docs.py; re-capture "
+        "essie-syntax.md if the page changed, update SNAPSHOT_API_VERSION, and review the diff."
     )
     return 1
 

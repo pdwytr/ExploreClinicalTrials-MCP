@@ -15,7 +15,9 @@ from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Response
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
+from cheiron.agents.api_docs import load_api_docs
 from cheiron.agents.query_agent import QueryAgent
 from cheiron.api.outputs import QueryOutputs
 from cheiron.api.tasks import TaskStore, TaskView
@@ -41,9 +43,10 @@ The web page at `/` uses the first two. Use "Try it out" below to call them from
 
 
 async def build_task_store(stack: AsyncExitStack) -> TaskStore:
-    """Real dependencies, created once per process and shared by every request."""
+    """Real dependencies, created once per process and shared by every request. The API reference
+    the agent reads is fetched from ClinicalTrials.gov here, so it matches the live API."""
     client = await stack.enter_async_context(CtgovClient())
-    workflow = QueryWorkflow(agent=QueryAgent(), source=client)
+    workflow = QueryWorkflow(agent=QueryAgent(docs=await load_api_docs()), source=client)
     return TaskStore(workflow, QueryOutputs())
 
 
@@ -102,6 +105,8 @@ def create_app(task_store_factory: Callable[[AsyncExitStack], object] = build_ta
     async def health() -> dict[str, str]:
         """Not part of answering a question; the host calls it to check the service is up."""
         return {"status": "ok"}
+
+    app.mount("/vendor", StaticFiles(directory=WEB_UI.parent / "vendor"), name="vendor")
 
     @app.get("/", include_in_schema=False)
     async def web_ui() -> FileResponse:

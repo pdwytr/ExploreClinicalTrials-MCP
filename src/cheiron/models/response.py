@@ -22,7 +22,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, computed_field, model_serializer, model_validator
 
 # --- Chart vocabulary ----------------------------------------------------------
-# Which chart suits which question is judgement, taught by the chart-planning skill;
+# Which chart suits which question is judgement, taught to the chart planner agent (agents/specs/chart-planner.yaml);
 # code only enforces what makes a chart renderable.
 
 ChartType = Literal[

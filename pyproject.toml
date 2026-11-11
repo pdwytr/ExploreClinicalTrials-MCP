@@ -6,18 +6,22 @@ requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.115",
     "httpx>=0.27",
+    "mcp>=2.0",  # MCP server (cheiron-mcp), incl. MCP Apps
     "pydantic>=2.7",
     "pydantic-ai-slim[openai]>=2.66.0",
     "pydantic-settings>=2.4",
+    "pyyaml>=6",  # agent specs and the OpenAPI spec the agent reads
     "uvicorn>=0.30",
 ]
+
+[project.scripts]
+cheiron-mcp = "cheiron.mcp_server.server:main"
 
 [dependency-groups]
 dev = [
     "pytest>=8",
     "altair>=5",    # validates generated specs against the official Vega-Lite schema
     "networkx>=3.4", # checks NetworkData round-trips through node_link_graph
-    "pyyaml>=6",     # skill frontmatter tests and scripts/build_ctgov_skill.py
 ]
 
 [build-system]
@@ -26,6 +30,9 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/cheiron"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"docs/ctgov" = "cheiron/agents/ctgov-snapshot"  # the API reference fallback, for installs (uvx)
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]

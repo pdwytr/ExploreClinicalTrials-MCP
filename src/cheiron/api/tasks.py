@@ -133,7 +133,7 @@ class TaskStore:
                     record.plan, record.outcome, record.profile, record.error,
                 )  # fmt: skip
             await asyncio.to_thread(self.outputs.save_response, folder, response)
-            await asyncio.to_thread(self.outputs.save_trace, folder, build_trace(run_log.messages, records))
+            await asyncio.to_thread(self.outputs.save_trace, folder, build_trace(run_log.messages, records, run_log.chart_runs))
             meta |= {
                 "metrics": response.meta.metrics.model_dump() if response.meta.metrics else None,
                 "status": TaskStatus.SUCCEEDED.value,
@@ -185,8 +185,8 @@ class TaskStore:
         if not run_log.messages:
             return {}
         try:
-            self.outputs.save_trace(folder, build_trace(run_log.messages, run_log.fetches))
-            return {"metrics": run_metrics(run_log.messages, run_log.fetches, run_log.seconds).model_dump()}
+            self.outputs.save_trace(folder, build_trace(run_log.messages, run_log.fetches, run_log.chart_runs))
+            return {"metrics": run_metrics(run_log.all_messages, run_log.fetches, run_log.seconds).model_dump()}
         except Exception:
             log.exception("could not save the trace of task folder %s", folder)
             return {}

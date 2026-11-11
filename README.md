@@ -8,7 +8,7 @@ One principle shapes the whole design: **a language model decides what the quest
 plain code does everything that can be checked.** The model reads the question, plans the search,
 and chooses the chart. Code fetches the trials, counts them, cites them, and writes the response.
 The model never produces a number, so it cannot invent one. It is built on published
-standards (Agent Skills, Pydantic, the Financial Times Visual Vocabulary, Vega-Lite) rather than
+standards (Pydantic AI agent specs, Pydantic, the Financial Times Visual Vocabulary, Vega-Lite) rather than
 private formats. The rest of this README explains where the line between model and code sits, why,
 and how the evals were used to move it.
 
@@ -56,7 +56,8 @@ There is no separate frontend to build or start. The backend serves the web page
 the server running, open **http://localhost:8765/**, type a question, add any filters, and the
 page shows the chart, the numbers behind it and the trials each number cites. It is one file,
 [`src/cheiron/web/index.html`](src/cheiron/web/index.html), and it draws charts with Vega-Lite
-loaded from a CDN, so it needs internet access but no Node.js or `npm`.
+from pinned copies in `src/cheiron/web/vendor/` (refresh them with
+`uv run python scripts/vendor_web_assets.py`), so it needs no CDN, Node.js or `npm`.
 
 ### The API
 
@@ -72,7 +73,47 @@ curl -s localhost:8765/queries/<task_id>
 - `http://localhost:8765/` is a small web page that renders any answer and its sources.
 - `http://localhost:8765/docs` is the interactive API reference.
 - [`examples/`](examples/) holds five real requests and the exact JSON the service returned.
-- `uv run pytest` runs the 261 unit tests; they need no API key.
+- `uv run pytest` runs the unit tests; they need no API key.
+
+### In Claude (plugin and MCP server)
+
+cheiron also runs inside Claude, with no API key. There, Claude does the two agents' jobs (it
+plans the search and chooses the chart, following the same specs), and the MCP server `cheiron-mcp`
+does everything code does in the web service: it fetches, profiles, checks the chart against the
+data, counts, cites and saves the answer. A number still never comes from the model. The only
+prerequisite is [uv](https://docs.astral.sh/uv/), which runs the server.
+
+**Claude Code**, as a plugin:
+
+```
+/plugin install cheiron --marketplace pdwytr/cheiron
+```
+
+or `/plugin marketplace add pdwytr/cheiron` then `/plugin install cheiron@cheiron`, then
+`/reload-plugins`. Ask a clinical-trials question. The plugin's `clinical-trials` subagent answers
+in its own context and returns a summary with a link to the chart, such as
+`http://127.0.0.1:8765/?result=<id>`. The server starts that page on the first chart, on
+localhost only, and stops it when the session ends. Answers are saved in `~/.cheiron/results/`;
+`uvx --from git+https://github.com/pdwytr/cheiron cheiron-mcp serve` reopens them without Claude.
+
+**Claude Desktop** (and other hosts that support [MCP Apps](https://modelcontextprotocol.io/extensions/apps)):
+add the server to `claude_desktop_config.json`. The chart then renders inline in the conversation:
+
+```json
+{ "mcpServers": { "cheiron": { "command": "uvx", "args": ["--from", "git+https://github.com/pdwytr/cheiron", "cheiron-mcp"] } } }
+```
+
+| Where | How it is added | Who plans and picks the chart | Where the chart shows |
+|---|---|---|---|
+| Claude Code | plugin (`plugin/`) | the `clinical-trials` subagent | browser tab on localhost |
+| Claude Desktop | MCP server | Claude, using the instructions `start_query` returns | inline (MCP App) |
+| Web service | `uvicorn` | the Pydantic AI agents (OpenAI key) | the web page |
+
+The tools are `start_query` (it returns the query agent's spec), `fetch_data`, `describe_data` (its
+first answer adds the chart planner's spec), `read_api_docs`, `read_reference` and `build_chart`.
+They live in [`src/cheiron/mcp_server/`](src/cheiron/mcp_server/). The specs are served by the
+tools, so the plugin and the web service read the same instructions. To try local changes in
+Claude Code, run `CHEIRON_SOURCE=$PWD claude --plugin-dir ./plugin`.
 
 ## What happens to a question
 
@@ -115,9 +156,9 @@ tests, not just followed by convention.
 
 | Standard | Used for | Why this one | Enforced by |
 |---|---|---|---|
-| [Agent Skills](https://agentskills.io/specification) | Both skills (`ctgov-search`, `chart-planning`) | A documented format for giving an agent knowledge in layers: metadata, instructions, then references loaded only when needed. That is exactly the context discipline section 5 relies on | Tests check frontmatter, naming, size limits, that every reference is linked with when to read it, and that every example is valid |
+| [Pydantic AI agent specs](https://ai.pydantic.dev/agents/) | Both agents (`agents/specs/query-agent.yaml`, `agents/specs/chart-planner.yaml`) | Each agent's name, description, retries and instructions in one declarative file, loaded with `Agent.from_file`; tools and output types stay typed Python. A job with its own input, output and checks is an agent, not a block of text loaded into another agent's context | Tests check that each spec lists exactly the tools code registers, stays within size, lists every reference with when to read it, and that every example is valid |
 | [Pydantic](https://docs.pydantic.dev) and [Pydantic AI](https://ai.pydantic.dev) | The request, the agent's tool arguments and final answers, the response | One typed definition serves as validation, the agent's tool schema and the API documentation. A structured answer that fails validation goes back to the model with the error, instead of breaking downstream code | The models themselves; the OpenAPI schema generated from them is committed and checked for drift |
-| [Financial Times Visual Vocabulary](https://github.com/Financial-Times/chart-doctor/tree/main/visual-vocabulary) | Chart intent (`change_over_time`, `ranking`, `distribution`, `magnitude`, `part_to_whole`, `correlation`, `spatial`), plus `relationship` for networks, which the FT places under flow | It classifies charts by the question they answer rather than by their shape, which is how the chart-planning skill chooses: first what is being asked, then the chart. Deviation is not used yet, because no question class compares against a baseline | `Intent` enum in the response schema |
+| [Financial Times Visual Vocabulary](https://github.com/Financial-Times/chart-doctor/tree/main/visual-vocabulary) | Chart intent (`change_over_time`, `ranking`, `distribution`, `magnitude`, `part_to_whole`, `correlation`, `spatial`), plus `relationship` for networks, which the FT places under flow | It classifies charts by the question they answer rather than by their shape, which is how the chart planner chooses: first what is being asked, then the chart. Deviation is not used yet, because no question class compares against a baseline | `Intent` enum in the response schema |
 | [Vega-Lite v5](https://vega.github.io/vega-lite/) | The `encoding` vocabulary and the ready-to-render `vega_lite` spec | A declarative grammar with a published JSON schema: field types (`nominal`, `ordinal`, `temporal`, `quantitative`) and channels mean the same thing to every renderer, and a frontend can draw the chart with no custom code | Every generated spec is validated against the official Vega-Lite schema in tests |
 | [OpenAPI](https://www.openapis.org) | The HTTP API | Generated by FastAPI from the Pydantic models, so the documentation cannot disagree with the code | Committed at `docs/api/openapi.json`, with a drift test |
 | [NetworkX node-link format](https://networkx.org/documentation/stable/reference/readwrite/json_graph.html) | Network graphs | A graph format libraries already read (`networkx.node_link_graph`) | Tests read the output back with NetworkX |
@@ -143,26 +184,38 @@ which narrows where errors can come from and lets the evals target interpretatio
 *Cost:* the agent can only express what the plan and chart models allow, so a new capability
 (percentages, scatter plots) needs code, not a prompt change.
 
-### 2. One agent with tools, not a pipeline of agents
+### 2. A query agent that calls a chart planner, not a pipeline of agents
 
 The first version was a pipeline: a search-planner agent, then code, then a chart-planner agent.
-I replaced it with one agent and four tools: `fetch_data` (code runs a search plan),
-`describe_data` (the profile of what was fetched), `load_skill` and `read_reference`.
+The second was one agent with every job in one context. The current design keeps the loop of the
+second and the separation of the first: a **query agent** with three tools, `fetch_data` (code runs
+a search plan), `describe_data` (the profile of what was fetched) and `read_api_docs`, whose answer
+is a call to `plan_chart`, which runs the **chart planner** sub-agent.
 
-The pipeline could not serve two kinds of question:
+A pipeline could not serve two kinds of question:
 
 - **Multi-step questions** such as "the sponsor with the most melanoma trials, and its trials per
   year". The second search depends on what the first found, so the planner has to see results
-  before it can finish. A one-way pipeline cannot loop back.
-- **Questions whose right chart depends on what the search found.** A separate chart planner
-  would not know why the search was shaped the way it was. One agent keeps the question, the
-  search and its results in one reasoning context.
+  before it can finish. A one-way pipeline cannot loop back. The query agent still can: if the
+  chart planner cannot chart the data, the reason comes back to it and it fetches again.
+- **Questions whose right chart depends on why the search was shaped as it was.** The chart
+  planner does not need the search conversation for that, only its result. Code hands it the
+  question, the user's fields, the latest search plan (which states the breakdown the question
+  asks for), the profile, and a one-paragraph brief from the query agent ("NCI leads melanoma with
+  205 trials; show its trials per year").
 
-The agent may fetch up to five times, and each fetch is kept in `meta.chain` with the agent's
-reason, so intermediate findings ("NCI leads melanoma with 205 trials") can be checked. Code
-enforces the order: no chart is accepted before data has been fetched.
+Splitting the jobs means each context holds only its own instructions and work: search rules never
+reach the chart planner, chart rules never reach the query agent, and a chart sent back three times
+is fixed inside the sub-agent instead of filling the query agent's conversation. Each can be
+tested on its own, and could run on a different model.
 
-*Cost:* one context carries both jobs. Section 5 keeps that context small.
+The query agent may fetch up to five times, and each fetch is kept in `meta.chain` with the agent's
+reason, so intermediate findings can be checked. Code enforces the order: `plan_chart` is refused
+before data has been fetched. The trace shows both agents, the chart planner's turns placed inside
+the `plan_chart` call that ran them.
+
+*Cost:* two model contexts per question instead of one, and the brief is a narrow channel: what the
+query agent leaves out of it, the chart planner does not know.
 
 ### 3. The agent states intent; code builds the query
 
@@ -237,32 +290,40 @@ That is all the agent needs to choose a chart: whether there is enough data, whi
 filled, how many categories there are. The records stay on disk (`data/queries/<id>/fetch-N/`) for
 the code that counts and cites them.
 
-### 6. Knowledge comes from skills read on demand, not retrieval
+### 6. API knowledge is loaded from the live API at startup; judgement is written in the specs
 
 The agent needs to know the ClinicalTrials.gov API: 24 record modules, 41 enums, every search area
-and parameter. That knowledge is small, structured and authoritative, so I organised it as
-**skills** in the Agent Skills format instead of indexing it in a vector database:
+and parameter. That knowledge is small, structured and authoritative, and the API publishes it, so
+the service fetches it when it starts (`agents/api_docs.py`): the OpenAPI spec, the enums, the
+search areas, the field metadata and the version. It is rendered in memory into pages the query
+agent reads one at a time with `read_api_docs` ("read `enums` when you need an enum's allowed
+values"). Nothing is generated into the repository, so nothing there can go stale.
 
-- `ctgov-search` is in the prompt (about 3,100 tokens): the procedure, the slots, rules checked
-  against the live API, and worked examples. Its references (about 110 KB in all) are generated
-  from snapshots of the official API documentation, and the agent reads one only when a table row
-  says when ("read `enums.md` when you need an enum's allowed values").
-- `chart-planning` (about 1,700 tokens) is loaded only once data has been fetched: a default chart
-  for each question class, the known traps, and references for networks and registry statistics.
+Two rules keep this from making the code unstable:
+
+- **It is context, never code.** The request, plan and chart models stay hand-written; no type or
+  validation is derived from the downloaded spec, so an upstream change cannot alter them at runtime.
+- **It degrades, never fails.** A document that cannot be fetched comes from the bundled snapshot
+  in `docs/ctgov/`, and the startup log says which. The Essie query syntax page is rendered by
+  JavaScript on the website, so it is always the bundled copy.
+
+What the API does not publish is judgement: the search procedure and rules (in the query agent's
+spec, about 3,500 tokens) and the default chart per question class, the known traps and references
+for networks and registry statistics (in the chart planner's spec and its four reference pages).
 
 Retrieval by similarity can return the wrong chunk, or miss the right one, and the failure is
-silent. With an index, the agent decides what to read, the trace records each read, and the
-references are exact copies of the official documentation. A version check warns when the live API
-moves past the documented version.
+silent. With an index, the agent decides what to read, the trace records each read, and the pages
+are exact renderings of the official documentation. A version check warns when the live API moves
+past the version the specs and evals were checked on.
 
-To keep the skills reliable, tests enforce the Agent Skills spec (size limits, references linked
-from the skill), validate every example as a real plan or chart, and fail if a skill teaches an API
-parameter the code does not accept. Each fact in a skill was checked against the live API with the
-numbers quoted. No skill may contain an eval question (also a test), so the evals measure
-judgement rather than copying.
+Tests validate every example in the specs as a real plan or chart, fail if a spec teaches an API
+parameter the code does not accept, check that every field of the record appears in the field
+pages, and run the loader against a faked live API, a partly failing one and no network. No spec
+may contain an eval question (also a test), so the evals measure judgement rather than copying.
 
-*Cost:* the skills are curated by hand. That works for one well-documented API; it would not scale
-to a large, unstructured corpus, where retrieval is the better tool.
+*Cost:* startup makes five requests to ClinicalTrials.gov, and the rules in the specs are curated
+by hand. That works for one well-documented API; it would not scale to a large, unstructured
+corpus, where retrieval is the better tool.
 
 ### 7. Counts are exact, and every value shows its sources
 
@@ -294,7 +355,7 @@ Nothing in the system is trained. It improves through a deliberate loop:
 2. The failure is classified, and the fix goes to the layer that was wrong:
    - a broken **contract** (code combined two terms it should have replaced) is fixed in a
      deterministic layer;
-   - a **judgement** error is fixed with general guidance in a skill, never a rule for one
+   - a **judgement** error is fixed with general guidance in an agent spec, never a rule for one
      question;
    - a **missing capability** becomes an honest refusal until it is built.
 3. The affected cases are rerun live, with the unit tests.
@@ -334,7 +395,7 @@ well-formed but wrong answer fails:
   (advice, efficacy, made-up drugs, prompt injection), multi-step questions, and cases written by an
   adversarial reviewing agent whose job was to break the system.
 - **Tags show coverage**, including the categories nothing tests yet.
-- **No leakage:** the agent never sees the cases, and a test fails if a skill contains an eval
+- **No leakage:** the agent never sees the cases, and a test fails if a spec contains an eval
   question. When one slipped in during development, that test caught it.
 - **Expectations cover only what the question decides**, so a correct answer is not failed for a
   different but valid chart.
@@ -350,9 +411,13 @@ well-formed but wrong answer fails:
 | Conflicting fields and lead sponsor fixed | 55/72 |
 | Typed intent compiled by code | 70/72 |
 | Percentages, design fields, scatter plots | 72/72 |
+| Chart planner as a sub-agent, API reference loaded live (one full rerun) | 73/73 |
 
-The 72/72 report combines live reruns of the cases each change affected; a single full rerun is
-still to do. Each case also runs once, so a model choice that varies between runs can pass by
+The 72/72 report combined live reruns of the cases each change affected. The 73/73 run is a single
+full rerun of every case after the split into two agents. Against the earlier responses for the
+same 59 answered cases, the median query used 23% fewer input tokens (22,471 vs 29,057), because
+the chart planner's context holds only the profile and plan, but took 1.3 s longer (8.8 s vs
+7.5 s) for the extra model call. Each case still runs once, so a model choice that varies between runs can pass by
 chance; see the limitations.
 
 ### Running the evals
@@ -382,7 +447,7 @@ What is not done, roughly in the order I would do it:
    question needs them, and clean investigator names against a list.
 2. **Sponsor aliases depend on the model.** The registry has no canonical sponsor names: "MSD"
    matches six small MSD entities, not Merck Sharp & Dohme LLC, so the name resolution that works
-   for drugs does not work for sponsors. The skill tells the agent to write the registered name.
+   for drugs does not work for sponsors. The query agent's spec tells it to write the registered name.
    Next: an alias table built from the registry's lead-sponsor names.
 3. **Network nodes are keyed by the intervention name as the sponsor typed it.** This is a known
    issue I did not get to in the time available. The counts are right for each name, but one drug
@@ -434,11 +499,11 @@ better without anyone editing code.
 
 ### A reinforcement-style feedback loop over configuration
 
-Today the knowledge that decides most outcomes is spread across code and skill text: the
+Today the knowledge that decides most outcomes is spread across code and spec text: the
 name-resolution thresholds (`RESOLVE_SAMPLE`, `RESOLVE_SHARE` in `workflow/intent.py`), region
 membership (`REGION_MEMBERS`), display names the registry lacks (`FALLBACK` in
 `visualize/labels.py`), arms that are not interventions (`NOT_AN_INTERVENTION`), the default chart
-for each question class and the known traps (the chart-planning skill), and the failure
+for each question class and the known traps (the chart planner's spec), and the failure
 categories the evals use (`TAGS`). Changing any of them means a code change.
 
 The next version would move each of these into a versioned configuration file with a strict
@@ -475,13 +540,13 @@ a configuration proposal.
 
 ### Automatic API version updates
 
-Updating to a new ClinicalTrials.gov API version is manual today: run
-`scripts/refresh_ctgov_docs.py`, rebuild the skill references with `scripts/build_ctgov_skill.py`,
-review the diff, and bump `SNAPSHOT_API_VERSION`. The service only logs a warning when the live API
-moves past the documented version.
+The agent already reads the live API reference, but the specs and evals were checked on one
+version. When the live API moves past it, the service logs a warning; a person then reruns the
+evals, refreshes the fallback snapshot with `scripts/refresh_ctgov_docs.py` and bumps
+`SNAPSHOT_API_VERSION`.
 
 A scheduled job would do this instead: detect the new version (`refresh_ctgov_docs.py --check`
-already exits with an error when it changes), refresh the snapshots, regenerate the references,
+already exits with an error when it changes), refresh the snapshots,
 run the unit tests and the evals, and open a pull request with the documentation diff and the eval
 report. A contract test would fail the run, and flag it for a person, whenever a field, enum value
 or parameter the code depends on disappears.
@@ -515,9 +580,9 @@ code can apply exactly (phase, status, years), so counts stay identical to the A
 
 ### Richer chart planning
 
-The chart-planning skill maps ten question classes to seven chart types, and each class has one
+The chart planner's spec maps ten question classes to seven chart types, and each class has one
 default. That covers the brief's examples, but some questions still get a weaker chart than they
-deserve, because the right chart type does not exist yet or the skill gives no rule for choosing
+deserve, because the right chart type does not exist yet or the spec gives no rule for choosing
 between two acceptable ones:
 
 - **"Where" questions get a bar chart**, though the `spatial` intent exists: a world map
@@ -531,19 +596,19 @@ between two acceptable ones:
   builder already holds.
 
 New chart types need the same work as the existing ones: a builder that counts and cites, schema
-rules, and a section in the skill. The skill would also replace judgement with thresholds read from
+rules, and a section in the spec. The spec would also replace judgement with thresholds read from
 the profile wherever a threshold is honest: more than five series on a time axis means small
 multiples; a numeric field whose maximum is a hundred times its median gets a log scale; a ranking
 with ties at the cut-off shows every tied value. Each new rule would come with an eval case that
-fails without it, measured on the held-out set like any other skill change.
+fails without it, measured on the held-out set like any other spec change.
 
-### Leaner skills, measured
+### Leaner specs, measured
 
-The skills were written rule by rule as failures appeared. The traces already record which
-references the agent reads, so each part of a skill can be measured: rules no eval depends on can
+The specs were written rule by rule as failures appeared. The traces already record which
+references the agent reads, so each part of a spec can be measured: rules no eval depends on can
 be removed, and rules that code can enforce can move into code, as happened with study type. Each
-remaining rule would get an eval case that fails without it. A new skill version would be adopted
-only if it does at least as well on the held-out cases with fewer tokens. A smaller skill leaves
+remaining rule would get an eval case that fails without it. A new spec version would be adopted
+only if it does at least as well on the held-out cases with fewer tokens. A smaller spec leaves
 the agent less to misread, which is where accuracy gains are left at this point.
 
 ### Production hardening
@@ -758,7 +823,7 @@ right.
 
 ### Tools
 
-- **Claude Code (Anthropic)** was my pair programmer for the whole build: code, tests, skills,
+- **Claude Code (Anthropic)** was my pair programmer for the whole build: code, tests, agent specs,
   eval cases, documentation, and the Fly.io deployment files. I worked in small steps and reviewed
   each one.
 - **Agents inside Claude Code** took over more of the testing as the codebase became reliable.
@@ -769,9 +834,9 @@ right.
 - **OpenAI GPT-5.4** runs the query agent at request time
   (`CHEIRON_PLANNER_MODEL=openai:gpt-5.4`). Every eval result in this README comes from that
   model; I have not compared it with others.
-- **Not AI:** the API knowledge the agent reads is not model-written. The skill's reference files
-  are generated by a plain script (`scripts/build_ctgov_skill.py`) from snapshots of the official
-  ClinicalTrials.gov documentation.
+- **Not AI:** the API knowledge the agent reads is not model-written. It is the official
+  ClinicalTrials.gov documentation, fetched from the live API at startup and rendered by plain code
+  (`agents/api_docs.py`).
 
 ### What I designed, and what was generated
 
@@ -785,9 +850,10 @@ belonged before deciding how to fix it.
 - **The split between model and code.** The model interprets the question; code fetches, counts,
   cites and writes the response, so the model never produces a number. Most other decisions follow
   from this one.
-- **One agent with tools instead of a pipeline**, once multi-step questions needed to loop back.
-- **Skills read on demand instead of retrieval** for the API knowledge, and their structure: what
-  each skill covers, how its references are split, and which published standards its outputs must
+- **A query agent that calls a chart planner sub-agent**, instead of a pipeline (multi-step
+  questions need to loop back) or one agent holding both jobs.
+- **Live API documentation read on demand instead of retrieval**, and agent specs for the
+  judgement: what each agent covers, how its references are split, and which published standards its outputs must
   follow (Vega-Lite encodings, the Financial Times Visual Vocabulary for choosing a chart).
 - **Typed intent compiled by code**, with names resolved through the registry's own vocabulary.
   This replaced a run of string-level search fixes. Each was plausible on its own; together they
@@ -803,7 +869,7 @@ belonged before deciding how to fix it.
 
 - **Implementation and unit tests**, generated from my descriptions and reviewed step by step.
   When code drifted from the design, the design won and the code changed.
-- **Skill rules**, written with Claude inside the structure I set, rule by rule as eval failures
+- **Spec rules**, written with Claude inside the structure I set, rule by rule as eval failures
   appeared.
 - **Eval cases**: the brief's examples and my own scenarios, plus the adversarial agent's cases. I
   decided which expectations stayed, and dropped checks that would have failed correct answers.
@@ -830,13 +896,13 @@ assistant makes easiest to miss.
 - **261 unit tests** with fake models and a fake registry; they need no API key.
 - **Contract tests:** every generated chart validates against the official Vega-Lite schema; the
   committed OpenAPI file fails a test if it drifts from the code; and a leakage test fails if a
-  skill contains an eval question. That test caught one during development.
+  spec contains an eval question. That test caught one during development.
 - **72 live evals** against the real model and API ([How it is tested](#how-it-is-tested)). The
   progression is the evidence that they test the right thing: the first checks, mostly of shape, passed
   60 of 62 cases, several of them wrong answers; adding correctness checks dropped that to 53 of
   72; design fixes brought it to 72 of 72. That last figure combines reruns of the affected cases
   and each case ran once, so it is not yet a single clean run.
-- **Every number** quoted in a skill or in this README was checked against the live API or
+- **Every number** quoted in a spec or in this README was checked against the live API or
   measured from saved outputs.
 
 ### What I watched for

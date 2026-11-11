@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cheiron</title>
-<script src="https://cdn.jsdelivr.net/npm/vega@5.30.0"></script>
-<script src="https://cdn.jsdelivr.net/npm/vega-lite@5.21.0"></script>
-<script src="https://cdn.jsdelivr.net/npm/vega-embed@6.26.0"></script>
+<script src="/vendor/vega.min.js"></script>
+<script src="/vendor/vega-lite.min.js"></script>
+<script src="/vendor/vega-embed.min.js"></script>
 <style>
   :root {
     --bg: #f7f7f5; --panel: #fff; --text: #1d1d1b; --muted: #6b6b66; --line: #e2e2dc;
@@ -51,6 +51,10 @@
   #citations a { color: var(--accent); font-weight: 600; }
   #citations .trial-title { color: var(--text); margin: 2px 0; }
   .hidden { display: none !important; }
+  /* Inside Claude (MCP App iframe) or opened from Claude (?result=): only the answer, no form. */
+  html[data-mode="mcp-app"] main > h1, html[data-mode="mcp-app"] .sub, html[data-mode="mcp-app"] #form,
+  html[data-mode="result"] #form { display: none; }
+  html[data-mode="mcp-app"] main { padding: 8px; }
   label.file { display: inline-block; margin: 0; font-size: 14px; color: var(--accent); cursor: pointer; }
   label.file input { display: none; }
   #raw summary { margin: 0; }
@@ -559,9 +563,54 @@ $("open-file").addEventListener("change", async (event) => {
   }
 });
 
-// Reopen a running or finished task from the URL (?task=<id>).
-const resumeId = new URLSearchParams(location.search).get("task");
+// Reopen a running or finished task from the URL (?task=<id>), or an answer made in Claude
+// (?result=<id>, served by `cheiron-mcp`).
+const params = new URLSearchParams(location.search);
+const resumeId = params.get("task");
+const resultId = params.get("result");
 if (resumeId) poll(resumeId);
+else if (resultId) openResult(resultId);
+
+async function openResult(id) {
+  document.documentElement.dataset.mode = "result";
+  try {
+    const res = await fetch(`/results/${encodeURIComponent(id)}`);
+    const body = await res.json();
+    if (!res.ok) throw new Error(body.detail || `HTTP ${res.status}`);
+    await render(body);
+  } catch (err) {
+    showError(`Could not open result ${id}: ${err.message}`);
+  }
+}
+
+// Inside Claude: the page is an MCP App (ui://cheiron/chart) and gets the build_chart result from
+// the host. The full answer is in the result's _meta; if a host drops it, ask the server for it.
+if (document.documentElement.dataset.mode === "mcp-app" && window.McpApps) {
+  const app = new McpApps.App({ name: "cheiron", version: "1.0.0" }, {}, { autoResize: true });
+  app.ontoolresult = async (result) => {
+    try {
+      if (result.isError) throw new Error((result.content || []).map((c) => c.text).join(" ") || "The chart could not be built.");
+      let answer = result._meta && result._meta["cheiron/response"];
+      const id = result._meta && result._meta["cheiron/result_id"];
+      if (!answer && id) {
+        const got = await app.callServerTool({ name: "get_result", arguments: { result_id: id } });
+        answer = got.structuredContent || JSON.parse(got.content[0].text);
+      }
+      if (!answer) throw new Error("The tool result has no chart.");
+      await render(answer);
+    } catch (err) {
+      showError(err.message);
+    }
+  };
+  // Links (trial citations) open through the host: the sandbox blocks new windows.
+  document.addEventListener("click", (event) => {
+    const a = event.target.closest && event.target.closest("a[href^='http']");
+    if (!a) return;
+    event.preventDefault();
+    app.openLink({ url: a.href });
+  });
+  app.connect().catch((err) => showError(`Could not connect to Claude: ${err.message}`));
+}
 </script>
 </body>
 </html>

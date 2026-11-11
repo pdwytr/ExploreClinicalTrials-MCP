@@ -225,7 +225,7 @@ class ChartPlan(BaseModel):
     @model_validator(mode="after")
     def renderable(self) -> "ChartPlan":
         """Structural rules: what each chart type needs to be drawn from trial counts.
-        Which chart fits which question is the chart-planning skill's job, not code's."""
+        Which chart fits which question is the chart planner agent's job, not code's."""
         needs_series = self.chart_type in ("grouped_bar_chart", "stacked_bar_chart", "network_graph")
         if needs_series and self.series is None:
             raise ValueError(f"{self.chart_type} needs a series dimension")

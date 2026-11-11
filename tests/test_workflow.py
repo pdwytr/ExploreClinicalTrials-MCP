@@ -1,6 +1,6 @@
 """The workflow around the agent: fetching a plan, the data-version guard, and assembling the response.
 The agent is a fake that behaves like QueryAgent (fetch -> profile -> check chart); the real
-agent's tool loop is tested in test_query_agent.py."""
+agents' tool loops are tested in test_query_agent.py."""
 
 import asyncio
 
@@ -77,7 +77,7 @@ class FakeAgent:
         outcome = await fetch(self.plan)
         profile = build_profile(outcome.trials_by_group, outcome.total_matched)
         warnings = check_chart_plan(self.chart, outcome.plan, profile)
-        return AgentResult(self.chart, outcome, profile, warnings, ["ctgov-search", "chart-planning"], [])
+        return AgentResult(self.chart, outcome, profile, warnings, [], [])
 
 
 BY_PHASE = ChartPlan(intent="distribution", chart_type="bar_chart", title="Trials by phase", x=Dimension.PHASE)
@@ -206,7 +206,7 @@ def test_newer_api_version_warns_that_docs_are_outdated(caplog, monkeypatch):
     with caplog.at_level("WARNING", logger="cheiron.workflow.pipeline"):
         response, _ = run(wf)
 
-    assert "API is 2.1.0 but docs/ctgov and the ctgov-search skill describe" in caplog.text
+    assert "API is 2.1.0 but the agent specs and evals were last checked on" in caplog.text
     assert response.meta.api_version == "2.1.0"
 
 

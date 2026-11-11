@@ -21,8 +21,8 @@ from cheiron.models.request import RecruitmentStatus, TrialPhase
 BASE_URL = "https://clinicaltrials.gov/api/v2"
 MAX_PAGE_SIZE = 1000  # the API silently caps larger values at 1,000
 
-# API version that docs/ctgov/ and the ctgov-search skill were generated from.
-# A test keeps this equal to docs/ctgov/version.json and the skill's metadata.
+# API version the agent specs and evals were last checked on, and of the bundled fallback in
+# docs/ctgov/ (a test keeps them equal). The agent itself reads the live reference at startup.
 SNAPSHOT_API_VERSION = "2.0.5"
 
 

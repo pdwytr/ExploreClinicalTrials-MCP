@@ -1,0 +1,16 @@
+{
+  "name": "cheiron",
+  "version": "0.1.0",
+  "description": "Ask about clinical trials and get a chart from ClinicalTrials.gov, with every value citing its trials. Claude plans the search and picks the chart; code fetches, counts and cites.",
+  "author": {
+    "name": "pdwytr"
+  },
+  "homepage": "https://github.com/pdwytr/cheiron",
+  "repository": "https://github.com/pdwytr/cheiron",
+  "keywords": [
+    "clinical-trials",
+    "clinicaltrials.gov",
+    "charts",
+    "mcp"
+  ]
+}
