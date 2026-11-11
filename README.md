@@ -114,9 +114,21 @@ Add a stdio server with the command `uvx` and the argument `studytrials-mcp@late
 Ask a clinical-trials question in plain words. If the client answers from its own knowledge
 instead, say *"use studytrials to …"*.
 
-The tools are `start_query`, `fetch_data`, `describe_data`, `build_chart`, `read_api_docs` and
-`read_reference`. `start_query` returns the procedure the model follows, so any client's model
-calls the tools in the right order. No tool changes anything outside your machine. Every tool is
+For a chart, the tools are `start_query`, `fetch_data`, `describe_data`, `build_chart`,
+`read_api_docs` and `read_reference`. `start_query` returns the procedure the model follows, so any
+client's model calls the tools in the right order.
+
+Two tools answer without a chart:
+
+- `find_trials` lists matching trials with the exact total, e.g. *"recruiting melanoma trials in
+  Texas for a 60-year-old"*. Filters: condition, intervention, other terms, sponsor, site location,
+  status, phase, age and sex. With a location, each trial shows its sites there.
+- `get_trial` reads one trial by NCT number: what it tests, its arms and outcome measures, who can
+  join, contacts and sites. It never reports posted results, only whether the record has them.
+
+Neither says whether someone qualifies for a trial or whether a treatment works.
+
+No tool changes anything outside your machine. Every tool is
 marked read-only except `build_chart`, which saves each answer to `~/.studytrials/results/` and
 never changes or deletes an existing one. Clients can use these labels to decide when to ask you
 for approval.

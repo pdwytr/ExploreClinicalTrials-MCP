@@ -11,6 +11,8 @@ client's model plans the search and picks the chart; code fetches, counts and ci
                                        saves it; renders inline in hosts with MCP Apps
                                        (ui://studytrials/chart), else returns a localhost link
     get_result(result_id)           -> a saved answer, for the inline page (app-only)
+    find_trials(filters)            -> one page of matching trials and the true total, no chart
+    get_trial(nct_id)               -> one trial's record: design, eligibility, sites (never results)
 
 Run:  studytrials-mcp            (stdio, launched by the MCP client)
       studytrials-mcp serve      (only the local page, to reopen saved answers)
@@ -37,11 +39,13 @@ from pydantic import Field, ValidationError
 from studytrials.agents.api_docs import ApiDocs, load_api_docs, snapshot_api_docs
 from studytrials.agents.chart_planner import REFERENCES
 from studytrials.fetch.client import CtgovClient
+from studytrials.mcp_server import lookup
 from studytrials.mcp_server.results import ResultStore
 from studytrials.mcp_server.session import Queries, QueryError
 from studytrials.mcp_server.web import LocalWeb, serve
 from studytrials.models.request import QueryRequest, RecruitmentStatus, TrialPhase
 from studytrials.models.response import QueryResponse
+from studytrials.workflow.errors import InvalidSearch, UpstreamError
 from studytrials.workflow.pipeline import QueryWorkflow
 from studytrials.workflow.plans import ChartPlan, SearchPlan
 
@@ -61,6 +65,12 @@ where code fetches every matching trial and every number cites the trials behind
 Use it for questions about trial counts, phases, sponsors, drugs, conditions, countries, trends,
 comparisons or networks. Start with start_query and follow the procedure it returns. Never state a
 number that did not come from a tool result.
+Two tools answer without a chart: find_trials lists trials that match filters (e.g. recruiting
+trials for a condition near a place, for a person's age), with the true total, and get_trial reads
+one trial by NCT number (what it tests, who can join, where its sites are). For counts or breakdowns
+use start_query instead: find_trials shows a page, not a distribution. Never tell a person whether
+they qualify for a trial, should join one or whether a treatment works: quote the eligibility
+criteria and point to the study's contacts and its record page.
 Finish with: the chart's title and its link (open_in_browser from build_chart) on its own line; two
 or three sentences on what it shows, using only numbers from build_chart's summary; and the
 warnings or assumptions that change how to read it. If registry data cannot answer the question,
@@ -93,8 +103,9 @@ def _instructions(name: str) -> str:
 class StudyTrials:
     """Everything the tools share, created once per process."""
 
-    def __init__(self, queries: Queries, store: ResultStore, web: LocalWeb):
+    def __init__(self, queries: Queries, store: ResultStore, web: LocalWeb, registry: CtgovClient):
         self.queries = queries
+        self.registry = registry  # find_trials and get_trial call it directly
         self.store = store
         self.web = web
         self.docs: ApiDocs | None = None
@@ -125,7 +136,7 @@ async def lifespan(server: MCPServer):
     async with AsyncExitStack() as stack:
         client = await stack.enter_async_context(CtgovClient())
         store = ResultStore()
-        _state = StudyTrials(Queries(QueryWorkflow(agent=None, source=client)), store, LocalWeb(store))
+        _state = StudyTrials(Queries(QueryWorkflow(agent=None, source=client)), store, LocalWeb(store), client)
         try:
             yield {}
         finally:
@@ -306,6 +317,56 @@ def summarize(response: QueryResponse, result_id: str, url: str | None, inline: 
     return where + "\n" + json.dumps(out, ensure_ascii=False)
 
 
+async def find_trials(
+    condition: Annotated[str | None, Field(description="Disease or condition, e.g. 'melanoma'.")] = None,
+    intervention: Annotated[str | None, Field(description="Drug, device or procedure, e.g. 'pembrolizumab'.")] = None,
+    terms: Annotated[str | None, Field(description="Other words anywhere in the record.")] = None,
+    sponsor: Annotated[str | None, Field(description="Lead sponsor or collaborator.")] = None,
+    location: Annotated[str | None, Field(description="City, state or country of a site, e.g. 'Houston, Texas'.")] = None,
+    recruitment_status: list[RecruitmentStatus] | None = None,
+    trial_phase: list[TrialPhase] | None = None,
+    age: Annotated[int | None, Field(description="A person's age in years: trials whose age limits include it.")] = None,
+    sex: Annotated[str | None, Field(description="'female' or 'male': trials open to that sex or to all.")] = None,
+    limit: Annotated[int, Field(description=f"Trials per page, at most {lookup.MAX_LIMIT}.")] = lookup.DEFAULT_LIMIT,
+    page_token: Annotated[str | None, Field(description="next_page_token from the previous page.")] = None,
+) -> str:
+    """List trials that match the filters, most relevant first: per trial its status, phase,
+    sponsor, ages and, with a location, the sites there. Returns total_matched, the exact number of
+    matching trials, and one page of them; say how many there are, not just how many are shown.
+    Set a filter only when the user gave it. For counts by phase, sponsor, year or country, use
+    start_query: it fetches every trial and charts them."""
+    try:
+        params = lookup.find_params(
+            condition, intervention, terms, sponsor, location, recruitment_status, trial_phase, age, sex, limit, page_token
+        )
+        page = await _studytrials().registry.get("/studies", params)
+    except (ValueError, InvalidSearch, UpstreamError) as exc:
+        raise _fail(exc) from exc
+    out = lookup.found(page, location, limit)
+    out["search"] = {k: v for k, v in params.items() if k.startswith(("query.", "filter."))}
+    return json.dumps(out, ensure_ascii=False)
+
+
+async def get_trial(
+    nct_id: Annotated[str, Field(description="The trial's NCT number, e.g. 'NCT05064059'.")],
+    location: Annotated[str | None, Field(description="List only the sites in this city, state or country.")] = None,
+) -> str:
+    """Read one trial's registry record: titles, status, dates, sponsor, design, arms,
+    interventions, outcome measures, eligibility criteria, contacts and sites. It never reports
+    posted results; has_results says whether the record page has them. Quote the eligibility
+    criteria as written: whether someone qualifies is for the study team to decide."""
+    try:
+        nct = lookup.nct_id(nct_id)
+        record = await _studytrials().registry.get(f"/studies/{nct}", {"fields": lookup.DETAIL_FIELDS})
+    except InvalidSearch as exc:
+        if str(exc).startswith("Not found"):
+            raise ToolError(f"No trial {lookup.nct_id(nct_id)} on ClinicalTrials.gov.") from exc
+        raise _fail(exc) from exc
+    except (ValueError, UpstreamError) as exc:
+        raise _fail(exc) from exc
+    return json.dumps(lookup.trial_detail(record, location), ensure_ascii=False)
+
+
 # --- The inline page --------------------------------------------------------------------------
 
 
@@ -354,6 +415,8 @@ for tool, title, hints in (
     (describe_data, "Describe the fetched trials", READ),
     (read_api_docs, "Read the ClinicalTrials.gov API reference", REGISTRY),
     (read_reference, "Read a chart-planning reference", READ),
+    (find_trials, "Find trials on ClinicalTrials.gov", REGISTRY),
+    (get_trial, "Read one trial's record", REGISTRY),
 ):
     mcp.tool(title=title, annotations=hints)(tool)
 mcp.tool(meta={"ui": {"visibility": ["app"]}}, annotations=READ)(get_result)  # for the chart page, not the model

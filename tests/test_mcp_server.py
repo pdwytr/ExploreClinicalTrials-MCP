@@ -2,7 +2,9 @@
 page, the saved answers and the local page. ClinicalTrials.gov is the workflow tests' FakeSource."""
 
 import asyncio
+import json
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
@@ -12,17 +14,40 @@ from studytrials.mcp_server import server
 from studytrials.mcp_server.results import ResultStore
 from studytrials.mcp_server.web import create_results_app
 from studytrials.models.request import QueryRequest
+from studytrials.workflow.errors import InvalidSearch
 from tests.test_workflow import FOUND, FakeSource
 
 PLAN = {"steps": [{"endpoint": "studies", "label": "Ozempic", "drugs": ["Ozempic"]}], "rationale": "Ozempic trials"}
 BY_PHASE = {"intent": "distribution", "chart_type": "bar_chart", "title": "Ozempic trials by phase", "x": "phase"}
 
 
+CTGOV = Path(__file__).parent / "fixtures" / "ctgov"
+
+
+class FakeRegistry(FakeSource):
+    """FakeSource plus CtgovClient.get, for find_trials and get_trial: real responses by path."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.gets = []
+        self.pages = {
+            "/studies": json.loads((CTGOV / "find_melanoma_texas.json").read_text()),
+            "/studies/NCT05064059": json.loads((CTGOV / "full_NCT05064059.json").read_text()),
+        }
+
+    async def get(self, path, params=None):
+        self.gets.append((path, params))
+        if path not in self.pages:
+            raise InvalidSearch(f"Not found: {path}", {"path": path})
+        return self.pages[path]
+
+
 @pytest.fixture
 def studytrials(monkeypatch, tmp_path):
     """The real MCP server with a fake registry, results under tmp_path, and no real web server."""
     monkeypatch.setenv("STUDYTRIALS_HOME", str(tmp_path))
-    source = FakeSource({"Ozempic": FOUND})
+    source = FakeRegistry({"Ozempic": FOUND})
+    FakeRegistry.last = source
 
     @asynccontextmanager
     async def fake_client():
@@ -200,3 +225,40 @@ def test_annotations_say_what_each_tool_does():
     assert tools["build_chart"].read_only_hint is False and tools["build_chart"].destructive_hint is False
     assert all(a.read_only_hint for name, a in tools.items() if name != "build_chart")
     assert tools["fetch_data"].open_world_hint and not tools["build_chart"].open_world_hint
+
+
+# --- find_trials and get_trial -----------------------------------------------------------------
+
+
+def test_find_trials_lists_a_page_with_the_true_total(studytrials):
+    (result,) = call(("find_trials", {"condition": "melanoma", "location": "Texas", "recruitment_status": ["RECRUITING"], "age": 60, "limit": 3}))
+    assert not result.is_error, text(result)
+    out = json.loads(text(result))
+    assert out["total_matched"] == 693 and out["shown"] == 3
+    assert out["trials"][0]["matching_sites"]
+    path, params = FakeRegistry.last.gets[-1]
+    assert path == "/studies"
+    assert params["query.cond"] == "melanoma" and params["filter.overallStatus"] == "RECRUITING"
+    assert "MISSING" in params["filter.advanced"]
+    assert out["search"]["query.locn"] == "Texas"  # the model can say exactly what was searched
+
+
+def test_find_trials_refuses_an_empty_search(studytrials):
+    (result,) = call(("find_trials", {"recruitment_status": ["RECRUITING"]}))
+    assert result.is_error and "at least one" in text(result)
+
+
+def test_get_trial_reads_one_record_without_its_results(studytrials):
+    (result,) = call(("get_trial", {"nct_id": "nct05064059", "location": "Kentucky"}))
+    assert not result.is_error, text(result)
+    out = json.loads(text(result))
+    assert out["nct_id"] == "NCT05064059" and out["has_results"] is True
+    assert all(s["state"] == "Kentucky" for s in out["locations"]["sites"])
+    path, params = FakeRegistry.last.gets[-1]
+    assert path == "/studies/NCT05064059" and params == {"fields": "protocolSection|hasResults"}
+
+
+def test_get_trial_says_when_a_trial_does_not_exist(studytrials):
+    bad, missing = call(("get_trial", {"nct_id": "12345"}), ("get_trial", {"nct_id": "NCT99999999"}))
+    assert bad.is_error and "NCT" in text(bad)
+    assert missing.is_error and "No trial NCT99999999" in text(missing)
