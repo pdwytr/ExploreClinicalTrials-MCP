@@ -5,15 +5,15 @@ import time
 
 from fastapi.testclient import TestClient
 
-from trialsight.api.app import create_app
-from trialsight.api.outputs import QueryOutputs
-from trialsight.api.tasks import TaskStore
-from trialsight.fetch.models import DataVersion, Trial
-from trialsight.fetch.stats import FieldValuesResponse
-from trialsight.workflow import AgentResult, ChartPlan, Dimension, FetchResult, SearchPlan, StatsResult
-from trialsight.workflow.errors import UnsupportedQuery
-from trialsight.workflow.pipeline import QueryWorkflow, check_chart_plan
-from trialsight.workflow.profile import build_profile
+from studytrials.api.app import create_app
+from studytrials.api.outputs import QueryOutputs
+from studytrials.api.tasks import TaskStore
+from studytrials.fetch.models import DataVersion, Trial
+from studytrials.fetch.stats import FieldValuesResponse
+from studytrials.workflow import AgentResult, ChartPlan, Dimension, FetchResult, SearchPlan, StatsResult
+from studytrials.workflow.errors import UnsupportedQuery
+from studytrials.workflow.pipeline import QueryWorkflow, check_chart_plan
+from studytrials.workflow.profile import build_profile
 
 DATA_TS = "2026-11-06T10:00:05"
 

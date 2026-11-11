@@ -5,9 +5,9 @@ import asyncio
 import httpx
 import pytest
 
-from trialsight.fetch.client import CtgovClient
-from trialsight.fetch.models import StudySearchParams
-from trialsight.workflow.errors import InvalidSearch, UpstreamError
+from studytrials.fetch.client import CtgovClient
+from studytrials.fetch.models import StudySearchParams
+from studytrials.workflow.errors import InvalidSearch, UpstreamError
 
 
 def study(n: int) -> dict:

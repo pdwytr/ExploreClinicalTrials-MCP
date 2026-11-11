@@ -1,8 +1,8 @@
 {
   "mcpServers": {
-    "trialsight": {
+    "studytrials": {
       "command": "uvx",
-      "args": ["--from", "${TRIALSIGHT_SOURCE:-git+https://github.com/pdwytr/trialsight}", "trialsight-mcp"]
+      "args": ["--from", "${STUDYTRIALS_SOURCE:-studytrials-mcp@latest}", "studytrials-mcp"]
     }
   }
 }

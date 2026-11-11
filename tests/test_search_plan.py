@@ -6,13 +6,13 @@ import asyncio
 import pytest
 from pydantic import ValidationError
 
-from trialsight.fetch.models import Trial
-from trialsight.fetch.stats import FieldValuesResponse
-from trialsight.models.request import QueryRequest
-from trialsight.workflow import FetchResult, SearchPlan, StatsResult
-from trialsight.workflow.errors import InvalidSearch
-from trialsight.workflow.intent import Resolver, phrase
-from trialsight.workflow.translate import filters_summary, prepare_plan
+from studytrials.fetch.models import Trial
+from studytrials.fetch.stats import FieldValuesResponse
+from studytrials.models.request import QueryRequest
+from studytrials.workflow import FetchResult, SearchPlan, StatsResult
+from studytrials.workflow.errors import InvalidSearch
+from studytrials.workflow.intent import Resolver, phrase
+from studytrials.workflow.translate import filters_summary, prepare_plan
 
 # --- A fake registry for name lookups ------------------------------------------------------------
 

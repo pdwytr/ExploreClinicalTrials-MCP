@@ -7,7 +7,7 @@ import re
 
 import httpx
 
-from trialsight.agents.api_docs import (
+from studytrials.agents.api_docs import (
     SNAPSHOT_DIR,
     SOURCES,
     load_api_docs,

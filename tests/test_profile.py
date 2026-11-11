@@ -4,10 +4,10 @@ import json
 from datetime import date
 from pathlib import Path
 
-from trialsight.fetch.models import StudiesPage, Trial
-from trialsight.fetch.stats import FieldValuesResponse, incomplete_fields
-from trialsight.workflow.plans import Dimension, StatsResult
-from trialsight.workflow.profile import TOP_VALUES, build_profile
+from studytrials.fetch.models import StudiesPage, Trial
+from studytrials.fetch.stats import FieldValuesResponse, incomplete_fields
+from studytrials.workflow.plans import Dimension, StatsResult
+from studytrials.workflow.profile import TOP_VALUES, build_profile
 
 FIXTURES = Path(__file__).parent / "fixtures" / "ctgov"
 

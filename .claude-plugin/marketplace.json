@@ -1,12 +1,12 @@
 {
-  "name": "trialsight",
+  "name": "studytrials",
   "owner": {
     "name": "pdwytr"
   },
-  "description": "trialsight: clinical-trials questions answered with cited charts from ClinicalTrials.gov.",
+  "description": "studytrials: clinical-trials questions answered with cited charts from ClinicalTrials.gov.",
   "plugins": [
     {
-      "name": "trialsight",
+      "name": "studytrials",
       "source": "./plugin",
       "description": "Ask about clinical trials and get a chart from ClinicalTrials.gov, with every value citing its trials."
     }

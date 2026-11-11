@@ -6,13 +6,13 @@ import altair as alt
 import pytest
 from pydantic import ValidationError
 
-from trialsight.fetch.models import Intervention, Trial
-from trialsight.models.response import Meta, QueryResponse
-from trialsight.visualize.builder import CITATIONS_PER_DATUM, FIELD_PATHS, build_visualization
-from trialsight.workflow.errors import UnsupportedQuery
-from trialsight.workflow.pipeline import check_chart_plan
-from trialsight.workflow.plans import ChartPlan, Dimension, SearchPlan
-from trialsight.workflow.profile import build_profile
+from studytrials.fetch.models import Intervention, Trial
+from studytrials.models.response import Meta, QueryResponse
+from studytrials.visualize.builder import CITATIONS_PER_DATUM, FIELD_PATHS, build_visualization
+from studytrials.workflow.errors import UnsupportedQuery
+from studytrials.workflow.pipeline import check_chart_plan
+from studytrials.workflow.plans import ChartPlan, Dimension, SearchPlan
+from studytrials.workflow.profile import build_profile
 
 
 def trial(n: int, **fields) -> Trial:

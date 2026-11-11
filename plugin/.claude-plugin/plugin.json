@@ -1,12 +1,12 @@
 {
-  "name": "trialsight",
+  "name": "studytrials",
   "version": "0.1.0",
   "description": "Ask about clinical trials and get a chart from ClinicalTrials.gov, with every value citing its trials. Claude plans the search and picks the chart; code fetches, counts and cites.",
   "author": {
     "name": "pdwytr"
   },
-  "homepage": "https://github.com/pdwytr/trialsight",
-  "repository": "https://github.com/pdwytr/trialsight",
+  "homepage": "https://github.com/pdwytr/studytrials",
+  "repository": "https://github.com/pdwytr/studytrials",
   "keywords": [
     "clinical-trials",
     "clinicaltrials.gov",

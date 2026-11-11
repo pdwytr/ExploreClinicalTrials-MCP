@@ -2,7 +2,7 @@
 
 import pytest
 
-from trialsight.models import QueryResponse
+from studytrials.models import QueryResponse
 
 alt = pytest.importorskip("altair")
 
