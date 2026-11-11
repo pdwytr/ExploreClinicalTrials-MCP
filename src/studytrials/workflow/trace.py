@@ -11,9 +11,7 @@ The trace holds tool arguments (the agent's plans) and short previews of what to
 import json
 from collections import Counter
 from typing import Any
-
 from pydantic_ai.messages import ModelMessage, ModelResponse, RetryPromptPart, ToolCallPart, ToolReturnPart
-
 from studytrials.models.response import RunMetrics
 from studytrials.workflow.steps import FetchRecord
 

@@ -142,6 +142,11 @@ browse them without an MCP client:
 uvx studytrials-mcp@latest serve
 ```
 
+Under each chart, **Download data (CSV)** saves the chart's values and counts, and **Download
+trial list (CSV)** saves every trial behind the chart, once each: NCT ID, title, record link and
+the chart values it counts in. Titles come from the citations, which quote a sample of trials, so
+some rows have the NCT ID and link only. The chart menu also saves the chart as PNG or SVG.
+
 ## What it can't do yet
 
 - **Investigators and trial sites.** Questions about them, or about US states and cities, are

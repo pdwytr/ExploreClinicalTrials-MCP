@@ -5,6 +5,7 @@
     uv run python evals/run.py --only=b3,m1
     uv run python evals/run.py --regrade            # re-check saved responses, no service calls
     uv run python evals/run.py --coverage           # just the coverage table of the cases, no runs
+    uv run python evals/run.py --service=http://localhost:8766   # the service on another port
 
 Needs the service on localhost:8765 (except --regrade and --coverage). Raw responses go to
 evals/results/responses/<id>.json, the report to evals/results/report.json.
@@ -40,11 +41,11 @@ def load_cases(suites: list[str] | None, only: list[str] | None) -> list[dict]:
     return cases
 
 
-def ask(case: dict) -> dict:
+def ask(case: dict, service: str = SERVICE) -> dict:
     started = time.time()
-    task = http_json(f"{SERVICE}/queries", case["request"])
+    task = http_json(f"{service}/queries", case["request"])
     while True:
-        status = http_json(f"{SERVICE}/queries/{task['task_id']}")
+        status = http_json(f"{service}/queries/{task['task_id']}")
         if status["status"] in ("succeeded", "failed") or time.time() - started > TIMEOUT_S:
             return status | {"seconds": round(time.time() - started, 1)}
         time.sleep(2)
@@ -107,7 +108,7 @@ def main():
                 return None
             status = json.loads(saved.read_text())
         else:
-            status = ask(case)
+            status = ask(case, args.get("service", SERVICE))
             saved.write_text(json.dumps(status, indent=1))
         result = grade(case, status)
         mark = "PASS" if result["passed"] else "FAIL"

@@ -262,3 +262,23 @@ def test_get_trial_says_when_a_trial_does_not_exist(studytrials):
     bad, missing = call(("get_trial", {"nct_id": "12345"}), ("get_trial", {"nct_id": "NCT99999999"}))
     assert bad.is_error and "NCT" in text(bad)
     assert missing.is_error and "No trial NCT99999999" in text(missing)
+
+
+def test_data_tools_return_structured_content_and_prose_tools_do_not(studytrials):
+    """MCP: a tool with an outputSchema returns structuredContent matching it (the object itself, not
+    a JSON string), paired with the same JSON as text. Prose tools declare no outputSchema."""
+
+    async def go():
+        async with Client(server.mcp) as client:
+            tools = {t.name: t for t in (await client.list_tools()).tools}
+            found = await client.call_tool("find_trials", {"condition": "melanoma", "limit": 3})
+            return tools, found
+
+    tools, found = asyncio.run(go())
+    assert found.structured_content["total_matched"] == 693
+    assert json.loads(text(found)) == found.structured_content
+    for name in ("find_trials", "get_trial", "fetch_data"):
+        assert tools[name].output_schema["type"] == "object", name
+        assert "result" not in tools[name].output_schema.get("properties", {}), name  # not a wrapped string
+    for name in ("start_query", "describe_data", "read_api_docs", "read_reference"):
+        assert tools[name].output_schema is None, name

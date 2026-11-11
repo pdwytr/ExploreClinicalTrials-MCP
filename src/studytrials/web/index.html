@@ -112,6 +112,10 @@
         <div id="chart"></div>
         <div id="network" class="hidden"></div>
         <p class="hint">Click a bar, point or node to see the trials behind it.</p>
+        <div class="row">
+          <button type="button" id="download-data">Download data (CSV)</button>
+          <button type="button" id="download-trials">Download trial list (CSV)</button>
+        </div>
       </div>
       <div id="citations" class="panel hidden">
         <strong id="cite-title"></strong>
@@ -249,7 +253,10 @@ function poll(taskId) {
 
 // --- Rendering ------------------------------------------------------------------
 
+let current = null;  // the answer on screen, for the downloads
+
 async function render(result) {
+  current = result;
   $("result").classList.remove("hidden");
   $("raw-json").textContent = JSON.stringify(result, null, 2);
   $("citations").classList.add("hidden");
@@ -260,7 +267,7 @@ async function render(result) {
   if (isNetwork) {
     renderNetwork(result.visualization);
   } else {
-    const view = await vegaEmbed("#chart", result.vega_lite, { actions: { export: true, source: false, compiled: false, editor: true } });
+    const view = await vegaEmbed("#chart", result.vega_lite, { actions: { export: true, source: false, compiled: false, editor: false } });
     view.view.addEventListener("click", (_event, item) => {
       const datum = item && item.datum;
       const row = datum && datum._row != null ? result.visualization.data[datum._row] : null;  // sources live there
@@ -281,6 +288,101 @@ function labelFor(datum, encoding) {
     })
     .join(" · ");
 }
+
+// <csv> Downloads: the chart's values and the trials behind them, as CSV (pure functions, tested in
+// tests/test_web_csv.py). Every value carries the full list of its trials (nct_ids); titles come
+// from the citations, which quote a sample of them, so some trials have no title.
+const SOURCE_KEYS = new Set(["citations", "nct_ids"]);
+
+function csvCell(value) {
+  if (value == null) return "";
+  if (Array.isArray(value)) value = value.join("; ");
+  let text = String(value);
+  // A cell starting with = + - @ runs as a formula in spreadsheets: registry text is untrusted.
+  if (typeof value !== "number" && /^[=+\-@\t\r]/.test(text)) text = "'" + text;
+  return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+}
+
+function toCsv(header, rows) {
+  return [header, ...rows].map((r) => r.map(csvCell).join(",")).join("\r\n") + "\r\n";
+}
+
+// One row per chart value: its categories and counts, in the order the chart has them.
+function chartDataCsv(viz) {
+  if (viz.type === "network_graph") {
+    const nodes = new Map(viz.data.nodes.map((n) => [n.id, n]));
+    const rows = viz.data.nodes.map((n) => ["node", n.label, n.group, "", "", n.size]);
+    for (const e of viz.data.edges) {
+      const a = nodes.get(e.source) || { label: e.source }, b = nodes.get(e.target) || { label: e.target };
+      rows.push(["link", a.label, a.group, b.label, b.group, e.weight]);
+    }
+    return toCsv(["kind", "label", "group", "linked_label", "linked_group", "trials"], rows);
+  }
+  const keys = [];
+  for (const row of viz.data) for (const k of Object.keys(row)) if (!SOURCE_KEYS.has(k) && !keys.includes(k)) keys.push(k);
+  return toCsv(keys, viz.data.map((row) => keys.map((k) => row[k])));
+}
+
+// What a value is, for the trial list: "phase=PHASE3; group=Pembrolizumab".
+function valueLabel(row) {
+  return Object.entries(row)
+    .filter(([k]) => !SOURCE_KEYS.has(k) && k !== "trial_count")
+    .map(([k, v]) => `${k}=${v}`)
+    .join("; ");
+}
+
+// One row per trial: its title (when cited), its record page and every chart value it counts in.
+function trialListCsv(viz) {
+  const trials = new Map();
+  const add = (row, label) => {
+    const titles = new Map((row.citations || []).map((c) => [c.nct_id, c.title]));
+    for (const nct of row.nct_ids || []) {
+      if (!trials.has(nct)) trials.set(nct, { title: "", values: [] });
+      const t = trials.get(nct);
+      t.title = t.title || titles.get(nct) || "";
+      if (!t.values.includes(label)) t.values.push(label);
+    }
+  };
+  if (viz.type === "network_graph") {
+    const nodes = new Map(viz.data.nodes.map((n) => [n.id, n]));
+    for (const n of viz.data.nodes) add(n, n.label);
+    for (const e of viz.data.edges) add(e, `${(nodes.get(e.source) || {}).label} + ${(nodes.get(e.target) || {}).label}`);
+  } else {
+    for (const row of viz.data) add(row, valueLabel(row));
+  }
+  const rows = [...trials].sort(([a], [b]) => a.localeCompare(b))
+    .map(([nct, t]) => [nct, t.title, `https://clinicaltrials.gov/study/${nct}`, t.values]);
+  return toCsv(["nct_id", "title", "url", "counted_in"], rows);
+}
+
+function fileName(title, suffix) {
+  const slug = String(title || "studytrials").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
+  return `${slug || "studytrials"}-${suffix}.csv`;
+}
+// </csv>
+
+let mcpApp = null;  // set inside Claude: the sandbox may block downloads, so the host saves the file
+
+async function saveCsv(name, text) {
+  if (mcpApp && (mcpApp.getHostCapabilities() || {}).downloadFile) {
+    const result = await mcpApp.downloadFile({ contents: [{ uri: `file:///${name}`, mimeType: "text/csv", text }] });
+    if (result && result.isError) showError("The download was cancelled or not allowed by the host.");
+    return;
+  }
+  const url = URL.createObjectURL(new Blob(["\ufeff" + text], { type: "text/csv;charset=utf-8" }));  // BOM: Excel reads UTF-8
+  const a = Object.assign(document.createElement("a"), { href: url, download: name });
+  document.body.append(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+$("download-data").addEventListener("click", () => {
+  if (current) saveCsv(fileName(current.visualization.title, "data"), chartDataCsv(current.visualization)).catch((e) => showError(e.message));
+});
+$("download-trials").addEventListener("click", () => {
+  if (current) saveCsv(fileName(current.visualization.title, "trials"), trialListCsv(current.visualization)).catch((e) => showError(e.message));
+});
 
 // One entry per cited trial: its title and every value quoted from it (an edge or a scatter
 // point quotes several). `total` is how many trials the data point counts (citations sample it).
@@ -587,6 +689,7 @@ async function openResult(id) {
 // the host. The full answer is in the result's _meta; if a host drops it, ask the server for it.
 if (document.documentElement.dataset.mode === "mcp-app" && window.McpApps) {
   const app = new McpApps.App({ name: "studytrials", version: "1.0.0" }, {}, { autoResize: true });
+  mcpApp = app;
   app.ontoolresult = async (result) => {
     try {
       if (result.isError) throw new Error((result.content || []).map((c) => c.text).join(" ") || "The chart could not be built.");

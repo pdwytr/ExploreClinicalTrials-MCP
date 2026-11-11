@@ -191,12 +191,12 @@ async def start_query(
     return "\n".join(lines)
 
 
-async def fetch_data(query_id: str, plan: SearchPlan) -> str:
+async def fetch_data(query_id: str, plan: SearchPlan) -> dict[str, Any]:
     """Execute a search plan. Code resolves names to the registry's own, adds the user's fields,
     builds the API calls, fetches every page and keeps the data; you get back how many trials each
     step matched and what each step searched. At most 5 fetches per query."""
     try:
-        return json.dumps(await _studytrials().queries.fetch(query_id, plan))
+        return await _studytrials().queries.fetch(query_id, plan)
     except QueryError as exc:
         raise _fail(exc) from exc
 
@@ -329,7 +329,7 @@ async def find_trials(
     sex: Annotated[str | None, Field(description="'female' or 'male': trials open to that sex or to all.")] = None,
     limit: Annotated[int, Field(description=f"Trials per page, at most {lookup.MAX_LIMIT}.")] = lookup.DEFAULT_LIMIT,
     page_token: Annotated[str | None, Field(description="next_page_token from the previous page.")] = None,
-) -> str:
+) -> dict[str, Any]:
     """List trials that match the filters, most relevant first: per trial its status, phase,
     sponsor, ages and, with a location, the sites there. Returns total_matched, the exact number of
     matching trials, and one page of them; say how many there are, not just how many are shown.
@@ -344,13 +344,13 @@ async def find_trials(
         raise _fail(exc) from exc
     out = lookup.found(page, location, limit)
     out["search"] = {k: v for k, v in params.items() if k.startswith(("query.", "filter."))}
-    return json.dumps(out, ensure_ascii=False)
+    return out
 
 
 async def get_trial(
     nct_id: Annotated[str, Field(description="The trial's NCT number, e.g. 'NCT05064059'.")],
     location: Annotated[str | None, Field(description="List only the sites in this city, state or country.")] = None,
-) -> str:
+) -> dict[str, Any]:
     """Read one trial's registry record: titles, status, dates, sponsor, design, arms,
     interventions, outcome measures, eligibility criteria, contacts and sites. It never reports
     posted results; has_results says whether the record page has them. Quote the eligibility
@@ -364,7 +364,7 @@ async def get_trial(
         raise _fail(exc) from exc
     except (ValueError, UpstreamError) as exc:
         raise _fail(exc) from exc
-    return json.dumps(lookup.trial_detail(record, location), ensure_ascii=False)
+    return lookup.trial_detail(record, location)
 
 
 # --- The inline page --------------------------------------------------------------------------
@@ -409,16 +409,18 @@ SAVES = ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHin
 apps.tool(resource_uri=CHART_UI, name="build_chart", title="Build the chart", annotations=SAVES)(build_chart)
 apps.add_html_resource(CHART_UI, chart_page_html(), name="studytrials chart", title="studytrials chart", prefers_border=True)
 mcp = MCPServer("studytrials", version=_version(), instructions=INSTRUCTIONS, lifespan=lifespan, extensions=[apps], log_level="WARNING")
-for tool, title, hints in (
-    (start_query, "Start a clinical-trials question", READ),
-    (fetch_data, "Fetch trials from ClinicalTrials.gov", REGISTRY),
-    (describe_data, "Describe the fetched trials", READ),
-    (read_api_docs, "Read the ClinicalTrials.gov API reference", REGISTRY),
-    (read_reference, "Read a chart-planning reference", READ),
-    (find_trials, "Find trials on ClinicalTrials.gov", REGISTRY),
-    (get_trial, "Read one trial's record", REGISTRY),
+# Data tools return an object: structuredContent plus the same JSON as text, with an outputSchema.
+# Prose tools (procedures, profiles, reference pages) return text only, with no outputSchema.
+for tool, title, hints, structured in (
+    (start_query, "Start a clinical-trials question", READ, False),
+    (fetch_data, "Fetch trials from ClinicalTrials.gov", REGISTRY, True),
+    (describe_data, "Describe the fetched trials", READ, False),
+    (read_api_docs, "Read the ClinicalTrials.gov API reference", REGISTRY, False),
+    (read_reference, "Read a chart-planning reference", READ, False),
+    (find_trials, "Find trials on ClinicalTrials.gov", REGISTRY, True),
+    (get_trial, "Read one trial's record", REGISTRY, True),
 ):
-    mcp.tool(title=title, annotations=hints)(tool)
+    mcp.tool(title=title, annotations=hints, structured_output=structured)(tool)
 mcp.tool(meta={"ui": {"visibility": ["app"]}}, annotations=READ)(get_result)  # for the chart page, not the model
 
 

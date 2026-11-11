@@ -91,6 +91,7 @@ With the service on port 8765:
     uv run python evals/run.py --only=b3,m1            # some cases
     uv run python evals/run.py --regrade               # re-check saved responses, no service calls
     uv run python evals/run.py --coverage              # what the cases cover, no runs
+    uv run python evals/run.py --service=http://localhost:8766  # the service on another port
 
 Every run ends with a coverage table: for each tag, the number of cases, how many ran, how many
 passed, and which ones failed. `NO CASES` marks tags nothing tests yet.
