@@ -95,7 +95,7 @@ def test_tools_refuse_to_run_out_of_order(studytrials):
         ("build_chart", {"query_id": "q-unknown", "chart": BY_PHASE}),
     )
     assert described.is_error and "fetch_data first" in text(described)
-    assert built.is_error and "Unknown query_id" in text(built)
+    assert built.is_error and "Unknown or expired query_id" in text(built)
 
 
 def test_start_query_validates_the_users_filters(studytrials):
@@ -169,3 +169,34 @@ def test_network_summary_names_the_strongest_pairs():
         {"pair": ["Dexamethasone", "Bortezomib"], "trials": 150},
     ]
     assert "NCT1" not in text  # sources stay on the page
+
+
+def test_query_ids_are_opaque_and_expire(monkeypatch):
+    """MCP: server-minted handles have enough entropy and a bounded lifetime, and an expired one
+    is a tool error that says so."""
+    from studytrials.mcp_server import session as sessions
+
+    clock = [1000.0]
+    monkeypatch.setattr(sessions.time, "monotonic", lambda: clock[0])
+    queries = sessions.Queries(workflow=None)
+    first = queries.start(QueryRequest(query="Phases of melanoma trials"))
+    assert len(first.id) == len("q-") + 32 and first.id != queries.start(QueryRequest(query="again")).id
+    assert queries.get(first.id) is first
+    clock[0] += sessions.QUERY_TTL_SECONDS + 1
+    with pytest.raises(sessions.QueryError, match="expired"):
+        queries.get(first.id)
+    with pytest.raises(sessions.QueryError, match="Unknown or expired"):
+        queries.get(first.id)  # forgotten once expired
+    queries.start(QueryRequest(query="new"))
+    assert all(not s.expired(clock[0]) for s in queries._sessions.values())  # expired ones are dropped
+
+
+def test_annotations_say_what_each_tool_does():
+    async def go():
+        async with Client(server.mcp) as client:
+            return {t.name: t.annotations for t in (await client.list_tools()).tools}, client
+
+    tools, _ = asyncio.run(go())
+    assert tools["build_chart"].read_only_hint is False and tools["build_chart"].destructive_hint is False
+    assert all(a.read_only_hint for name, a in tools.items() if name != "build_chart")
+    assert tools["fetch_data"].open_world_hint and not tools["build_chart"].open_world_hint

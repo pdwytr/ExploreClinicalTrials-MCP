@@ -7,4 +7,6 @@
 # PyPI spec) are ignored.
 set -euo pipefail
 repo="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-exec uv run --no-project --with-editable "$repo" studytrials-mcp
+# --isolated and no VIRTUAL_ENV: the same environment whoever starts it, never an activated venv.
+unset VIRTUAL_ENV
+exec uv run --isolated --no-project --with-editable "$repo" studytrials-mcp

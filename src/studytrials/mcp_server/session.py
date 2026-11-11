@@ -30,6 +30,7 @@ from studytrials.workflow.translate import year_bounds
 
 FETCH_BUDGET = 5  # as for the query agent: each question gets at most 5 fetches
 MAX_QUERIES = 50  # oldest questions are forgotten past this (their saved answers stay on disk)
+QUERY_TTL_SECONDS = 2 * 60 * 60  # a query_id expires 2 hours after start_query (MCP: handles have a bounded lifetime)
 
 
 class QueryError(Exception):
@@ -44,6 +45,10 @@ class QuerySession:
     outcome: FetchOutcome | None = None  # the latest successful fetch: what gets charted
     profile: DataProfile | None = None
     started: float = field(default_factory=time.perf_counter)
+    created: float = field(default_factory=lambda: time.monotonic())
+
+    def expired(self, now: float) -> bool:
+        return now - self.created > QUERY_TTL_SECONDS
 
 
 @dataclass
@@ -66,16 +71,23 @@ class Queries:
         self._sessions: dict[str, QuerySession] = {}
 
     def start(self, request: QueryRequest) -> QuerySession:
+        now = time.monotonic()
+        for query_id in [q for q, s in self._sessions.items() if s.expired(now)]:
+            del self._sessions[query_id]
         while len(self._sessions) >= MAX_QUERIES:
             self._sessions.pop(next(iter(self._sessions)))
-        session = QuerySession(id=f"q-{secrets.token_hex(4)}", request=request)
+        # An opaque handle with 128 random bits, as MCP asks of server-minted handles.
+        session = QuerySession(id=f"q-{secrets.token_hex(16)}", request=request)
         self._sessions[session.id] = session
         return session
 
     def get(self, query_id: str) -> QuerySession:
         session = self._sessions.get(query_id)
         if session is None:
-            raise QueryError(f"Unknown query_id {query_id!r}. Call start_query first.")
+            raise QueryError(f"Unknown or expired query_id {query_id!r}. Call start_query again.")
+        if session.expired(time.monotonic()):
+            del self._sessions[query_id]
+            raise QueryError(f"query_id {query_id!r} has expired (after 2 hours). Call start_query again.")
         return session
 
     async def fetch(self, query_id: str, plan: SearchPlan) -> dict:

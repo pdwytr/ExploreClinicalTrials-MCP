@@ -151,7 +151,9 @@ async def start_query(
 ) -> str:
     """Start answering one clinical-trials question. Set a filter only when the user gave it
     explicitly as a constraint; otherwise leave it to the search plan. Returns a query_id and the
-    procedure to follow: read it fully before planning the search."""
+    procedure to follow: read it fully before planning the search. The query_id and its fetched data
+    live in this server's memory for 2 hours (at most the 50 latest questions), then expire; charts
+    built from it are saved on this computer."""
     try:
         request = QueryRequest(
             query=question,
@@ -307,6 +309,16 @@ def summarize(response: QueryResponse, result_id: str, url: str | None, inline: 
 # --- The inline page --------------------------------------------------------------------------
 
 
+def _version() -> str:
+    """The installed package's version, for serverInfo (MCP: servers identify themselves)."""
+    from importlib.metadata import PackageNotFoundError, version
+
+    try:
+        return version("studytrials-mcp")
+    except PackageNotFoundError:  # running from a source tree that is not installed
+        return "0+unknown"
+
+
 def chart_page_html() -> str:
     """index.html for the MCP App iframe: the vendored scripts inlined (the sandbox may not load
     CDNs or localhost), plus the MCP Apps SDK, and `data-mode="mcp-app"` so the page waits for the
@@ -325,14 +337,17 @@ def chart_page_html() -> str:
 
 # The Apps extension takes its tools and pages when the server is built, so they come first.
 apps = Apps()
-# Every tool only reads (ClinicalTrials.gov, the bundled references, saved answers); build_chart also
-# saves the answer locally. openWorldHint: the fetches reach an outside service.
+# The tools read ClinicalTrials.gov, the bundled references and saved answers (openWorldHint: they
+# reach an outside service). build_chart is not read-only: it writes the answer to
+# ~/.studytrials/results. It never changes or deletes anything already there, and each call saves a
+# new answer.
 READ = ToolAnnotations(readOnlyHint=True, openWorldHint=False)
 REGISTRY = ToolAnnotations(readOnlyHint=True, openWorldHint=True)
+SAVES = ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False)
 
-apps.tool(resource_uri=CHART_UI, name="build_chart", title="Build the chart", annotations=REGISTRY)(build_chart)
+apps.tool(resource_uri=CHART_UI, name="build_chart", title="Build the chart", annotations=SAVES)(build_chart)
 apps.add_html_resource(CHART_UI, chart_page_html(), name="studytrials chart", title="studytrials chart", prefers_border=True)
-mcp = MCPServer("studytrials", instructions=INSTRUCTIONS, lifespan=lifespan, extensions=[apps], log_level="WARNING")
+mcp = MCPServer("studytrials", version=_version(), instructions=INSTRUCTIONS, lifespan=lifespan, extensions=[apps], log_level="WARNING")
 for tool, title, hints in (
     (start_query, "Start a clinical-trials question", READ),
     (fetch_data, "Fetch trials from ClinicalTrials.gov", REGISTRY),

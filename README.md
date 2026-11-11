@@ -116,9 +116,10 @@ instead, say *"use studytrials to …"*.
 
 The tools are `start_query`, `fetch_data`, `describe_data`, `build_chart`, `read_api_docs` and
 `read_reference`. `start_query` returns the procedure the model follows, so any client's model
-calls the tools in the right order. No tool changes anything outside your machine (`build_chart`
-saves the answer locally), and every tool is marked read-only, which clients can use to skip
-asking you for approval.
+calls the tools in the right order. No tool changes anything outside your machine. Every tool is
+marked read-only except `build_chart`, which saves each answer to `~/.studytrials/results/` and
+never changes or deletes an existing one. Clients can use these labels to decide when to ask you
+for approval.
 
 ## Your saved answers
 
