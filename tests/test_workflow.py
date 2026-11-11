@@ -6,9 +6,9 @@ import asyncio
 
 import pytest
 
-from studytrials.fetch.models import SNAPSHOT_API_VERSION, DataVersion, Trial
-from studytrials.models.request import QueryRequest
-from studytrials.workflow import (
+from exploreclinicaltrials.fetch.models import SNAPSHOT_API_VERSION, DataVersion, Trial
+from exploreclinicaltrials.models.request import QueryRequest
+from exploreclinicaltrials.workflow import (
     AgentResult,
     ChartPlan,
     Dimension,
@@ -19,10 +19,10 @@ from studytrials.workflow import (
     SearchPlan,
     UpstreamError,
 )
-from studytrials.workflow import pipeline
-from studytrials.workflow.pipeline import check_chart_plan
-from studytrials.workflow.intent import RESOLVE_SAMPLE
-from studytrials.workflow.profile import build_profile
+from exploreclinicaltrials.workflow import pipeline
+from exploreclinicaltrials.workflow.pipeline import check_chart_plan
+from exploreclinicaltrials.workflow.intent import RESOLVE_SAMPLE
+from exploreclinicaltrials.workflow.profile import build_profile
 
 # --- Fakes ---------------------------------------------------------------------------
 
@@ -203,7 +203,7 @@ def test_newer_api_version_warns_that_docs_are_outdated(caplog, monkeypatch):
     monkeypatch.setattr(pipeline, "_docs_warning_logged", False)
     wf, _ = make_workflow(search_plan("pembrolizumab"), {"pembrolizumab": FOUND}, versions=[version(api="2.1.0")])
 
-    with caplog.at_level("WARNING", logger="studytrials.workflow.pipeline"):
+    with caplog.at_level("WARNING", logger="exploreclinicaltrials.workflow.pipeline"):
         response, _ = run(wf)
 
     assert "API is 2.1.0 but the agent specs and evals were last checked on" in caplog.text
@@ -251,8 +251,8 @@ def test_a_country_limited_search_charts_only_those_countries():
 
 
 def test_placebo_and_sham_are_not_interventions():
-    from studytrials.fetch.models import Intervention
-    from studytrials.workflow.profile import FIELD_VALUES
+    from exploreclinicaltrials.fetch.models import Intervention
+    from exploreclinicaltrials.workflow.profile import FIELD_VALUES
 
     t = Trial(nct_id="NCT00000001", interventions=[Intervention(name="Metformin"), Intervention(name="Placebo Oral Tablet"), Intervention(name="Sham procedure")])
     assert FIELD_VALUES[Dimension.INTERVENTION](t) == ["Metformin"]

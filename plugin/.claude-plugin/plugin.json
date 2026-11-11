@@ -1,12 +1,12 @@
 {
-  "name": "studytrials",
+  "name": "exploreclinicaltrials",
   "version": "0.3.0",
   "description": "Ask about clinical trials and get a chart from ClinicalTrials.gov, with every value citing its trials. Claude plans the search and picks the chart; code fetches, counts and cites.",
   "author": {
     "name": "pdwytr"
   },
-  "homepage": "https://github.com/pdwytr/studytrials",
-  "repository": "https://github.com/pdwytr/studytrials",
+  "homepage": "https://github.com/pdwytr/ExploreClinicalTrials-MCP",
+  "repository": "https://github.com/pdwytr/ExploreClinicalTrials-MCP",
   "keywords": [
     "clinical-trials",
     "clinicaltrials.gov",

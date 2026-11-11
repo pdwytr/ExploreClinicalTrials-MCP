@@ -1,4 +1,4 @@
-# Release studytrials-mcp to PyPI when a version tag is pushed:
+# Release exploreclinicaltrials-mcp to PyPI when a version tag is pushed:
 #   bump `version` in pyproject.toml, commit, then  git tag v0.1.0 && git push origin v0.1.0
 # PyPI side, once: add a trusted publisher for this repo, workflow `release.yml`, environment `pypi`
 # (https://docs.pypi.org/trusted-publishers/). No API token is stored anywhere.
@@ -22,7 +22,7 @@ jobs:
       - run: uv run pytest -q
       - run: uv build
       - name: The wheel starts as an MCP server
-        run: uvx --from dist/*.whl studytrials-mcp --help
+        run: uvx --from dist/*.whl exploreclinicaltrials-mcp --help
       - uses: actions/upload-artifact@v4
         with:
           name: dist

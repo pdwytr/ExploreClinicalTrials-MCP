@@ -1,4 +1,4 @@
-# StudyTrials
+# ExploreClinicalTrials
 
 Ask a question about clinical trials in plain words and get one chart from
 [ClinicalTrials.gov](https://clinicaltrials.gov). Every bar, point and line links to the trials it
@@ -14,7 +14,7 @@ business-development analysts, clinical operations, consultants, investors and r
 
 ## How it works
 
-StudyTrials is one MCP server. It works in any MCP client (Claude, Codex, Cursor, VS Code and
+ExploreClinicalTrials is one MCP server. It works in any MCP client (Claude, Codex, Cursor, VS Code and
 others) and uses that client's own model, so it needs no API key.
 
 The model reads the question, plans the search and picks the chart. Code does everything that
@@ -23,7 +23,7 @@ distinct trials and attaches the sources. **The model never produces a number**,
 invent one.
 
 Code also fixes what the registry gets wrong. For example, a search for "Ozempic" finds about 100
-trials, but most of them are indexed as *semaglutide*. StudyTrials sees this and searches both
+trials, but most of them are indexed as *semaglutide*. ExploreClinicalTrials sees this and searches both
 names, and the chart says it did.
 
 Where the chart shows depends on the client. Clients that support
@@ -37,7 +37,7 @@ You need [uv](https://docs.astral.sh/uv/) (`brew install uv` or
 `curl -LsSf https://astral.sh/uv/install.sh | sh`). Every client runs the same command:
 
 ```
-uvx studytrials-mcp@latest
+uvx exploreclinicaltrials-mcp@latest
 ```
 
 With `@latest`, uv checks for a new release each time the server starts, so you get updates
@@ -46,15 +46,15 @@ without doing anything.
 ### Claude Code
 
 ```bash
-claude mcp add -s user studytrials -- uvx studytrials-mcp@latest
+claude mcp add -s user exploreclinicaltrials -- uvx exploreclinicaltrials-mcp@latest
 ```
 
 Or install it as a plugin. The plugin adds a `clinical-trials` subagent, which answers in its own
 context and keeps your conversation short:
 
 ```
-/plugin marketplace add pdwytr/studytrials
-/plugin install studytrials@studytrials
+/plugin marketplace add pdwytr/ExploreClinicalTrials-MCP
+/plugin install exploreclinicaltrials@exploreclinicaltrials
 ```
 
 ### Claude Desktop
@@ -64,7 +64,7 @@ Open **Settings → Developer → Edit Config** and add the following, then rest
 ```json
 {
   "mcpServers": {
-    "studytrials": { "command": "uvx", "args": ["studytrials-mcp@latest"] }
+    "exploreclinicaltrials": { "command": "uvx", "args": ["exploreclinicaltrials-mcp@latest"] }
   }
 }
 ```
@@ -74,16 +74,16 @@ If Desktop cannot find `uvx`, use the full path that `which uvx` prints.
 ### Codex
 
 ```bash
-codex mcp add studytrials -- uvx studytrials-mcp@latest
+codex mcp add exploreclinicaltrials -- uvx exploreclinicaltrials-mcp@latest
 ```
 
 Or add this to `~/.codex/config.toml`. Fetching every trial for a large question can take a
 minute, which is why `tool_timeout_sec` is raised:
 
 ```toml
-[mcp_servers.studytrials]
+[mcp_servers.exploreclinicaltrials]
 command = "uvx"
-args = ["studytrials-mcp@latest"]
+args = ["exploreclinicaltrials-mcp@latest"]
 tool_timeout_sec = 180
 ```
 
@@ -94,7 +94,7 @@ Add this to `~/.cursor/mcp.json`:
 ```json
 {
   "mcpServers": {
-    "studytrials": { "command": "uvx", "args": ["studytrials-mcp@latest"] }
+    "exploreclinicaltrials": { "command": "uvx", "args": ["exploreclinicaltrials-mcp@latest"] }
   }
 }
 ```
@@ -102,17 +102,17 @@ Add this to `~/.cursor/mcp.json`:
 ### VS Code (Copilot agent mode)
 
 ```bash
-code --add-mcp '{"name":"studytrials","command":"uvx","args":["studytrials-mcp@latest"]}'
+code --add-mcp '{"name":"exploreclinicaltrials","command":"uvx","args":["exploreclinicaltrials-mcp@latest"]}'
 ```
 
 ### Any other MCP client
 
-Add a stdio server with the command `uvx` and the argument `studytrials-mcp@latest`.
+Add a stdio server with the command `uvx` and the argument `exploreclinicaltrials-mcp@latest`.
 
 ## Using it
 
 Ask a clinical-trials question in plain words. If the client answers from its own knowledge
-instead, say *"use studytrials to …"*.
+instead, say *"use exploreclinicaltrials to …"*.
 
 For a chart, the tools are `start_query`, `fetch_data`, `describe_data`, `build_chart`,
 `read_api_docs` and `read_reference`. `start_query` returns the procedure the model follows, so any
@@ -129,17 +129,17 @@ Two tools answer without a chart:
 Neither says whether someone qualifies for a trial or whether a treatment works.
 
 No tool changes anything outside your machine. Every tool is
-marked read-only except `build_chart`, which saves each answer to `~/.studytrials/results/` and
+marked read-only except `build_chart`, which saves each answer to `~/.exploreclinicaltrials/results/` and
 never changes or deletes an existing one. Clients can use these labels to decide when to ask you
 for approval.
 
 ## Your saved answers
 
-Every answer is saved in `~/.studytrials/results/` (set `STUDYTRIALS_HOME` to change the folder). To
+Every answer is saved in `~/.exploreclinicaltrials/results/` (set `EXPLORECLINICALTRIALS_HOME` to change the folder). To
 browse them without an MCP client:
 
 ```bash
-uvx studytrials-mcp@latest serve
+uvx exploreclinicaltrials-mcp@latest serve
 ```
 
 Under each chart, **Download data (CSV)** saves the chart's values and counts, and **Download
@@ -161,14 +161,14 @@ some rows have the NCT ID and link only. The chart menu also saves the chart as 
 
 ## Run it as a web service
 
-StudyTrials also runs without Claude, as a web page and an API. In this mode, the planning is done
+ExploreClinicalTrials also runs without Claude, as a web page and an API. In this mode, the planning is done
 by Pydantic AI agents, which need an OpenAI key.
 
 ```bash
-git clone https://github.com/pdwytr/studytrials.git && cd studytrials
-cp .env.example .env    # set OPENAI_API_KEY and STUDYTRIALS_PLANNER_MODEL
+git clone https://github.com/pdwytr/ExploreClinicalTrials-MCP.git && cd exploreclinicaltrials
+cp .env.example .env    # set OPENAI_API_KEY and EXPLORECLINICALTRIALS_PLANNER_MODEL
 uv sync
-uv run uvicorn studytrials.api.app:app --port 8765
+uv run uvicorn exploreclinicaltrials.api.app:app --port 8765
 ```
 
 Open http://localhost:8765/ for the page or http://localhost:8765/docs for the API. A demo runs at
@@ -178,19 +178,19 @@ https://cheiron-e7vsuq.fly.dev/.
 
 ```bash
 uv run pytest                                          # unit tests, no API key needed
-STUDYTRIALS_LAUNCHER=$PWD/scripts/dev-mcp claude --plugin-dir ./plugin   # the plugin, on this checkout's source
+EXPLORECLINICALTRIALS_LAUNCHER=$PWD/scripts/dev-mcp claude --plugin-dir ./plugin   # the plugin, on this checkout's source
 uv run python scripts/vendor_web_assets.py             # refresh the pinned chart libraries
 ```
 
 | Path | What it is |
 |---|---|
 | `plugin/` | the Claude Code plugin: MCP config and the `clinical-trials` subagent |
-| `src/studytrials/mcp_server/` | the MCP server: tools, query sessions, saved results, local page |
-| `src/studytrials/agents/` | the agent specs (shared by the plugin and the web service) |
-| `src/studytrials/workflow/` | search plans, fetching, profiling, chart checks |
-| `src/studytrials/visualize/` | counts, citations and the Vega-Lite chart |
-| `src/studytrials/web/index.html` | the chart page, used everywhere |
+| `src/exploreclinicaltrials/mcp_server/` | the MCP server: tools, query sessions, saved results, local page |
+| `src/exploreclinicaltrials/agents/` | the agent specs (shared by the plugin and the web service) |
+| `src/exploreclinicaltrials/workflow/` | search plans, fetching, profiling, chart checks |
+| `src/exploreclinicaltrials/visualize/` | counts, citations and the Vega-Lite chart |
+| `src/exploreclinicaltrials/web/index.html` | the chart page, used everywhere |
 | `evals/` | end-to-end cases against the live registry |
 
-Data comes from the [ClinicalTrials.gov API v2](https://clinicaltrials.gov/data-api/api). StudyTrials
+Data comes from the [ClinicalTrials.gov API v2](https://clinicaltrials.gov/data-api/api). ExploreClinicalTrials
 is not affiliated with the NIH or the NLM.

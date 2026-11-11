@@ -9,7 +9,7 @@ A test fails if the committed file drifts from the code.
 import json
 from pathlib import Path
 
-from studytrials.api.app import create_app
+from exploreclinicaltrials.api.app import create_app
 
 OUT = Path(__file__).resolve().parent.parent / "docs" / "api" / "openapi.json"
 

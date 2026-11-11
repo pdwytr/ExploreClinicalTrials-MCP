@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
-PAGE = ROOT / "src" / "studytrials" / "web" / "index.html"
+PAGE = ROOT / "src" / "exploreclinicaltrials" / "web" / "index.html"
 EXAMPLES = ROOT / "examples"
 
 pytestmark = pytest.mark.skipif(shutil.which("node") is None, reason="needs Node")

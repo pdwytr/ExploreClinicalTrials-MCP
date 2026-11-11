@@ -15,9 +15,9 @@ import httpx
 import pytest
 import yaml
 
-from studytrials.fetch.client import CtgovClient
-from studytrials.fetch.endpoints import FieldSizesStep, FieldValuesStep, RecordSizeStep, StudyStep
-from studytrials.fetch.stats import (
+from exploreclinicaltrials.fetch.client import CtgovClient
+from exploreclinicaltrials.fetch.endpoints import FieldSizesStep, FieldValuesStep, RecordSizeStep, StudyStep
+from exploreclinicaltrials.fetch.stats import (
     DateStats,
     EnumStats,
     FieldSizesResponse,
@@ -27,7 +27,7 @@ from studytrials.fetch.stats import (
     StringStats,
     incomplete_fields,
 )
-from studytrials.workflow.errors import InvalidSearch, UpstreamError
+from exploreclinicaltrials.workflow.errors import InvalidSearch, UpstreamError
 
 FIXTURES = Path(__file__).parent / "fixtures" / "ctgov"
 SPEC = yaml.safe_load((Path(__file__).resolve().parent.parent / "docs" / "ctgov" / "openapi.yaml").read_text())

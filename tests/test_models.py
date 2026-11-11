@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from studytrials.models import Intent, QueryResponse
+from exploreclinicaltrials.models import Intent, QueryResponse
 
 # Request validation lives in test_requests.py; this file covers responses.
 

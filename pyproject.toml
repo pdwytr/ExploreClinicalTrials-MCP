@@ -1,5 +1,5 @@
 [project]
-name = "studytrials-mcp"
+name = "exploreclinicaltrials-mcp"
 version = "0.3.0"
 description = "MCP server: ask about clinical trials in any MCP client and get a chart from ClinicalTrials.gov where every value cites its trials"
 readme = "README.md"
@@ -16,7 +16,7 @@ classifiers = [
 dependencies = [
     "fastapi>=0.115",
     "httpx>=0.27",
-    "mcp>=2.0",  # MCP server (studytrials-mcp), incl. MCP Apps
+    "mcp>=2.0",  # MCP server (exploreclinicaltrials-mcp), incl. MCP Apps
     "pydantic>=2.7",
     "pydantic-ai-slim[openai]>=2.66.0",
     "pydantic-settings>=2.4",
@@ -25,11 +25,11 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/pdwytr/studytrials"
-Issues = "https://github.com/pdwytr/studytrials/issues"
+Homepage = "https://github.com/pdwytr/ExploreClinicalTrials-MCP"
+Issues = "https://github.com/pdwytr/ExploreClinicalTrials-MCP/issues"
 
 [project.scripts]
-studytrials-mcp = "studytrials.mcp_server.server:main"
+exploreclinicaltrials-mcp = "exploreclinicaltrials.mcp_server.server:main"
 
 [dependency-groups]
 dev = [
@@ -43,10 +43,10 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/studytrials"]
+packages = ["src/exploreclinicaltrials"]
 
 [tool.hatch.build.targets.wheel.force-include]
-"docs/ctgov" = "studytrials/agents/ctgov-snapshot"  # the API reference fallback, for installs (uvx)
+"docs/ctgov" = "exploreclinicaltrials/agents/ctgov-snapshot"  # the API reference fallback, for installs (uvx)
 
 [tool.pytest.ini_options]
 pythonpath = ["src", "."]

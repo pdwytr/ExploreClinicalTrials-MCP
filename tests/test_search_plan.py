@@ -6,13 +6,13 @@ import asyncio
 import pytest
 from pydantic import ValidationError
 
-from studytrials.fetch.models import Trial
-from studytrials.fetch.stats import FieldValuesResponse
-from studytrials.models.request import QueryRequest
-from studytrials.workflow import FetchResult, SearchPlan, StatsResult
-from studytrials.workflow.errors import InvalidSearch
-from studytrials.workflow.intent import Resolver, phrase
-from studytrials.workflow.translate import filters_summary, prepare_plan
+from exploreclinicaltrials.fetch.models import Trial
+from exploreclinicaltrials.fetch.stats import FieldValuesResponse
+from exploreclinicaltrials.models.request import QueryRequest
+from exploreclinicaltrials.workflow import FetchResult, SearchPlan, StatsResult
+from exploreclinicaltrials.workflow.errors import InvalidSearch
+from exploreclinicaltrials.workflow.intent import Resolver, phrase
+from exploreclinicaltrials.workflow.translate import filters_summary, prepare_plan
 
 # --- A fake registry for name lookups ------------------------------------------------------------
 

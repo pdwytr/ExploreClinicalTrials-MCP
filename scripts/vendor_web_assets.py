@@ -1,4 +1,4 @@
-"""Download the web page's JavaScript into src/studytrials/web/vendor/, pinned, so the page works offline
+"""Download the web page's JavaScript into src/exploreclinicaltrials/web/vendor/, pinned, so the page works offline
 and can be inlined into the MCP App resource (a sandboxed iframe that may not load CDN scripts).
 
     uv run python scripts/vendor_web_assets.py
@@ -13,7 +13,7 @@ from pathlib import Path
 
 import httpx
 
-VENDOR = Path(__file__).resolve().parents[1] / "src" / "studytrials" / "web" / "vendor"
+VENDOR = Path(__file__).resolve().parents[1] / "src" / "exploreclinicaltrials" / "web" / "vendor"
 CDN = "https://cdn.jsdelivr.net/npm"
 ASSETS = {
     "vega.min.js": f"{CDN}/vega@5.30.0/build/vega.min.js",

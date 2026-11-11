@@ -5,9 +5,9 @@ import asyncio
 import httpx
 import pytest
 
-from studytrials.fetch.client import CtgovClient
-from studytrials.fetch.models import StudySearchParams
-from studytrials.workflow.errors import InvalidSearch, UpstreamError
+from exploreclinicaltrials.fetch.client import CtgovClient
+from exploreclinicaltrials.fetch.models import StudySearchParams
+from exploreclinicaltrials.workflow.errors import InvalidSearch, UpstreamError
 
 
 def study(n: int) -> dict:

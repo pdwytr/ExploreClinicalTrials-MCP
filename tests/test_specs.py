@@ -8,10 +8,10 @@ from pathlib import Path
 import pytest
 from pydantic_ai.agent.spec import AgentSpec
 
-from studytrials.agents import chart_planner, query_agent
-from studytrials.agents.api_docs import snapshot_api_docs
-from studytrials.fetch.models import SEARCH_PARAMS, SNAPSHOT_API_VERSION
-from studytrials.workflow import ChartPlan, Dimension, SearchPlan
+from exploreclinicaltrials.agents import chart_planner, query_agent
+from exploreclinicaltrials.agents.api_docs import snapshot_api_docs
+from exploreclinicaltrials.fetch.models import SEARCH_PARAMS, SNAPSHOT_API_VERSION
+from exploreclinicaltrials.workflow import ChartPlan, Dimension, SearchPlan
 
 SPECS = Path(query_agent.__file__).parent / "specs"
 QUERY_SPEC, CHART_SPEC = SPECS / "query-agent.yaml", SPECS / "chart-planner.yaml"

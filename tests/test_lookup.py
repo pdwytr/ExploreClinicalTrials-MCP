@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from studytrials.mcp_server import lookup
-from studytrials.models.request import RecruitmentStatus, TrialPhase
+from exploreclinicaltrials.mcp_server import lookup
+from exploreclinicaltrials.models.request import RecruitmentStatus, TrialPhase
 
 FIXTURES = Path(__file__).parent / "fixtures" / "ctgov"
 FULL = json.loads((FIXTURES / "full_NCT05064059.json").read_text())

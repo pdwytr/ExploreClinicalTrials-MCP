@@ -5,15 +5,15 @@ import time
 
 from fastapi.testclient import TestClient
 
-from studytrials.api.app import create_app
-from studytrials.api.outputs import QueryOutputs
-from studytrials.api.tasks import TaskStore
-from studytrials.fetch.models import DataVersion, Trial
-from studytrials.fetch.stats import FieldValuesResponse
-from studytrials.workflow import AgentResult, ChartPlan, Dimension, FetchResult, SearchPlan, StatsResult
-from studytrials.workflow.errors import UnsupportedQuery
-from studytrials.workflow.pipeline import QueryWorkflow, check_chart_plan
-from studytrials.workflow.profile import build_profile
+from exploreclinicaltrials.api.app import create_app
+from exploreclinicaltrials.api.outputs import QueryOutputs
+from exploreclinicaltrials.api.tasks import TaskStore
+from exploreclinicaltrials.fetch.models import DataVersion, Trial
+from exploreclinicaltrials.fetch.stats import FieldValuesResponse
+from exploreclinicaltrials.workflow import AgentResult, ChartPlan, Dimension, FetchResult, SearchPlan, StatsResult
+from exploreclinicaltrials.workflow.errors import UnsupportedQuery
+from exploreclinicaltrials.workflow.pipeline import QueryWorkflow, check_chart_plan
+from exploreclinicaltrials.workflow.profile import build_profile
 
 DATA_TS = "2026-11-06T10:00:05"
 

@@ -7,7 +7,7 @@ import re
 
 import httpx
 
-from studytrials.agents.api_docs import (
+from exploreclinicaltrials.agents.api_docs import (
     SNAPSHOT_DIR,
     SOURCES,
     load_api_docs,

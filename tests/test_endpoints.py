@@ -6,7 +6,7 @@ import pytest
 import yaml
 from pydantic import TypeAdapter, ValidationError
 
-from studytrials.fetch.endpoints import (
+from exploreclinicaltrials.fetch.endpoints import (
     FIELD_NAME_PATTERN,
     NCT_ID_PATTERN,
     FieldStatsType,

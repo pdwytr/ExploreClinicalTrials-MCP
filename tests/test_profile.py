@@ -4,10 +4,10 @@ import json
 from datetime import date
 from pathlib import Path
 
-from studytrials.fetch.models import StudiesPage, Trial
-from studytrials.fetch.stats import FieldValuesResponse, incomplete_fields
-from studytrials.workflow.plans import Dimension, StatsResult
-from studytrials.workflow.profile import TOP_VALUES, build_profile
+from exploreclinicaltrials.fetch.models import StudiesPage, Trial
+from exploreclinicaltrials.fetch.stats import FieldValuesResponse, incomplete_fields
+from exploreclinicaltrials.workflow.plans import Dimension, StatsResult
+from exploreclinicaltrials.workflow.profile import TOP_VALUES, build_profile
 
 FIXTURES = Path(__file__).parent / "fixtures" / "ctgov"
 

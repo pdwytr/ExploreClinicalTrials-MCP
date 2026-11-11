@@ -1,12 +1,12 @@
 {
-  "name": "studytrials",
+  "name": "exploreclinicaltrials",
   "owner": {
     "name": "pdwytr"
   },
-  "description": "studytrials: clinical-trials questions answered with cited charts from ClinicalTrials.gov.",
+  "description": "exploreclinicaltrials: clinical-trials questions answered with cited charts from ClinicalTrials.gov.",
   "plugins": [
     {
-      "name": "studytrials",
+      "name": "exploreclinicaltrials",
       "source": "./plugin",
       "description": "Ask about clinical trials and get a chart from ClinicalTrials.gov, with every value citing its trials."
     }
